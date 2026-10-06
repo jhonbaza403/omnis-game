@@ -7,3 +7,4 @@ python3 Tools/Validation/validate_console_readiness.py
 python3 Tools/Validation/validate_platform_contracts.py
 python3 Tools/Validation/validate_platform_build_contract.py
 python3 Tools/Validation/validate_ci_platform_jobs.py
+python3 Tools/Validation/validate_localization_contract.py
