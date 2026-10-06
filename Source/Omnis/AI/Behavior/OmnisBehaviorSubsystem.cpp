@@ -1,15 +1,21 @@
 #include "AI/Behavior/OmnisBehaviorSubsystem.h"
+#include "GameFramework/Actor.h"
 
 void UOmnisBehaviorSubsystem::SetBehaviorForActor(AActor* Actor, FName Behavior)
 {
     if (Actor && !Behavior.IsNone())
     {
-        Behaviors.Add(Actor, Behavior);
+        Behaviors.Add(Actor->GetFName(), Behavior);
     }
 }
 
 FName UOmnisBehaviorSubsystem::GetBehaviorForActor(AActor* Actor) const
 {
-    const FName* Behavior = Behaviors.Find(Actor);
+    if (!Actor)
+    {
+        return FName(TEXT("Idle"));
+    }
+
+    const FName* Behavior = Behaviors.Find(Actor->GetFName());
     return Behavior ? *Behavior : FName(TEXT("Idle"));
 }

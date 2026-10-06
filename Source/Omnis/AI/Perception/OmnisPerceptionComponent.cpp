@@ -18,16 +18,20 @@ AActor* UOmnisPerceptionComponent::SenseClosest(float Radius)
 
     TArray<FOverlapResult> Results;
     const FCollisionShape Shape = FCollisionShape::MakeSphere(Radius);
-    World->OverlapMultiByObjectType(
+    const FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(OmnisSense), false, Owner);
+
+    World->OverlapMultiByChannel(
         Results,
         Owner->GetActorLocation(),
         FQuat::Identity,
-        FCollisionObjectQueryParams(FCollisionObjectQueryParams::AllObjects),
-        Shape
+        ECC_Pawn,
+        Shape,
+        QueryParams
     );
 
     AActor* Best = nullptr;
     float BestDistanceSq = TNumericLimits<float>::Max();
+
     for (const FOverlapResult& Result : Results)
     {
         AActor* Candidate = Result.GetActor();
@@ -36,7 +40,11 @@ AActor* UOmnisPerceptionComponent::SenseClosest(float Radius)
             continue;
         }
 
-        const float DistanceSq = FVector::DistSquared(Owner->GetActorLocation(), Candidate->GetActorLocation());
+        const float DistanceSq = FVector::DistSquared(
+            Owner->GetActorLocation(),
+            Candidate->GetActorLocation()
+        );
+
         if (DistanceSq < BestDistanceSq)
         {
             Best = Candidate;

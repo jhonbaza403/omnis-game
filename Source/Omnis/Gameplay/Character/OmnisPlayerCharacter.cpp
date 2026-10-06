@@ -1,5 +1,5 @@
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
-#include "Camera/CameraComponent.h"
+#include "Camera/Player/OmnisPlayerCameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -31,7 +31,7 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     CameraBoom->TargetArmLength = 550.0f;
     CameraBoom->bUsePawnControlRotation = true;
 
-    FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+    FollowCamera = CreateDefaultSubobject<UOmnisPlayerCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom);
     FollowCamera->bUsePawnControlRotation = false;
 
@@ -62,6 +62,11 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
 void AOmnisPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (FollowCamera)
+    {
+        FollowCamera->SetDistance(550.0f);
+    }
 
     if (Health)
     {

@@ -4,7 +4,7 @@
 #include "GameFramework/Character.h"
 #include "OmnisPlayerCharacter.generated.h"
 
-class UCameraComponent;
+class UOmnisPlayerCameraComponent;
 class USpringArmComponent;
 class UOmnisExplorationComponent;
 class UOmnisTraversalComponent;
@@ -32,7 +32,7 @@ public:
     TObjectPtr<USpringArmComponent> CameraBoom;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Camera")
-    TObjectPtr<UCameraComponent> FollowCamera;
+    TObjectPtr<UOmnisPlayerCameraComponent> FollowCamera;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Gameplay")
     TObjectPtr<UOmnisExplorationComponent> Exploration;

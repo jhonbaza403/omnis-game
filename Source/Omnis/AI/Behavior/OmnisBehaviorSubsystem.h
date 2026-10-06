@@ -18,5 +18,5 @@ public:
 
 private:
     UPROPERTY()
-    TMap<TObjectPtr<AActor>, FName> Behaviors;
+    TMap<FName, FName> Behaviors;
 };
