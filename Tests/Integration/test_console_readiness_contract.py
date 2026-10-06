@@ -15,8 +15,7 @@ class ConsoleReadinessTests(unittest.TestCase):
         self.assertEqual(data["system"], "EnhancedInput")
         self.assertFalse(data["policy"]["legacyActionMappings"])
         self.assertFalse(data["policy"]["legacyAxisMappings"])
-        gamepad_keys = "
-".join(
+        gamepad_keys = "\n".join(
             binding
             for action in data["actions"].values()
             for binding in action.get("gamepad", [])
