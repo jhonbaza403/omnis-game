@@ -1,0 +1,10 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "Omnis Narrative",
+  "Description": "Narrative extension point for Omnis.",
+  "Category": "Omnis",
+  "CanContainContent": false,
+  "Modules": [{"Name":"OmnisNarrative","Type":"Runtime","LoadingPhase":"Default"}]
+}

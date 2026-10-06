@@ -1,0 +1,1 @@
+{"version":1,"actions":{"Jump":"SpaceBar","Sprint":"LeftShift","Attack":"LeftMouseButton","Interact":"E","Build":"Q"},"axes":{"MoveForward":["W:1","S:-1"],"MoveRight":["D:1","A:-1"],"Turn":["MouseX:1"],"LookUp":["MouseY:-1"]}}

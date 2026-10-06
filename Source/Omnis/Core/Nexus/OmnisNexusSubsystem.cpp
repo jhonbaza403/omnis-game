@@ -9,3 +9,15 @@ void UOmnisNexusSubsystem::AddPermanentUpgradePoints(int32 Amount)
 
     Progression.PermanentUpgradePoints += Amount;
 }
+
+bool UOmnisNexusSubsystem::PurchaseVitalityUpgrade()
+{
+    if (Progression.PermanentUpgradePoints <= 0)
+    {
+        return false;
+    }
+
+    --Progression.PermanentUpgradePoints;
+    ++Progression.PermanentVitalityLevel;
+    return true;
+}

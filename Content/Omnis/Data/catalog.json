@@ -1,0 +1,1 @@
+{"version":1,"items":[{"id":"Resource.Wood","type":"resource","maxStack":999},{"id":"Upgrade.Vitality","type":"upgrade","cost":1}],"characters":[{"id":"NPC.Wanderer","role":"ambient"}]}

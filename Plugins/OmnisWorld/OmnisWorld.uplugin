@@ -1,0 +1,10 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "Omnis World",
+  "Description": "World simulation extension point for Omnis.",
+  "Category": "Omnis",
+  "CanContainContent": false,
+  "Modules": [{"Name":"OmnisWorld","Type":"Runtime","LoadingPhase":"Default"}]
+}

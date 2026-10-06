@@ -1,21 +1,28 @@
 # OMNIS — El Ciclo del Sin-Ciclo
 
-Proyecto de videojuego basado en Unreal Engine 5.
+Proyecto de videojuego Unreal Engine 5 con una arquitectura C++ modular y una primera implementación funcional de extremo a extremo.
 
-## Objetivo
-
-Omnis construye una experiencia de exploración, combate y narrativa ramificada alrededor de un mundo que colapsa y renace en ciclos. El progreso permanente ocurre a través del Nexo y las decisiones del jugador producen consecuencias verificables entre ciclos.
-
-## Vertical slice
+## Vertical slice implementado
 
 BOOT → PRIMER CICLO → MUNDO → EXPLORACIÓN → NPC → DECISIÓN → COMBATE → FIN DEL CICLO → NEXO → MEJORA → NUEVO CICLO
 
-## Principios técnicos
+El ciclo de muerte ya conecta la transición al Nexo, la generación de un punto de mejora permanente, la mejora de vitalidad y el renacimiento del jugador.
 
-- C++ como fundamento de los sistemas runtime.
-- Blueprints para composición y contenido donde aporten valor.
-- Arquitectura orientada a datos.
-- Servidor autoritativo para el estado competitivo futuro.
-- Git LFS para assets binarios.
-- No se crean migraciones ficticias, sistemas duplicados ni arquitectura sin implementación real.
-- La expansión arquitectónica se hace a partir de sistemas funcionales y verificables.
+## Módulos runtime
+
+Core, Gameplay, World, Narrative, AI, Multiplayer, Online, UI, Audio, Camera, Data, Systems y Developer disponen de implementación C++ concreta.
+
+## Infraestructura
+
+- Seis plugins Omnis con módulos Unreal reales.
+- Herramientas de validación, datos, mundo, build y automatización.
+- Suite de pruebas Python por dominio.
+- Pipeline GitLab CI para validación estática y pruebas.
+- Git LFS para activos binarios.
+- Manifiestos de contenido para mantener contratos explícitos antes de incorporar assets binarios.
+
+## Reglas
+
+No se crean migraciones ficticias, sistemas duplicados ni carpetas vacías utilizadas como sustituto de código.
+
+Las integraciones online representan servicios locales y contratos de runtime hasta que exista un backend externo configurado; no se simulan respuestas de un proveedor inexistente.
