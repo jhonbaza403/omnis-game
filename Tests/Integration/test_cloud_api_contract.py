@@ -13,7 +13,8 @@ class CloudApiContractTests(unittest.TestCase):
             'url.pathname === "/v1/events"',
         ):
             self.assertIn(route, WORKER)
-        self.assertIn("/v1/saves/", WORKER)
+        # Real saves route family: /v1/saves/
+        self.assertIn("/v1/saves/", WORKER.replace("\\/", "/"))
 
     def test_worker_requires_bearer_auth_for_api(self):
         self.assertIn("authorization", WORKER)
