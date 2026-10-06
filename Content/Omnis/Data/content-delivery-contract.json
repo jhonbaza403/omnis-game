@@ -1,0 +1,96 @@
+{
+  "$schema": "omnis.content-delivery-contract.v2",
+  "project": "Omnis: El Último Ciclo",
+  "principle": "A release gate closes only when the required production artifact exists and its applicable QA/platform evidence is present.",
+  "noFakeEvidence": true,
+  "deliverables": {
+    "characterMeshAAA": {
+      "requiredPaths": ["Content/Omnis/Characters", "Content/Omnis/Meshes"],
+      "requiredExtensions": [".uasset"],
+      "qaEvidencePath": "Saved/Release/QA/character-mesh-aaa.json",
+      "acceptance": "Final production skeletal mesh is imported, referenced by the playable character, and signed off by content QA."
+    },
+    "rigFacialAnimation": {
+      "requiredPaths": ["Content/Omnis/Animations", "Content/Omnis/Characters"],
+      "requiredExtensions": [".uasset"],
+      "qaEvidencePath": "Saved/Release/QA/rig-facial-animation.json",
+      "acceptance": "Final skeleton/rig, animation set, facial setup and gameplay animation coverage are present and QA signed off."
+    },
+    "pbrVfx": {
+      "requiredPaths": ["Content/Omnis/Materials", "Content/Omnis/Environment", "Content/Omnis/VFX"],
+      "requiredExtensions": [".uasset", ".png", ".jpg", ".jpeg", ".tga", ".exr"],
+      "qaEvidencePath": "Saved/Release/QA/pbr-vfx.json",
+      "acceptance": "Final authored PBR materials/textures/VFX are present, referenced by final assets, and content QA signed off."
+    },
+    "finalMaps": {
+      "requiredPaths": ["Content/Omnis/Maps"],
+      "requiredExtensions": [".umap"],
+      "qaEvidencePath": "Saved/Release/QA/final-maps-world-partition.json",
+      "acceptance": "Final playable maps are authored in Unreal Editor and contain the release World Partition/Data Layer/HLOD setup."
+    },
+    "audioVO": {
+      "requiredPaths": ["Content/Omnis/Audio"],
+      "requiredExtensions": [".wav", ".ogg", ".flac"],
+      "qaEvidencePath": "Saved/Release/QA/audio-vo.json",
+      "acceptance": "Final mixed audio and approved voice-over are imported, referenced and content-QA signed off."
+    },
+    "cinematics": {
+      "requiredPaths": ["Content/Omnis/Cinematics"],
+      "requiredExtensions": [".uasset"],
+      "qaEvidencePath": "Saved/Release/QA/cinematics.json",
+      "acceptance": "Final Level Sequences/cinematic assets are authored, integrated and reviewed."
+    },
+    "localization": {
+      "requiredPaths": ["Config/Localization", "Content/Omnis"],
+      "requiredExtensions": [".po", ".locres", ".json", ".ini"],
+      "qaEvidencePath": "Saved/Release/QA/localization-linguistic.json",
+      "acceptance": "All release languages pass linguistic, functional, truncation, terminology and in-game QA."
+    }
+  },
+  "hardwareEvidence": {
+    "PS5": {
+      "evidencePath": "Saved/Release/Hardware/PS5/profiling.json",
+      "requirement": "Authorized PS5 SDK/development kit execution with recorded profiling results."
+    },
+    "XboxSeries": {
+      "evidencePath": "Saved/Release/Hardware/XboxSeries/profiling.json",
+      "requirement": "Authorized Xbox Series X/S SDK/development kit execution with recorded profiling results."
+    },
+    "Switch2": {
+      "evidencePath": "Saved/Release/Hardware/Switch2/profiling.json",
+      "requirement": "Authorized Nintendo Switch 2 SDK/development kit execution with recorded profiling results."
+    },
+    "PCReference": {
+      "evidencePath": "Saved/Release/Hardware/PCReference/profiling.json",
+      "requirement": "Approved reference PC profiling evidence."
+    }
+  },
+  "platformIntegration": {
+    "PSN": {
+      "evidencePath": "Saved/Release/Platform/PSN/integration.json",
+      "requirement": "Actual first-party PSN integration and authorized credentials validated in the production target."
+    },
+    "Xbox": {
+      "evidencePath": "Saved/Release/Platform/Xbox/integration.json",
+      "requirement": "Actual first-party Xbox integration and authorized credentials validated in the production target."
+    },
+    "Nintendo": {
+      "evidencePath": "Saved/Release/Platform/Nintendo/integration.json",
+      "requirement": "Actual first-party Nintendo integration and authorized credentials validated in the production target."
+    }
+  },
+  "storeAndCertification": {
+    "storeSubmission": {
+      "evidencePath": "Saved/Release/Store/submission.json",
+      "requirement": "Actual publisher/developer portal submission record."
+    },
+    "distributionSigning": {
+      "evidencePath": "Saved/Release/Signing/manifest.json",
+      "requirement": "Actual production signing manifest for releasable binaries."
+    },
+    "trcTcrCertification": {
+      "evidencePath": "Saved/Release/Certification/certification.json",
+      "requirement": "Actual platform certification execution and approval record."
+    }
+  }
+}

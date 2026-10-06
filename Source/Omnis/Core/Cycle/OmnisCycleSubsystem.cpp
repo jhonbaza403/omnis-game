@@ -21,6 +21,12 @@ void UOmnisCycleSubsystem::AdvanceWorldAge(float DeltaYears)
     State.WorldAge = FMath::Max(0.0f, State.WorldAge + DeltaYears);
 }
 
+void UOmnisCycleSubsystem::RestoreState(const FOmnisCycleState& SavedState)
+{
+    State = SavedState;
+    OnPhaseChanged.Broadcast(State.Phase);
+}
+
 void UOmnisCycleSubsystem::SetPhase(EOmnisCyclePhase NewPhase)
 {
     if (State.Phase == NewPhase)

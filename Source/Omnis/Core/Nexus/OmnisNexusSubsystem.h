@@ -28,6 +28,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Nexus")
     bool PurchaseVitalityUpgrade();
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Nexus")
+    void RestoreProgression(int32 SavedPoints, int32 SavedVitalityLevel);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Nexus")
     int32 GetPermanentUpgradePoints() const { return Progression.PermanentUpgradePoints; }
 

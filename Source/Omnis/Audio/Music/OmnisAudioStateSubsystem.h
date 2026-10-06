@@ -10,6 +10,9 @@ class OMNIS_API UOmnisAudioStateSubsystem : public UGameInstanceSubsystem
     GENERATED_BODY()
 
 public:
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    virtual void Deinitialize() override;
+
     UFUNCTION(BlueprintCallable, Category="Omnis|Audio")
     void SetMasterVolume(float Volume);
 
@@ -28,7 +31,12 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Audio")
     float GetSFXVolume() const { return SFXVolume; }
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Audio")
+    float GetEffectiveMasterVolume() const;
+
 private:
+    void HandleAudioFocusChanged(bool bHasAudioFocus);
+
     UPROPERTY()
     float MasterVolume = 1.0f;
 
@@ -37,4 +45,6 @@ private:
 
     UPROPERTY()
     float SFXVolume = 1.0f;
+
+    bool bHasAudioFocus = true;
 };

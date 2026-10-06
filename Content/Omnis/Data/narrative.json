@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "locale":"es",
+  "title":"Omnis — El Último Ciclo",
+  "voiceOverStatus":"pending_production",
+  "beats":[
+    {"id":"NAR.Awakening","sequence":1,"speaker":"Player","text":"Despiertas antes de que el mundo recuerde cómo terminó."},
+    {"id":"NAR.Wanderer","sequence":2,"speaker":"Wanderer","text":"No eres el primero que despierta. Solo podrías ser el último."},
+    {"id":"NAR.Decision","sequence":3,"speaker":"Player","text":"Entonces esta vez no voy a repetir el camino."},
+    {"id":"NAR.Collapse","sequence":4,"speaker":"World","text":"Las ruinas responden. El ciclo empieza a cerrarse."},
+    {"id":"NAR.Nexus","sequence":5,"speaker":"Wanderer","text":"El Nexo no te salva. Te recuerda lo que decidiste."},
+    {"id":"NAR.Rebirth","sequence":6,"speaker":"Player","text":"Si debo volver, volveré distinto."}
+  ]
+}
