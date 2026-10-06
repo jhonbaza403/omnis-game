@@ -35,8 +35,7 @@ bool UOmnisContentEntitlementSubsystem::RefreshEntitlements(const FString& Names
     for (const TSharedRef<FOnlineEntitlement>& Entitlement : CurrentEntitlements)
     {
         if (!Entitlement->ItemId.IsEmpty() &&
-            (Entitlement->Status.IsEmpty() ||
-             Entitlement->Status.Equals(TEXT("Active"), ESearchCase::IgnoreCase) ||
+            (Entitlement->Status.Equals(TEXT("Active"), ESearchCase::IgnoreCase) ||
              Entitlement->Status.Equals(TEXT("Subscribed"), ESearchCase::IgnoreCase)))
         {
             CachedEntitlementItemIds.Add(Entitlement->ItemId);
