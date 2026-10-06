@@ -6,3 +6,4 @@ python3 Tools/World/validate_world_manifest.py
 python3 Tools/Validation/validate_console_readiness.py
 python3 Tools/Validation/validate_platform_contracts.py
 python3 Tools/Validation/validate_platform_build_contract.py
+python3 Tools/Validation/validate_ci_platform_jobs.py
