@@ -56,13 +56,17 @@ async function parseJsonBody(request, maxBytes = 32768) {
   }
 }
 
-async function supabaseRequest(env, path, method, body = null, bearer = null) {
+async function supabaseRequest(env, path, method, body = null, bearer = null, prefer = null) {
   const headers = {
     apikey: env.SUPABASE_PUBLISHABLE_KEY
   };
 
   if (bearer) {
     headers.authorization = "Bearer " + bearer;
+  }
+
+  if (prefer) {
+    headers.prefer = prefer;
   }
 
   if (body !== null) {
@@ -154,7 +158,8 @@ async function handleApi(request, env, url) {
         "/rest/v1/game_profiles?on_conflict=user_id",
         "POST",
         { user_id: session.user.id, display_name: displayName },
-        bearer
+        bearer,
+        "resolution=merge-duplicates,return=representation"
       ));
     }
 
@@ -213,7 +218,8 @@ async function handleApi(request, env, url) {
           save_version: saveVersion,
           state: body.state
         },
-        bearer
+        bearer,
+        "resolution=merge-duplicates,return=representation"
       ));
     }
 
@@ -261,7 +267,8 @@ async function handleApi(request, env, url) {
         event_version: eventVersion,
         payload: body.payload
       },
-      bearer
+      bearer,
+      "return=representation"
     ));
   }
 

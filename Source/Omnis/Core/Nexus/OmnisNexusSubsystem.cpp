@@ -21,3 +21,9 @@ bool UOmnisNexusSubsystem::PurchaseVitalityUpgrade()
     ++Progression.PermanentVitalityLevel;
     return true;
 }
+
+void UOmnisNexusSubsystem::RestoreProgression(int32 SavedPoints, int32 SavedVitalityLevel)
+{
+    Progression.PermanentUpgradePoints = FMath::Max(0, SavedPoints);
+    Progression.PermanentVitalityLevel = FMath::Max(0, SavedVitalityLevel);
+}
