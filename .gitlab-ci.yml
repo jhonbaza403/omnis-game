@@ -1,6 +1,7 @@
 stages:
   - validate
   - test
+  - cloudflare
   - unreal
 
 python_validate:
@@ -14,6 +15,15 @@ python_tests:
   image: python:3.12
   script:
     - bash CI/Tests/test.sh
+
+cloudflare_validate:
+  stage: cloudflare
+  image: node:22
+  script:
+    - npx --yes wrangler@4.148.0 deploy --config wrangler.json --dry-run
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 unreal_build:
   stage: unreal
