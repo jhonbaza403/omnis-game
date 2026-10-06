@@ -24,8 +24,23 @@ function notFound() {
   });
 }
 
+async function supabaseHealth(env) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+    return { ok: false, status: 503 };
+  }
+
+  const response = await fetch(new URL("/auth/v1/settings", env.SUPABASE_URL), {
+    method: "GET",
+    headers: {
+      apikey: env.SUPABASE_PUBLISHABLE_KEY
+    }
+  });
+
+  return { ok: response.ok, status: response.status };
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     if (request.method !== "GET" && request.method !== "HEAD") {
@@ -40,11 +55,13 @@ export default {
     }
 
     if (url.pathname === "/health") {
+      const db = await supabaseHealth(env);
       return json({
         service: "omnis-cloudflare-worker",
         game: "Omnis: El Último Ciclo",
-        status: "ok"
-      });
+        status: db.ok ? "ok" : "degraded",
+        supabase: db.ok ? "ok" : "unavailable"
+      }, db.ok ? 200 : 503);
     }
 
     if (url.pathname === "/") {

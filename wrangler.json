@@ -4,6 +4,10 @@
   "main": "./Cloudflare/worker.js",
   "compatibility_date": "2026-10-06",
   "workers_dev": true,
+  "vars": {
+    "SUPABASE_URL": "https://mqdrcgymylbqozarykip.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_cyZq5_ffkc8j9D_r8QRxNA_dMg3ZLwL"
+  },
   "queues": {
     "producers": [
       { "binding": "OMNIS_EVENTS", "queue": "omnis-events" }
