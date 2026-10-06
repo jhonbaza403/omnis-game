@@ -10,6 +10,7 @@ stages:
   - test
   - cloudflare
   - unreal
+  - package
 
 python_validate:
   stage: validate
@@ -59,3 +60,94 @@ unreal_build:
     expire_in: 7 days
     paths:
       - Saved/Logs/omnis_ue56_build.log
+
+package_win64:
+  stage: package
+  tags:
+    - unreal56-win64
+  needs:
+    - python_tests
+  variables:
+    OMNIS_PLATFORM: "Win64"
+  script:
+    - bash Tools/Build/package_platform.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+  resource_group: omnis-win64
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - Saved/Archived/Win64/
+
+package_playstation5:
+  stage: package
+  tags:
+    - playstation5-authorized
+  needs:
+    - python_tests
+  variables:
+    OMNIS_PLATFORM: "PS5"
+    OMNIS_CONSOLE_SDK_READY: "true"
+  script:
+    - bash Tools/Build/package_platform.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+  resource_group: omnis-playstation5
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - Saved/Archived/PS5/
+
+package_xbox_series:
+  stage: package
+  tags:
+    - xbox-series-authorized
+  needs:
+    - python_tests
+  variables:
+    OMNIS_PLATFORM: "XSX"
+    OMNIS_CONSOLE_SDK_READY: "true"
+  script:
+    - bash Tools/Build/package_platform.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+  resource_group: omnis-xbox-series
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - Saved/Archived/XSX/
+
+package_nintendo_switch:
+  stage: package
+  tags:
+    - nintendo-switch-authorized
+  needs:
+    - python_tests
+  variables:
+    OMNIS_PLATFORM: "Switch"
+    OMNIS_CONSOLE_SDK_READY: "true"
+  script:
+    - bash Tools/Build/package_platform.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+  resource_group: omnis-nintendo-switch
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - Saved/Archived/Switch/
