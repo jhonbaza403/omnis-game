@@ -4,6 +4,8 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "OmnisStreamingSubsystem.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOmnisRegionStreamingEvent, FName, RegionId, bool, bSuccess);
+
 USTRUCT(BlueprintType)
 struct FOmnisStreamingStatus
 {
@@ -41,13 +43,22 @@ public:
     void SetMaxResidentRegions(int32 MaxRegions);
 
     UFUNCTION(BlueprintPure, Category="Omnis|Streaming")
+    bool IsRegionRequested(FName RegionId) const;
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Streaming")
     bool IsRegionLoaded(FName RegionId) const;
 
     UFUNCTION(BlueprintPure, Category="Omnis|Streaming")
     FOmnisStreamingStatus GetStatus() const;
 
+    UPROPERTY(BlueprintAssignable, Category="Omnis|Streaming")
+    FOmnisRegionStreamingEvent OnRegionStreamingChanged;
+
 private:
     void HandleAssetLoaded(FName RegionId);
+
+    UPROPERTY()
+    TSet<FName> RequestedRegions;
 
     UPROPERTY()
     TSet<FName> LoadedRegions;
