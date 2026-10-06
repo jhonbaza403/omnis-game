@@ -1,6 +1,7 @@
 #include "Platform/OmnisPlatformSubsystem.h"
 
 #include "Core/Save/OmnisSaveSubsystem.h"
+#include "Diagnostics/OmnisTelemetrySubsystem.h"
 #include "Engine/Engine.h"
 #include "GameFramework/GameUserSettings.h"
 #include "HAL/PlatformMemory.h"
@@ -10,7 +11,6 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "OnlineSubsystem.h"
-#include "OnlineStats.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogOmnisPlatform, Log, All);
 
@@ -27,8 +27,6 @@ void UOmnisPlatformSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     FCoreDelegates::ApplicationHasEnteredForegroundDelegate.AddUObject(this, &ThisClass::HandleEnteredForeground);
     FCoreDelegates::OnHandleSystemError.AddUObject(this, &ThisClass::HandleSystemError);
     FCoreDelegates::OnHandleSystemHang.AddUObject(this, &ThisClass::HandleSystemHang);
-
-    UE_LOG(LogOmnisPlatform, Log, TEXT("Platform initialized: %s"), *PlatformName);
 }
 
 void UOmnisPlatformSubsystem::Deinitialize()
@@ -69,16 +67,8 @@ void UOmnisPlatformSubsystem::DetectPlatform()
 
 void UOmnisPlatformSubsystem::RefreshCapabilities()
 {
-    Capabilities.bGamepad = true;
-    Capabilities.bOnline = true;
+    Capabilities = FOmnisPlatformCapabilities();
     Capabilities.bAchievements = HasNativeOnlineSubsystem();
-    Capabilities.bSuspendResume = true;
-    Capabilities.bDLCEntitlements = true;
-    Capabilities.bDynamicResolution = true;
-    Capabilities.bStreaming = true;
-    Capabilities.bCrashReporting = true;
-    Capabilities.bAccessibility = true;
-    Capabilities.bLocalization = true;
 
     if (GEngine && GEngine->GetGameUserSettings())
     {
@@ -94,8 +84,7 @@ bool UOmnisPlatformSubsystem::HasNativeOnlineSubsystem() const
         return false;
     }
 
-    const IOnlineIdentityPtr Identity = OnlineSubsystem->GetIdentityInterface();
-    return Identity.IsValid();
+    return OnlineSubsystem->GetIdentityInterface().IsValid();
 }
 
 bool UOmnisPlatformSubsystem::UnlockAchievement(const FString& AchievementId, float Progress)
@@ -128,13 +117,7 @@ bool UOmnisPlatformSubsystem::UnlockAchievement(const FString& AchievementId, fl
     const float SafeProgress = FMath::Clamp(Progress, 0.0f, 100.0f);
     FOnlineAchievementsWriteRef WriteObject = MakeShared<FOnlineAchievementsWrite, ESPMode::ThreadSafe>();
     WriteObject->SetFloatStat(AchievementId, SafeProgress);
-
-    Achievements->WriteAchievements(
-        *UserId,
-        WriteObject,
-        FOnAchievementsWrittenDelegate()
-    );
-
+    Achievements->WriteAchievements(*UserId, WriteObject, FOnAchievementsWrittenDelegate());
     return true;
 }
 
@@ -181,7 +164,6 @@ bool UOmnisPlatformSubsystem::ApplyHDR(bool bEnable, int32 DisplayNits)
     Settings->EnableHDRDisplayOutput(bEnable, FMath::Clamp(DisplayNits, 100, 4000));
     Settings->ApplyResolutionSettings(false);
     Settings->SaveSettings();
-
     Capabilities.bHDR = Settings->SupportsHDRDisplayOutput();
     return true;
 }
@@ -252,6 +234,11 @@ void UOmnisPlatformSubsystem::SaveForLifecycleTransition()
                 UE_LOG(LogOmnisPlatform, Warning, TEXT("Lifecycle save failed for slot 1"));
             }
         }
+
+        if (UOmnisTelemetrySubsystem* Telemetry = GameInstance->GetSubsystem<UOmnisTelemetrySubsystem>())
+        {
+            Telemetry->RecordLifecycleEvent(TEXT("saving_for_lifecycle"));
+        }
     }
 }
 
@@ -303,6 +290,14 @@ void UOmnisPlatformSubsystem::HandleSystemError()
         Marker,
         *FPaths::Combine(Directory, TEXT("last_system_error.json"))
     );
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisTelemetrySubsystem* Telemetry = GameInstance->GetSubsystem<UOmnisTelemetrySubsystem>())
+        {
+            Telemetry->RecordCrashEvent(TEXT("system_error"));
+        }
+    }
 }
 
 void UOmnisPlatformSubsystem::HandleSystemHang()
@@ -319,4 +314,12 @@ void UOmnisPlatformSubsystem::HandleSystemHang()
         Marker,
         *FPaths::Combine(Directory, TEXT("last_system_hang.json"))
     );
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisTelemetrySubsystem* Telemetry = GameInstance->GetSubsystem<UOmnisTelemetrySubsystem>())
+        {
+            Telemetry->RecordCrashEvent(TEXT("system_hang"));
+        }
+    }
 }
