@@ -3,6 +3,23 @@
   "name": "omnis-game",
   "main": "./Cloudflare/worker.js",
   "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "queues": {
+    "producers": [
+      { "binding": "OMNIS_EVENTS", "queue": "omnis-events" }
+    ],
+    "consumers": [
+      {
+        "queue": "omnis-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "omnis-events-dlq",
+        "max_concurrency": 5,
+        "retry_delay": 10
+      }
+    ]
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -18,8 +35,6 @@
       "head_sampling_rate": 0.1,
       "persist": true
     },
-    "issues": {
-      "enabled": true
-    }
+    "issues": { "enabled": true }
   }
 }

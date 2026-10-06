@@ -1,29 +1,35 @@
 # Cloudflare integration
 
-Omnis uses a real Cloudflare Worker with Queues and Workers Observability.
+Omnis uses a real Cloudflare Worker with Queues, a dead-letter queue, and Workers Observability.
 
 ## Worker
-
 - Name: `omnis-game`
 - Entry point: `Cloudflare/worker.js`
 - Wrangler configuration: `/wrangler.json`
+- `workers.dev`: enabled for initial access; use a custom domain for business-critical production traffic.
 
-## Queue
-
-- Primary queue: `omnis-events`
+## Queues
+- Producer binding: `OMNIS_EVENTS` -> `omnis-events`
+- Consumer: `omnis-game`
+- Batch size: 10
+- Timeout: 5 seconds
+- Max retries: 3
+- Retry delay: 10 seconds
+- Max concurrency: 5
 - Dead-letter queue: `omnis-events-dlq`
-- Consumer: Worker `omnis-game`
-- The Worker implements a `queue(batch)` handler and writes structured JSON logs for each delivered message.
 
 ## Observability
-
-Worker Observability is enabled in `wrangler.json`: invocation logs, persisted logs, Real-time Issues, and traces. Query strings are redacted in logs/traces.
+- Workers Observability enabled.
+- Invocation logs enabled and persisted.
+- Logs sampled at 100%.
+- Query-string redaction configured in Wrangler.
+- Real-time Issues enabled.
+- Traces enabled and sampled at 10%.
 
 ## Domain
+No custom zone/domain is currently present in the Cloudflare account, so no custom-domain route is configured. The Worker is exposed through `workers.dev` until a domain is added.
 
-No custom DNS zone is currently present in the Cloudflare account. Production custom-domain routing must be attached only after the intended domain is added to the account; until then, the Worker can use `workers.dev` for non-critical access.
+## Cloudflare Builds
+Cloudflare Workers Builds supports GitLab repositories and automatic deployment on push. The account currently reports that its GitLab account connection is disconnected, so repository auto-build cannot be safely activated by API until that GitLab connection is re-authorized in Cloudflare.
 
-## Workers Builds
-
-Cloudflare Workers Builds should point to this GitLab repository and branch `main`, with `/` as the root directory and `npx wrangler deploy` as the deploy command.
-
+GitLab has a `cloudflare_validate` job that performs a real Wrangler dry-run without storing provider secrets in the repository.
