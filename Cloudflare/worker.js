@@ -22,5 +22,16 @@ export default {
       status: 404,
       headers: { "content-type": "text/plain; charset=utf-8" }
     });
+  },
+
+  async queue(batch) {
+    for (const message of batch.messages) {
+      console.log(JSON.stringify({
+        event: "queue_message",
+        queue: batch.queue,
+        messageId: message.id,
+        body: message.body
+      }));
+    }
   }
 };
