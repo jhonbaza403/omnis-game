@@ -11,6 +11,14 @@ def require_text(path: str, fragments: list[str]) -> None:
 
 def main() -> None:
     require_text(
+        "Source/Omnis/Omnis.Build.cs",
+        ["OnlineSubsystem"],
+    )
+    require_text(
+        "Omnis.uproject",
+        ['"Name": "OnlineSubsystem", "Enabled": true'],
+    )
+    require_text(
         "Source/Omnis/Platform/OmnisPlatformSubsystem.h",
         [
             "UnlockAchievement",
@@ -24,10 +32,6 @@ def main() -> None:
         ],
     )
     require_text(
-        "Source/Omnis/Online/Entitlements/OmnisContentEntitlementSubsystem.h",
-        ["RefreshEntitlements", "IsContentEntitled"],
-    )
-    require_text(
         "Source/Omnis/Platform/OmnisPlatformSubsystem.cpp",
         [
             "ApplicationWillDeactivateDelegate",
@@ -39,6 +43,24 @@ def main() -> None:
         ],
     )
     require_text(
+        "Source/Omnis/Online/Entitlements/OmnisContentEntitlementSubsystem.h",
+        ["RefreshEntitlements", "IsContentEntitled"],
+    )
+    require_text(
+        "Source/Omnis/Online/Content/OmnisTitleUpdateSubsystem.h",
+        ["EnumerateUpdateFiles", "ReadUpdateFile", "GetUpdateFileContents"],
+    )
+    require_text(
+        "Config/DefaultInput.ini",
+        [
+            'ActionName="Accept"',
+            'ActionName="Cancel"',
+            'ActionName="Menu"',
+            'ActionName="Back"',
+            'Key=Gamepad_DPad_Up',
+        ],
+    )
+    require_text(
         "Config/OmnisPlatformProfiles.ini",
         ["[PlayStation5]", "[XboxSeries]", "[Switch2]", "AchievementsProvider=OnlineSubsystem"],
     )
@@ -47,10 +69,10 @@ def main() -> None:
         ["NativeCulture=es", "CulturesToGenerate=en", "CulturesToGenerate=ja", "CulturesToGenerate=zh-Hans"],
     )
     require_text(
-        "Docs/PLAYSTATION_CERTIFICATION_READINESS.md",
-        ["P0", "P1", "P2", "P3", "P4"],
+        "Docs/PLATFORM_RUNTIME_STANDARD.md",
+        ["IOnlineAchievements", "IOnlineEntitlements", "UGameUserSettings", "P0–P4"],
     )
-    print("[PASS] unified platform, content, lifecycle and localization contracts validated.")
+    print("[PASS] unified console platform contracts validated.")
 
 if __name__ == "__main__":
     main()
