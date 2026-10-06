@@ -25,6 +25,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Cycle")
     void AdvanceWorldAge(float DeltaYears);
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Cycle")
+    void RestoreState(const FOmnisCycleState& SavedState);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Cycle")
     FOmnisCycleState GetCycleState() const { return State; }
 

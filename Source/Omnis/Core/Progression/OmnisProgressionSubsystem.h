@@ -25,6 +25,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Progression")
     void AddExperience(int32 Amount);
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Progression")
+    void RestoreProgression(int32 SavedExperience, int32 SavedLevel);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Progression")
     FOmnisPlayerProgression GetProgression() const { return Progression; }
 

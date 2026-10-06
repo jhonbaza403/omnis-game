@@ -12,8 +12,20 @@ class OMNIS_API UOmnisSaveGame : public USaveGame
 
 public:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    int32 SaveVersion = 1;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Save")
     FOmnisCycleState CycleState;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    int32 ProgressionExperience = 0;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    int32 ProgressionLevel = 1;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Save")
     int32 PermanentUpgradePoints = 0;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    int32 PermanentVitalityLevel = 0;
 };
