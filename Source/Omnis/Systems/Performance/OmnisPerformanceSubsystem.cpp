@@ -67,6 +67,35 @@ void UOmnisPerformanceSubsystem::ApplyStreamingBudgetMB(int32 PoolSizeMB)
     }
 }
 
+bool UOmnisPerformanceSubsystem::ApplyAdaptiveMemoryProtection(float WarningRatio, float CriticalRatio)
+{
+    if (WarningRatio < 0.0f || CriticalRatio <= WarningRatio || CriticalRatio > 1.0f)
+    {
+        return false;
+    }
+
+    const FOmnisMemorySnapshot Memory = GetMemorySnapshot();
+
+    if (Memory.UsedRatio >= CriticalRatio)
+    {
+        ApplyStreamingBudgetMB(GetStreamingPoolSizeForTier(EOmnisPerformanceTier::Low));
+        return ApplyPerformanceTier(EOmnisPerformanceTier::Low);
+    }
+
+    if (Memory.UsedRatio >= WarningRatio)
+    {
+        const EOmnisPerformanceTier ReducedTier =
+            CurrentTier > EOmnisPerformanceTier::Medium
+                ? static_cast<EOmnisPerformanceTier>(static_cast<uint8>(CurrentTier) - 1)
+                : EOmnisPerformanceTier::Medium;
+
+        ApplyStreamingBudgetMB(GetStreamingPoolSizeForTier(ReducedTier));
+        return ApplyPerformanceTier(ReducedTier);
+    }
+
+    return true;
+}
+
 FOmnisMemorySnapshot UOmnisPerformanceSubsystem::GetMemorySnapshot() const
 {
     const FPlatformMemoryStats Stats = FPlatformMemory::GetStats();
@@ -86,17 +115,11 @@ int32 UOmnisPerformanceSubsystem::GetStreamingPoolSizeForTier(EOmnisPerformanceT
 {
     switch (Tier)
     {
-        case EOmnisPerformanceTier::Low:
-            return 512;
-        case EOmnisPerformanceTier::Medium:
-            return 1024;
-        case EOmnisPerformanceTier::High:
-            return 2048;
-        case EOmnisPerformanceTier::VeryHigh:
-            return 3072;
-        case EOmnisPerformanceTier::Ultra:
-            return 4096;
-        default:
-            return 2048;
+        case EOmnisPerformanceTier::Low: return 512;
+        case EOmnisPerformanceTier::Medium: return 1024;
+        case EOmnisPerformanceTier::High: return 2048;
+        case EOmnisPerformanceTier::VeryHigh: return 3072;
+        case EOmnisPerformanceTier::Ultra: return 4096;
+        default: return 2048;
     }
 }
