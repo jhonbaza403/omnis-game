@@ -37,7 +37,8 @@ public:
     bool SubmitEvent(FName EventType, const FString& PayloadJson, int32 EventVersion = 1);
 
     UFUNCTION(BlueprintPure, Category="Omnis|Online")
-    bool IsConfigured() const { return !ApiBaseUrl.IsEmpty() && !AccessToken.IsEmpty(); }
+    UFUNCTION(BlueprintPure, Category="Omnis|Online")
+    bool IsConfigured() const;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Omnis|Online")
     FString ApiBaseUrl = TEXT("https://omnis-game.bazajhon.workers.dev");

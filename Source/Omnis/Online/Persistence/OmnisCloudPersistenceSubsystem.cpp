@@ -24,6 +24,29 @@ void UOmnisCloudPersistenceSubsystem::SetAccessToken(FString NewAccessToken)
     AccessToken = MoveTemp(NewAccessToken);
 }
 
+bool UOmnisCloudPersistenceSubsystem::IsConfigured() const
+{
+    if (ApiBaseUrl.IsEmpty())
+    {
+        return false;
+    }
+
+    if (!AccessToken.IsEmpty())
+    {
+        return true;
+    }
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (const UOmnisAuthenticationSubsystem* Auth = GameInstance->GetSubsystem<UOmnisAuthenticationSubsystem>())
+        {
+            return !Auth->GetAccessToken().IsEmpty();
+        }
+    }
+
+    return false;
+}
+
 bool UOmnisCloudPersistenceSubsystem::IsValidSlot(int32 Slot) const
 {
     return Slot >= 1 && Slot <= 10;
