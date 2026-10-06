@@ -80,7 +80,7 @@ public:
     FString GetPlatformName() const { return PlatformName; }
 
     UFUNCTION(BlueprintPure, Category="Omnis|Platform")
-    const FOmnisPlatformCapabilities& GetCapabilities() const { return Capabilities; }
+    FOmnisPlatformCapabilities GetCapabilities() const { return Capabilities; }
 
     UFUNCTION(BlueprintPure, Category="Omnis|Platform")
     EOmnisApplicationLifecycle GetApplicationLifecycle() const { return Lifecycle; }
