@@ -4,6 +4,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "OmnisGameMode.generated.h"
 
+class AController;
+
 UCLASS()
 class OMNIS_API AOmnisGameMode : public AGameModeBase
 {
@@ -11,5 +13,15 @@ class OMNIS_API AOmnisGameMode : public AGameModeBase
 
 public:
     AOmnisGameMode();
+
     virtual void BeginPlay() override;
+    virtual void RestartPlayer(AController* NewPlayer) override;
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Cycle")
+    void NotifyPlayerDeath(AController* PlayerController);
+
+private:
+    void RespawnAfterNexus(AController* PlayerController);
+
+    FTimerHandle RespawnTimer;
 };

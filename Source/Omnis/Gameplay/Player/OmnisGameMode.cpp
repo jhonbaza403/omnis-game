@@ -2,6 +2,8 @@
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Gameplay/Player/OmnisPlayerController.h"
 #include "Core/Cycle/OmnisCycleSubsystem.h"
+#include "Core/Nexus/OmnisNexusSubsystem.h"
+#include "Systems/Damage/OmnisHealthComponent.h"
 #include "World/Environment/OmnisWorldBootstrapSubsystem.h"
 
 AOmnisGameMode::AOmnisGameMode()
@@ -26,4 +28,76 @@ void AOmnisGameMode::BeginPlay()
     {
         Bootstrap->BuildInitialWorld();
     }
+}
+
+void AOmnisGameMode::RestartPlayer(AController* NewPlayer)
+{
+    Super::RestartPlayer(NewPlayer);
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
+        {
+            if (AOmnisPlayerCharacter* Player = NewPlayer ? Cast<AOmnisPlayerCharacter>(NewPlayer->GetPawn()) : nullptr)
+            {
+                if (UOmnisHealthComponent* Health = Player->Health)
+                {
+                    const float MaxHealth = 100.0f + (10.0f * Nexus->GetPermanentVitalityLevel());
+                    Health->SetMaxHealth(MaxHealth);
+                    Health->Restore(MaxHealth);
+                }
+            }
+        }
+    }
+}
+
+void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
+{
+    if (!PlayerController)
+    {
+        return;
+    }
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
+        {
+            Cycle->EnterNexus();
+        }
+
+        if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
+        {
+            Nexus->AddPermanentUpgradePoints(1);
+        }
+    }
+
+    GetWorldTimerManager().SetTimer(
+        RespawnTimer,
+        FTimerDelegate::CreateUObject(this, &AOmnisGameMode::RespawnAfterNexus, PlayerController),
+        1.5f,
+        false
+    );
+}
+
+void AOmnisGameMode::RespawnAfterNexus(AController* PlayerController)
+{
+    if (!PlayerController)
+    {
+        return;
+    }
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
+        {
+            Nexus->PurchaseVitalityUpgrade();
+        }
+
+        if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
+        {
+            Cycle->BeginRebirth();
+        }
+    }
+
+    RestartPlayer(PlayerController);
 }

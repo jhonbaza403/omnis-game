@@ -15,6 +15,7 @@ class UOmnisAbilityComponent;
 class UOmnisInventoryComponent;
 class UOmnisEquipmentComponent;
 class UOmnisHealthComponent;
+class UInputComponent;
 
 UCLASS()
 class OMNIS_API AOmnisPlayerCharacter : public ACharacter
@@ -67,4 +68,7 @@ protected:
     void AttackPressed();
     void InteractPressed();
     void BuildPressed();
+
+    UFUNCTION()
+    void HandlePlayerDeath();
 };

@@ -11,6 +11,9 @@ struct FOmnisNexusProgression
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Nexus")
     int32 PermanentUpgradePoints = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Nexus")
+    int32 PermanentVitalityLevel = 0;
 };
 
 UCLASS()
@@ -22,8 +25,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Nexus")
     void AddPermanentUpgradePoints(int32 Amount);
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Nexus")
+    bool PurchaseVitalityUpgrade();
+
     UFUNCTION(BlueprintPure, Category="Omnis|Nexus")
     int32 GetPermanentUpgradePoints() const { return Progression.PermanentUpgradePoints; }
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Nexus")
+    int32 GetPermanentVitalityLevel() const { return Progression.PermanentVitalityLevel; }
 
 private:
     UPROPERTY()

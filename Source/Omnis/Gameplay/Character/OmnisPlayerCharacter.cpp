@@ -13,6 +13,7 @@
 #include "Gameplay/Inventory/OmnisInventoryComponent.h"
 #include "Gameplay/Equipment/OmnisEquipmentComponent.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
+#include "Gameplay/Player/OmnisGameMode.h"
 
 AOmnisPlayerCharacter::AOmnisPlayerCharacter()
 {
@@ -25,25 +26,25 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     GetCharacterMovement()->JumpZVelocity = 650.0f;
     GetCharacterMovement()->AirControl = 0.4f;
 
-    USpringArmComponent* NewBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-    CameraBoom = NewBoom;
+    CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     CameraBoom->TargetArmLength = 550.0f;
     CameraBoom->bUsePawnControlRotation = true;
 
-    UCameraComponent* NewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-    FollowCamera = NewCamera;
+    FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom);
     FollowCamera->bUsePawnControlRotation = false;
 
     UStaticMeshComponent* BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
     BodyMesh->SetupAttachment(GetCapsuleComponent());
     BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
     if (CubeMesh.Succeeded())
     {
         BodyMesh->SetStaticMesh(CubeMesh.Object);
     }
+
     BodyMesh->SetRelativeScale3D(FVector(0.55f, 0.55f, 1.2f));
     BodyMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 12.0f));
 
@@ -56,6 +57,16 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     Inventory = CreateDefaultSubobject<UOmnisInventoryComponent>(TEXT("Inventory"));
     Equipment = CreateDefaultSubobject<UOmnisEquipmentComponent>(TEXT("Equipment"));
     Health = CreateDefaultSubobject<UOmnisHealthComponent>(TEXT("Health"));
+}
+
+void AOmnisPlayerCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (Health)
+    {
+        Health->OnDeath.AddDynamic(this, &AOmnisPlayerCharacter::HandlePlayerDeath);
+    }
 }
 
 void AOmnisPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -122,5 +133,13 @@ void AOmnisPlayerCharacter::BuildPressed()
     if (Construction)
     {
         Construction->ConstructForward();
+    }
+}
+
+void AOmnisPlayerCharacter::HandlePlayerDeath()
+{
+    if (AOmnisGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<AOmnisGameMode>() : nullptr)
+    {
+        GameMode->NotifyPlayerDeath(GetController());
     }
 }
