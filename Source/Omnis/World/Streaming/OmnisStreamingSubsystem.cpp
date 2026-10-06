@@ -5,7 +5,7 @@
 
 bool UOmnisStreamingSubsystem::RequestRegion(FName RegionId)
 {
-    if (RegionId.IsNone() || LoadedRegions.Contains(RegionId))
+    if (RegionId.IsNone() || RequestedRegions.Contains(RegionId))
     {
         return false;
     }
@@ -15,7 +15,9 @@ bool UOmnisStreamingSubsystem::RequestRegion(FName RegionId)
         return false;
     }
 
+    RequestedRegions.Add(RegionId);
     LoadedRegions.Add(RegionId);
+    OnRegionStreamingChanged.Broadcast(RegionId, true);
     return true;
 }
 
@@ -32,6 +34,8 @@ void UOmnisStreamingSubsystem::ReleaseRegion(FName RegionId)
 
     RegionAssets.Remove(RegionId);
     LoadedRegions.Remove(RegionId);
+    RequestedRegions.Remove(RegionId);
+    OnRegionStreamingChanged.Broadcast(RegionId, false);
 }
 
 bool UOmnisStreamingSubsystem::RequestRegionAsset(FName RegionId, const FSoftObjectPath& AssetPath)
@@ -41,11 +45,17 @@ bool UOmnisStreamingSubsystem::RequestRegionAsset(FName RegionId, const FSoftObj
         return false;
     }
 
-    if (!RequestRegion(RegionId))
+    if (RequestedRegions.Contains(RegionId))
     {
         return false;
     }
 
+    if (LoadedRegions.Num() >= MaxResidentRegions)
+    {
+        return false;
+    }
+
+    RequestedRegions.Add(RegionId);
     RegionAssets.Add(RegionId, AssetPath);
 
     FStreamableManager& Streamable = UAssetManager::Get().GetStreamableManager();
@@ -56,7 +66,8 @@ bool UOmnisStreamingSubsystem::RequestRegionAsset(FName RegionId, const FSoftObj
 
     if (!Handle.IsValid())
     {
-        ReleaseRegion(RegionId);
+        RequestedRegions.Remove(RegionId);
+        RegionAssets.Remove(RegionId);
         return false;
     }
 
@@ -80,6 +91,11 @@ void UOmnisStreamingSubsystem::SetMaxResidentRegions(int32 MaxRegions)
     }
 }
 
+bool UOmnisStreamingSubsystem::IsRegionRequested(FName RegionId) const
+{
+    return RequestedRegions.Contains(RegionId);
+}
+
 bool UOmnisStreamingSubsystem::IsRegionLoaded(FName RegionId) const
 {
     return LoadedRegions.Contains(RegionId);
@@ -88,7 +104,7 @@ bool UOmnisStreamingSubsystem::IsRegionLoaded(FName RegionId) const
 FOmnisStreamingStatus UOmnisStreamingSubsystem::GetStatus() const
 {
     FOmnisStreamingStatus Status;
-    Status.RequestedRegions = RegionAssets.Num();
+    Status.RequestedRegions = RequestedRegions.Num();
     Status.LoadedRegions = LoadedRegions.Num();
     Status.MaxResidentRegions = MaxResidentRegions;
     return Status;
@@ -96,9 +112,12 @@ FOmnisStreamingStatus UOmnisStreamingSubsystem::GetStatus() const
 
 void UOmnisStreamingSubsystem::HandleAssetLoaded(FName RegionId)
 {
-    if (!RegionAssets.Contains(RegionId))
+    if (!RequestedRegions.Contains(RegionId) || !RegionAssets.Contains(RegionId))
     {
         ReleaseRegion(RegionId);
         return;
     }
+
+    LoadedRegions.Add(RegionId);
+    OnRegionStreamingChanged.Broadcast(RegionId, true);
 }
