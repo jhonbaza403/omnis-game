@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit real Omnis release-content evidence without inventing assets or approvals."""
+"""Audit real Omnis release evidence without inventing assets, approvals, or hardware results."""
 
 from __future__ import annotations
 
@@ -9,14 +9,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "Content/Omnis/Data/content-delivery-contract.json"
-CONTENT_ROOT = ROOT / "Content/Omnis"
-LOCALIZATION_ROOT = ROOT / "Config/Localization"
 REPORT = ROOT / "Saved/Release/content-delivery-audit.json"
-
-EXTENSIONS = {
-    ".uasset", ".umap", ".wav", ".ogg", ".flac", ".fbx", ".gltf", ".glb",
-    ".png", ".jpg", ".jpeg", ".tga", ".exr", ".po", ".locres", ".json", ".ini",
-}
 
 
 def files_under(paths: list[str], extensions: list[str]) -> list[str]:
@@ -32,82 +25,106 @@ def files_under(paths: list[str], extensions: list[str]) -> list[str]:
     return sorted(found)
 
 
+def exists(path: str) -> bool:
+    return (ROOT / path).is_file()
+
+
 def load_contract() -> dict[str, Any]:
     return json.loads(CONTRACT.read_text(encoding="utf-8"))
 
 
 def audit() -> dict[str, Any]:
     contract = load_contract()
-    deliverables = contract["deliverables"]
-    results: dict[str, Any] = {}
+    if contract.get("noFakeEvidence") is not True:
+        raise ValueError("content delivery contract must enforce noFakeEvidence=true")
 
-    for key, spec in deliverables.items():
-        evidence = files_under(
-            spec["requiredPaths"],
-            spec["requiredExtensions"],
-        )
-        results[key] = {
-            "physicalEvidence": len(evidence) > 0,
+    deliverables: dict[str, Any] = {}
+    for key, spec in contract["deliverables"].items():
+        evidence = files_under(spec["requiredPaths"], spec["requiredExtensions"])
+        qa_path = spec["qaEvidencePath"]
+        physical = len(evidence) > 0
+        qa = exists(qa_path)
+        deliverables[key] = {
+            "physicalEvidence": physical,
+            "qaEvidencePresent": qa,
             "evidenceFiles": evidence,
+            "qaEvidencePath": qa_path,
             "acceptance": spec["acceptance"],
-            "gate": "OPEN",
+            "gate": "CLOSED" if physical and qa else "OPEN",
         }
 
-    # Localization already has a runtime contract in the repository. Presence alone
-    # is deliberately insufficient for a final gate because linguistic QA is external.
-    localization_contract = ROOT / "Tools/Validation/validate_localization_contract.py"
-    results["localization"]["runtimeContractPresent"] = localization_contract.is_file()
-    results["localization"]["gate"] = "OPEN"
+    hardware: dict[str, Any] = {}
+    for platform, spec in contract["hardwareEvidence"].items():
+        present = exists(spec["evidencePath"])
+        hardware[platform] = {
+            "evidencePresent": present,
+            "evidencePath": spec["evidencePath"],
+            "gate": "CLOSED" if present else "OPEN",
+            "requirement": spec["requirement"],
+        }
 
-    hardware = {
-        "PS5": "OPEN",
-        "XboxSeries": "OPEN",
-        "Switch2": "OPEN",
-        "PCReference": "OPEN",
-    }
-    platform = {
-        "PSN": "OPEN",
-        "Xbox": "OPEN",
-        "Nintendo": "OPEN",
-    }
-    store = {
-        "storeSubmission": "OPEN",
-        "distributionSigning": "OPEN",
-        "trcTcrCertification": "OPEN",
-    }
+    platform: dict[str, Any] = {}
+    for provider, spec in contract["platformIntegration"].items():
+        present = exists(spec["evidencePath"])
+        platform[provider] = {
+            "evidencePresent": present,
+            "evidencePath": spec["evidencePath"],
+            "gate": "CLOSED" if present else "OPEN",
+            "requirement": spec["requirement"],
+        }
 
-    closed = [
-        all(item["physicalEvidence"] for item in results.values()
-            if item["gate"] == "CLOSED")
-        and bool(results)
-    ]
-    status = "BLOCKED" if not closed else "READY"
+    store: dict[str, Any] = {}
+    for gate, spec in contract["storeAndCertification"].items():
+        present = exists(spec["evidencePath"])
+        store[gate] = {
+            "evidencePresent": present,
+            "evidencePath": spec["evidencePath"],
+            "gate": "CLOSED" if present else "OPEN",
+            "requirement": spec["requirement"],
+        }
 
-    report = {
-        "schema": "omnis.content-delivery-audit.v1",
+    all_closed = (
+        all(item["gate"] == "CLOSED" for item in deliverables.values())
+        and all(item["gate"] == "CLOSED" for item in hardware.values())
+        and all(item["gate"] == "CLOSED" for item in platform.values())
+        and all(item["gate"] == "CLOSED" for item in store.values())
+    )
+
+    return {
+        "schema": "omnis.content-delivery-audit.v2",
         "principle": contract["principle"],
-        "noFakeEvidence": contract["noFakeEvidence"],
-        "status": status,
-        "deliverables": results,
+        "noFakeEvidence": True,
+        "status": "READY" if all_closed else "BLOCKED",
+        "deliverables": deliverables,
         "hardwareEvidence": hardware,
         "platformIntegration": platform,
         "storeAndCertification": store,
     }
-    return report
 
 
 def main() -> None:
     report = audit()
     REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    REPORT.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
     print("[CONTENT-AUDIT] status=" + report["status"])
     for key, value in report["deliverables"].items():
         print(
             f"[CONTENT-AUDIT] {key}: "
             f"physicalEvidence={value['physicalEvidence']} "
-            f"files={len(value['evidenceFiles'])}"
+            f"qaEvidencePresent={value['qaEvidencePresent']} "
+            f"files={len(value['evidenceFiles'])} "
+            f"gate={value['gate']}"
         )
+    for key, value in report["hardwareEvidence"].items():
+        print(f"[CONTENT-AUDIT] hardware {key}: gate={value['gate']}")
+    for key, value in report["platformIntegration"].items():
+        print(f"[CONTENT-AUDIT] provider {key}: gate={value['gate']}")
+    for key, value in report["storeAndCertification"].items():
+        print(f"[CONTENT-AUDIT] release {key}: gate={value['gate']}")
     print("[CONTENT-AUDIT] report=" + REPORT.relative_to(ROOT).as_posix())
 
 
