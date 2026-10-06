@@ -127,10 +127,7 @@ bool UOmnisSessionSubsystem::LeaveSession()
         return false;
     }
 
-    bOperationPending = Sessions->DestroySession(
-        SessionId,
-        FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::HandleDestroySessionComplete)
-    );
+    bOperationPending = Sessions->DestroySession(SessionId);
     return bOperationPending;
 }
 
