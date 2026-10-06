@@ -1,13 +1,21 @@
 # Omnis — Cycle System
 
-## State machine
+## Producto
 
-A cycle progresses through Awakening, Exploration, Crisis, Collapse, Nexus and Rebirth.
+Omnis: El Último Ciclo.
 
-## Semantics
+## Meta-bucle
 
-The cycle index identifies the generation of the run. World age represents the accumulated passage relevant to world evolution. Nexus is the transition context in which permanent progression can occur.
+El Ciclo del Sin-Ciclo.
 
-## Implementation
+## Fases
 
-The runtime source of truth is `UOmnisCycleSubsystem` in the Core module.
+Awakening → Exploration → Crisis → Collapse → Nexus → Rebirth.
+
+## Continuidad
+
+Un nuevo ciclo no es una repetición exacta. Puede alterar geografía, rutas, recursos, personajes y consecuencias mientras conserva una memoria histórica explicable.
+
+## Runtime
+
+`UOmnisCycleSubsystem` controla el estado y las transiciones principales; `UOmnisNexusSubsystem` mantiene progresión permanente.

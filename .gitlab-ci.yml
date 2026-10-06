@@ -17,8 +17,12 @@ python_tests:
 
 unreal_build:
   stage: unreal
+  tags:
+    - unreal56
   script:
     - bash CI/Build/build.sh
   rules:
-    - when: manual
+    - if: '$UE_ENGINE_ROOT'
+      when: manual
+    - when: never
   allow_failure: false

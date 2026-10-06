@@ -1,25 +1,19 @@
 # Omnis — Technical Architecture
 
-## Scope
+## Product
 
-Omnis uses Unreal Engine 5 with a C++ runtime foundation and a data-driven content model. The architecture is expanded from verified gameplay requirements rather than folder count.
+Omnis: El Último Ciclo.
 
-## Principles
+## Runtime
 
-- Runtime rules live in C++.
-- Blueprints compose content and presentation where appropriate.
-- GameInstance subsystems hold cross-world session state.
-- Persistent and competitive state is validated by the authoritative server.
-- Unreal binary assets use Git LFS.
-- Generated local artifacts stay outside version control.
-- A system is considered implemented only when code, integration and validation exist.
+C++ es la base de los sistemas runtime. UnrealBuildTool usa `.Build.cs` y `.Target.cs` para construir módulos y objetivos; Unreal Header Tool participa en la generación y validación de código reflejado.
 
-## Layers
+## State graph
 
-Core → Gameplay → World → Narrative → AI → Multiplayer/Online → Presentation → Data/Systems.
+Core → Gameplay → World → Narrative → AI → Multiplayer/Online → UI/Audio/Camera.
 
-## Vertical slice
+Core mantiene estado transversal. Gameplay gobierna reglas. World gobierna simulación. Narrative mantiene consecuencias. AI consume contexto. Multiplayer/Online administra estado autoritativo. Presentation observa y presenta.
 
-BOOT → PRIMER CICLO → MUNDO → EXPLORACIÓN → NPC → DECISIÓN → COMBATE → FIN DEL CICLO → NEXO → MEJORA → NUEVO CICLO
+## Cycle contract
 
-Architecture grows from this verified flow.
+CycleIndex, Phase y WorldAge forman el contrato del ciclo. Nexo conserva progresión permanente. Save conserva solo el estado explícitamente persistible.
