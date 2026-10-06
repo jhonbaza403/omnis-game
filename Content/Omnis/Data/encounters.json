@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "encounters": [
+    {
+      "id":"Encounter.PrimerAwakening",
+      "phase":"PRIMER CICLO",
+      "type":"exploration",
+      "objective":"Discover the first three beacons and learn the interaction loop.",
+      "requiredWorldElements":["Beacon.1","Beacon.2","Beacon.3"],
+      "successMetrics":{"discoveries":3,"xpReward":30}
+    },
+    {
+      "id":"Encounter.WandererChoice",
+      "phase":"DECISIÓN",
+      "type":"social",
+      "objective":"Interact with the Wanderer and record the first consequential decision.",
+      "requiredCharacters":["NPC.Wanderer"],
+      "successMetrics":{"interactions":1,"xpReward":10}
+    },
+    {
+      "id":"Encounter.Collapse",
+      "phase":"FIN DEL CICLO",
+      "type":"survival",
+      "objective":"Survive the collapse window, then continue through the Nexus.",
+      "requirements":{"playerHealthMin":1,"nexusTransition":true},
+      "successMetrics":{"cycleTransition":1}
+    }
+  ]
+}

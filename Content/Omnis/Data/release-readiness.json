@@ -1,0 +1,16 @@
+{
+  "schema":"omnis.release-readiness.v1",
+  "status":"BLOCKED",
+  "reason":"Final AAA content and authorized hardware/platform validation are not yet evidenced.",
+  "contentGates":{
+    "visualAssets":false,
+    "finalPlayableMaps":false,
+    "finalAnimation":false,
+    "finalAudio":false,
+    "finalCinematics":false,
+    "finalVoiceOver":false,
+    "finalLocalization":false
+  },
+  "hardwareGates":{"PS5":false,"XboxSeries":false,"Switch2":false,"PCReference":false},
+  "externalCertification":false
+}

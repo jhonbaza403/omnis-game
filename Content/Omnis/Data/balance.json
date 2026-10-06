@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "units": {"distance":"centimeters","speed":"centimeters_per_second","damage":"health_points","time":"seconds"},
+  "player": {"maxHealth":100.0,"walkSpeed":500.0,"sprintSpeed":750.0,"jumpZVelocity":650.0,"airControl":0.4},
+  "combat": {"lightAttack":{"range":280.0,"damage":25.0,"cooldownSeconds":0.45}},
+  "construction": {"forwardDistance":220.0,"resourceCost":[{"itemId":"Resource.Wood","quantity":10}]},
+  "progression": {"experiencePerLevel":100,"maxLevel":50,"npcInteractionExperience":10},
+  "economy": {"Resource.Wood":{"maxStack":999},"Upgrade.Vitality":{"pointCost":1}},
+  "difficulty": {
+    "Story":{"damageTakenMultiplier":0.75,"enemyHealthMultiplier":0.80},
+    "Standard":{"damageTakenMultiplier":1.0,"enemyHealthMultiplier":1.0},
+    "Hard":{"damageTakenMultiplier":1.25,"enemyHealthMultiplier":1.25}
+  },
+  "performanceTargets": {"targetHz":60,"frameBudgetMs":16.67,"memoryWarningRatio":0.80,"memoryCriticalRatio":0.90}
+}
