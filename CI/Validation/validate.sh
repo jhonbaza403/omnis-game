@@ -10,3 +10,4 @@ python3 Tools/Validation/validate_platform_build_contract.py
 python3 Tools/Validation/validate_ci_platform_jobs.py
 python3 Tools/Validation/validate_localization_contract.py
 python3 Tools/Balance/validate_balance.py
+python3 Tools/Release/audit_content_delivery.py

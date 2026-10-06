@@ -1,0 +1,59 @@
+{
+  "$schema": "omnis.content-delivery-contract.v1",
+  "project": "Omnis: El Último Ciclo",
+  "principle": "A release gate is closed only when the required production evidence exists in the repository or from an authorized platform/hardware validation run.",
+  "noFakeEvidence": true,
+  "deliverables": {
+    "characterMeshAAA": {
+      "requiredPaths": ["Content/Omnis/Characters", "Content/Omnis/Meshes"],
+      "requiredExtensions": [".uasset"],
+      "acceptance": "Final production skeletal mesh is imported, referenced by the playable character, and signed off by content QA."
+    },
+    "rigFacialAnimation": {
+      "requiredPaths": ["Content/Omnis/Animations", "Content/Omnis/Characters"],
+      "requiredExtensions": [".uasset"],
+      "acceptance": "Final skeleton/rig, animation set, facial setup and gameplay animation coverage are present and QA signed off."
+    },
+    "pbrVfx": {
+      "requiredPaths": ["Content/Omnis/Materials", "Content/Omnis/Environment", "Content/Omnis/VFX"],
+      "requiredExtensions": [".uasset", ".png", ".jpg", ".jpeg", ".tga", ".exr"],
+      "acceptance": "Final authored PBR materials/textures/VFX are present, referenced by final assets, and content QA signed off."
+    },
+    "finalMaps": {
+      "requiredPaths": ["Content/Omnis/Maps"],
+      "requiredExtensions": [".umap"],
+      "acceptance": "Final playable maps are authored in Unreal Editor and contain the release World Partition/Data Layer/HLOD setup."
+    },
+    "audioVO": {
+      "requiredPaths": ["Content/Omnis/Audio"],
+      "requiredExtensions": [".wav", ".ogg", ".flac"],
+      "acceptance": "Final mixed audio and approved voice-over are imported, referenced and content-QA signed off."
+    },
+    "cinematics": {
+      "requiredPaths": ["Content/Omnis/Cinematics"],
+      "requiredExtensions": [".uasset"],
+      "acceptance": "Final Level Sequences/cinematic assets are authored, integrated and reviewed."
+    },
+    "localization": {
+      "requiredPaths": ["Config/Localization", "Content/Omnis"],
+      "requiredExtensions": [".po", ".locres", ".json", ".ini"],
+      "acceptance": "All release languages pass linguistic, functional, truncation and terminology QA."
+    }
+  },
+  "hardwareEvidence": {
+    "PS5": "Requires authorized development kit/SDK execution and recorded profiling results.",
+    "XboxSeries": "Requires authorized development kit/SDK execution and recorded profiling results.",
+    "Switch2": "Requires authorized development kit/SDK execution and recorded profiling results.",
+    "PCReference": "Requires approved reference hardware profiling evidence."
+  },
+  "platformIntegration": {
+    "PSN": "Requires authorized first-party provider integration and credentials.",
+    "Xbox": "Requires authorized first-party provider integration and credentials.",
+    "Nintendo": "Requires authorized first-party provider integration and credentials."
+  },
+  "storeAndCertification": {
+    "storeSubmission": "Requires publisher/developer portal access and actual submission records.",
+    "distributionSigning": "Requires authorized production signing infrastructure and signed artifacts.",
+    "trcTcrCertification": "Requires execution and approval through the applicable platform certification process."
+  }
+}
