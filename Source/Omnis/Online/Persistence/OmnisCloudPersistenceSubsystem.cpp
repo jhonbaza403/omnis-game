@@ -1,8 +1,10 @@
 #include "Online/Persistence/OmnisCloudPersistenceSubsystem.h"
+
 #include "Dom/JsonObject.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Online/Authentication/OmnisAuthenticationSubsystem.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -13,7 +15,6 @@ void UOmnisCloudPersistenceSubsystem::SetApiBaseUrl(FString NewBaseUrl)
     {
         NewBaseUrl.LeftChopInline(1, false);
     }
-
     ApiBaseUrl = MoveTemp(NewBaseUrl);
 }
 
@@ -43,7 +44,20 @@ bool UOmnisCloudPersistenceSubsystem::IsValidJsonObject(const FString& Json) con
 
 void UOmnisCloudPersistenceSubsystem::ExecuteRequest(FName Operation, const FString& Method, const FString& Path, const FString& Body)
 {
-    if (ApiBaseUrl.IsEmpty() || AccessToken.IsEmpty())
+    FString EffectiveToken = AccessToken;
+
+    if (EffectiveToken.IsEmpty())
+    {
+        if (UGameInstance* GameInstance = GetGameInstance())
+        {
+            if (UOmnisAuthenticationSubsystem* Auth = GameInstance->GetSubsystem<UOmnisAuthenticationSubsystem>())
+            {
+                EffectiveToken = Auth->GetAccessToken();
+            }
+        }
+    }
+
+    if (ApiBaseUrl.IsEmpty() || EffectiveToken.IsEmpty())
     {
         OnRequestCompleted.Broadcast(Operation, false, 0, TEXT("cloud persistence is not configured"));
         return;
@@ -53,7 +67,7 @@ void UOmnisCloudPersistenceSubsystem::ExecuteRequest(FName Operation, const FStr
     Request->SetURL(ApiBaseUrl + Path);
     Request->SetVerb(Method);
     Request->SetHeader(TEXT("Accept"), TEXT("application/json"));
-    Request->SetHeader(TEXT("Authorization"), TEXT("Bearer ") + AccessToken);
+    Request->SetHeader(TEXT("Authorization"), TEXT("Bearer ") + EffectiveToken);
 
     if (!Body.IsEmpty())
     {
@@ -91,17 +105,12 @@ bool UOmnisCloudPersistenceSubsystem::SaveSlotJson(int32 Slot, const FString& St
     }
 
     const FString Body = FString::Printf(
-        TEXT("{\"save_version\":%d,\"state\":%s}"),
+        TEXT("{"save_version":%d,"state":%s}"),
         SaveVersion,
         *StateJson
     );
 
-    ExecuteRequest(
-        TEXT("save_slot"),
-        TEXT("PUT"),
-        FString::Printf(TEXT("/v1/saves/%d"), Slot),
-        Body
-    );
+    ExecuteRequest(TEXT("save_slot"), TEXT("PUT"), FString::Printf(TEXT("/v1/saves/%d"), Slot), Body);
     return true;
 }
 
@@ -112,12 +121,7 @@ bool UOmnisCloudPersistenceSubsystem::LoadSlotJson(int32 Slot)
         return false;
     }
 
-    ExecuteRequest(
-        TEXT("load_slot"),
-        TEXT("GET"),
-        FString::Printf(TEXT("/v1/saves/%d"), Slot),
-        FString()
-    );
+    ExecuteRequest(TEXT("load_slot"), TEXT("GET"), FString::Printf(TEXT("/v1/saves/%d"), Slot), FString());
     return true;
 }
 
@@ -128,12 +132,7 @@ bool UOmnisCloudPersistenceSubsystem::DeleteSlot(int32 Slot)
         return false;
     }
 
-    ExecuteRequest(
-        TEXT("delete_slot"),
-        TEXT("DELETE"),
-        FString::Printf(TEXT("/v1/saves/%d"), Slot),
-        FString()
-    );
+    ExecuteRequest(TEXT("delete_slot"), TEXT("DELETE"), FString::Printf(TEXT("/v1/saves/%d"), Slot), FString());
     return true;
 }
 
@@ -144,16 +143,38 @@ bool UOmnisCloudPersistenceSubsystem::SubmitEvent(FName EventType, const FString
         return false;
     }
 
-    const FString EscapedEventType = EventType.ToString()
-        .Replace(TEXT("\"), TEXT("\\"))
-        .Replace(TEXT("""), TEXT("\""));
+    const FString EventName = EventType.ToString();
+    if (EventName.Len() > 120)
+    {
+        return false;
+    }
 
-    const FString Body = FString::Printf(
-        TEXT("{\"event_type\":\"%s\",\"event_version\":%d,\"payload\":%s}"),
-        *EscapedEventType,
-        EventVersion,
-        *PayloadJson
-    );
+    for (const TCHAR Character : EventName)
+    {
+        if (!(FChar::IsAlnum(Character) || Character == TCHAR('_') || Character == TCHAR('-')))
+        {
+            return false;
+        }
+    }
+
+    TSharedRef<FJsonObject> Envelope = MakeShared<FJsonObject>();
+    Envelope->SetStringField(TEXT("event_type"), EventName);
+    Envelope->SetNumberField(TEXT("event_version"), EventVersion);
+
+    TSharedPtr<FJsonObject> PayloadObject;
+    const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(PayloadJson);
+    if (!FJsonSerializer::Deserialize(Reader, PayloadObject) || !PayloadObject.IsValid())
+    {
+        return false;
+    }
+    Envelope->SetObjectField(TEXT("payload"), PayloadObject);
+
+    FString Body;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Body);
+    if (!FJsonSerializer::Serialize(Envelope, Writer))
+    {
+        return false;
+    }
 
     ExecuteRequest(TEXT("submit_event"), TEXT("POST"), TEXT("/v1/events"), Body);
     return true;
