@@ -11,6 +11,7 @@
     }
   ],
   "Plugins": [
+    { "Name": "OnlineSubsystem", "Enabled": true },
     { "Name": "OmnisCore", "Enabled": true },
     { "Name": "OmnisGameplay", "Enabled": true },
     { "Name": "OmnisNarrative", "Enabled": true },
