@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
+#include "Engine/PrimaryDataAsset.h"
 #include "OmnisQuestDefinition.generated.h"
 
 UCLASS(BlueprintType)

@@ -25,6 +25,7 @@ class OMNIS_API AOmnisPlayerCharacter : public ACharacter
 public:
     AOmnisPlayerCharacter();
 
+    virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Camera")
