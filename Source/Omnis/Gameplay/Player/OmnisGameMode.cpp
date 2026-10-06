@@ -3,6 +3,7 @@
 #include "Gameplay/Player/OmnisPlayerController.h"
 #include "Core/Cycle/OmnisCycleSubsystem.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
+#include "Core/Save/OmnisSaveSubsystem.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 #include "World/Environment/OmnisWorldBootstrapSubsystem.h"
 
@@ -18,9 +19,15 @@ void AOmnisGameMode::BeginPlay()
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
-        if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
+        if (UOmnisSaveSubsystem* Saves = GameInstance->GetSubsystem<UOmnisSaveSubsystem>())
         {
-            Cycle->BeginCycle();
+            if (!Saves->LoadFromSlot(1))
+            {
+                if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
+                {
+                    Cycle->BeginCycle();
+                }
+            }
         }
     }
 
@@ -28,6 +35,19 @@ void AOmnisGameMode::BeginPlay()
     {
         Bootstrap->BuildInitialWorld();
     }
+}
+
+void AOmnisGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisSaveSubsystem* Saves = GameInstance->GetSubsystem<UOmnisSaveSubsystem>())
+        {
+            Saves->SaveToSlot(1);
+        }
+    }
+
+    Super::EndPlay(EndPlayReason);
 }
 
 void AOmnisGameMode::RestartPlayer(AController* NewPlayer)
@@ -69,6 +89,11 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
         {
             Nexus->AddPermanentUpgradePoints(1);
         }
+
+        if (UOmnisSaveSubsystem* Saves = GameInstance->GetSubsystem<UOmnisSaveSubsystem>())
+        {
+            Saves->SaveToSlot(1);
+        }
     }
 
     GetWorldTimerManager().SetTimer(
@@ -96,6 +121,11 @@ void AOmnisGameMode::RespawnAfterNexus(AController* PlayerController)
         if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
         {
             Cycle->BeginRebirth();
+        }
+
+        if (UOmnisSaveSubsystem* Saves = GameInstance->GetSubsystem<UOmnisSaveSubsystem>())
+        {
+            Saves->SaveToSlot(1);
         }
     }
 
