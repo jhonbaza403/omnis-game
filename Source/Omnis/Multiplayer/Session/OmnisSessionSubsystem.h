@@ -16,7 +16,7 @@ public:
     virtual void Deinitialize() override;
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Multiplayer")
-    bool CreateSession(FName NewSessionId, int32 MaxPlayers = 16);
+    bool CreateSession(FName NewSessionId, int32 MaxPlayers = 16, FName NewPlaylistId = NAME_None);
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Multiplayer")
     bool LeaveSession();
@@ -29,6 +29,9 @@ public:
 
     UFUNCTION(BlueprintPure, Category="Omnis|Multiplayer")
     FName GetSessionId() const { return SessionId; }
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Multiplayer")
+    FName GetPlaylistId() const { return PlaylistId; }
 
     UPROPERTY(BlueprintAssignable, Category="Omnis|Multiplayer")
     FOmnisSessionOperationCompleted OnSessionCreated;
@@ -48,6 +51,9 @@ private:
 
     UPROPERTY()
     FName SessionId;
+
+    UPROPERTY()
+    FName PlaylistId;
 
     UPROPERTY()
     int32 MaxPlayers = 0;
