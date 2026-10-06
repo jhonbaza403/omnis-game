@@ -50,6 +50,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Performance")
     void ApplyStreamingBudgetMB(int32 PoolSizeMB);
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Performance")
+    bool ApplyAdaptiveMemoryProtection(float WarningRatio = 0.85f, float CriticalRatio = 0.92f);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Performance")
     FOmnisMemorySnapshot GetMemorySnapshot() const;
 
