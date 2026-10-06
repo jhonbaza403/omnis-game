@@ -68,7 +68,14 @@ void UOmnisPlatformSubsystem::DetectPlatform()
 void UOmnisPlatformSubsystem::RefreshCapabilities()
 {
     Capabilities = FOmnisPlatformCapabilities();
-    Capabilities.bAchievements = HasNativeOnlineSubsystem();
+
+    IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+    if (OnlineSubsystem)
+    {
+        Capabilities.bOnline = OnlineSubsystem->GetIdentityInterface().IsValid();
+        Capabilities.bAchievements = OnlineSubsystem->GetAchievementsInterface().IsValid();
+        Capabilities.bDLCEntitlements = OnlineSubsystem->GetEntitlementsInterface().IsValid();
+    }
 
     if (GEngine && GEngine->GetGameUserSettings())
     {
@@ -79,12 +86,7 @@ void UOmnisPlatformSubsystem::RefreshCapabilities()
 bool UOmnisPlatformSubsystem::HasNativeOnlineSubsystem() const
 {
     IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
-    if (!OnlineSubsystem)
-    {
-        return false;
-    }
-
-    return OnlineSubsystem->GetIdentityInterface().IsValid();
+    return OnlineSubsystem && OnlineSubsystem->GetIdentityInterface().IsValid();
 }
 
 bool UOmnisPlatformSubsystem::UnlockAchievement(const FString& AchievementId, float Progress)
@@ -286,10 +288,7 @@ void UOmnisPlatformSubsystem::HandleSystemError()
         *PlatformName
     );
 
-    FFileHelper::SaveStringToFile(
-        Marker,
-        *FPaths::Combine(Directory, TEXT("last_system_error.json"))
-    );
+    FFileHelper::SaveStringToFile(Marker, *FPaths::Combine(Directory, TEXT("last_system_error.json")));
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
@@ -310,10 +309,7 @@ void UOmnisPlatformSubsystem::HandleSystemHang()
         *PlatformName
     );
 
-    FFileHelper::SaveStringToFile(
-        Marker,
-        *FPaths::Combine(Directory, TEXT("last_system_hang.json"))
-    );
+    FFileHelper::SaveStringToFile(Marker, *FPaths::Combine(Directory, TEXT("last_system_hang.json")));
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
