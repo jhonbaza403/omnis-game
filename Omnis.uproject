@@ -1,0 +1,13 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.6",
+  "Category": "Games",
+  "Description": "Omnis — El Ciclo del Sin-Ciclo",
+  "Modules": [
+    {
+      "Name": "Omnis",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}
