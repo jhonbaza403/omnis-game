@@ -10,13 +10,10 @@ def require_text(path: str, fragments: list[str]) -> None:
         raise AssertionError(f"{path}: missing {missing}")
 
 def main() -> None:
-    require_text(
-        "Source/Omnis/Omnis.Build.cs",
-        ["OnlineSubsystem"],
-    )
+    require_text("Source/Omnis/Omnis.Build.cs", ["OnlineSubsystem", "EnhancedInput"])
     require_text(
         "Omnis.uproject",
-        ['"Name": "OnlineSubsystem", "Enabled": true'],
+        ['"Name": "OnlineSubsystem", "Enabled": true', '"Name": "EnhancedInput", "Enabled": true'],
     )
     require_text(
         "Source/Omnis/Platform/OmnisPlatformSubsystem.h",
@@ -52,13 +49,7 @@ def main() -> None:
     )
     require_text(
         "Config/DefaultInput.ini",
-        [
-            'ActionName="Accept"',
-            'ActionName="Cancel"',
-            'ActionName="Menu"',
-            'ActionName="Back"',
-            'Key=Gamepad_DPad_Up',
-        ],
+        ["EnhancedPlayerInput", "EnhancedInputComponent"],
     )
     require_text(
         "Config/OmnisPlatformProfiles.ini",

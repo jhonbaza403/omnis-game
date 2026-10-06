@@ -1,1 +1,29 @@
-{"version":1,"actions":{"Jump":"SpaceBar","Sprint":"LeftShift","Attack":"LeftMouseButton","Interact":"E","Build":"Q"},"axes":{"MoveForward":["W:1","S:-1"],"MoveRight":["D:1","A:-1"],"Turn":["MouseX:1"],"LookUp":["MouseY:-1"]}}
+{
+  "version": 2,
+  "system": "EnhancedInput",
+  "actions": {
+    "IA_MoveForward": {"type":"Axis1D","keyboard":["W:+1","S:-1"],"gamepad":["Gamepad_LeftY:+1"]},
+    "IA_MoveRight": {"type":"Axis1D","keyboard":["D:+1","A:-1"],"gamepad":["Gamepad_LeftX:+1"]},
+    "IA_LookYaw": {"type":"Axis1D","mouse":["MouseX:+1"],"gamepad":["Gamepad_RightX:+1"]},
+    "IA_LookPitch": {"type":"Axis1D","mouse":["MouseY:-1"],"gamepad":["Gamepad_RightY:-1"]},
+    "IA_Jump": {"type":"Boolean","keyboard":["SpaceBar"],"gamepad":["Gamepad_FaceButton_Bottom"]},
+    "IA_Sprint": {"type":"Boolean","keyboard":["LeftShift"],"gamepad":["Gamepad_LeftThumbstick"]},
+    "IA_Attack": {"type":"Boolean","keyboard":["LeftMouseButton"],"gamepad":["Gamepad_RightTrigger"]},
+    "IA_Interact": {"type":"Boolean","keyboard":["E"],"gamepad":["Gamepad_FaceButton_Right"]},
+    "IA_Build": {"type":"Boolean","keyboard":["Q"],"gamepad":["Gamepad_FaceButton_Left"]},
+    "IA_Accept": {"type":"Boolean","keyboard":["Enter"],"gamepad":["Gamepad_FaceButton_Bottom"]},
+    "IA_Cancel": {"type":"Boolean","keyboard":["Escape"],"gamepad":["Gamepad_FaceButton_Right"]},
+    "IA_Menu": {"type":"Boolean","keyboard":["Tab"],"gamepad":["Gamepad_Special_Right"]},
+    "IA_Back": {"type":"Boolean","keyboard":["BackSpace"],"gamepad":["Gamepad_Special_Left"]},
+    "IA_DPadUp": {"type":"Boolean","gamepad":["Gamepad_DPad_Up"]},
+    "IA_DPadDown": {"type":"Boolean","gamepad":["Gamepad_DPad_Down"]},
+    "IA_DPadLeft": {"type":"Boolean","gamepad":["Gamepad_DPad_Left"]},
+    "IA_DPadRight": {"type":"Boolean","gamepad":["Gamepad_DPad_Right"]}
+  },
+  "policy": {
+    "legacyActionMappings": false,
+    "legacyAxisMappings": false,
+    "singleGameplayImplementation": true,
+    "platformSpecificBindingsOnly": true
+  }
+}

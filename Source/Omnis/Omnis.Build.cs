@@ -12,6 +12,7 @@ public class Omnis : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
+            "EnhancedInput",
             "GameplayTags",
             "Http",
             "Json",

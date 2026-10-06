@@ -10,7 +10,7 @@ bool UOmnisStreamingSubsystem::RequestRegion(FName RegionId)
         return false;
     }
 
-    if (LoadedRegions.Num() >= MaxResidentRegions)
+    if (LoadedRegions.Num() + RequestedRegions.Num() >= MaxResidentRegions)
     {
         return false;
     }
@@ -33,9 +33,13 @@ void UOmnisStreamingSubsystem::ReleaseRegion(FName RegionId)
     }
 
     RegionAssets.Remove(RegionId);
-    LoadedRegions.Remove(RegionId);
+    const bool bWasLoaded = LoadedRegions.Remove(RegionId) > 0;
     RequestedRegions.Remove(RegionId);
-    OnRegionStreamingChanged.Broadcast(RegionId, false);
+
+    if (bWasLoaded)
+    {
+        OnRegionStreamingChanged.Broadcast(RegionId, false);
+    }
 }
 
 bool UOmnisStreamingSubsystem::RequestRegionAsset(FName RegionId, const FSoftObjectPath& AssetPath)
@@ -50,7 +54,7 @@ bool UOmnisStreamingSubsystem::RequestRegionAsset(FName RegionId, const FSoftObj
         return false;
     }
 
-    if (LoadedRegions.Num() >= MaxResidentRegions)
+    if (LoadedRegions.Num() + RequestedRegions.Num() >= MaxResidentRegions)
     {
         return false;
     }
@@ -113,6 +117,18 @@ FOmnisStreamingStatus UOmnisStreamingSubsystem::GetStatus() const
 void UOmnisStreamingSubsystem::HandleAssetLoaded(FName RegionId)
 {
     if (!RequestedRegions.Contains(RegionId) || !RegionAssets.Contains(RegionId))
+    {
+        return;
+    }
+
+    const FSoftObjectPath AssetPath = RegionAssets.FindRef(RegionId);
+    if (!AssetPath.ResolveObject())
+    {
+        ReleaseRegion(RegionId);
+        return;
+    }
+
+    if (LoadedRegions.Num() >= MaxResidentRegions)
     {
         ReleaseRegion(RegionId);
         return;

@@ -11,6 +11,7 @@
     }
   ],
   "Plugins": [
+    { "Name": "EnhancedInput", "Enabled": true },
     { "Name": "OnlineSubsystem", "Enabled": true },
     { "Name": "OmnisCore", "Enabled": true },
     { "Name": "OmnisGameplay", "Enabled": true },

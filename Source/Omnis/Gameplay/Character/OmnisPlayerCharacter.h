@@ -4,6 +4,10 @@
 #include "GameFramework/Character.h"
 #include "OmnisPlayerCharacter.generated.h"
 
+struct FInputActionValue;
+class UInputAction;
+class UInputComponent;
+class UInputMappingContext;
 class UOmnisPlayerCameraComponent;
 class USpringArmComponent;
 class UOmnisExplorationComponent;
@@ -15,7 +19,6 @@ class UOmnisAbilityComponent;
 class UOmnisInventoryComponent;
 class UOmnisEquipmentComponent;
 class UOmnisHealthComponent;
-class UInputComponent;
 
 UCLASS()
 class OMNIS_API AOmnisPlayerCharacter : public ACharacter
@@ -26,6 +29,7 @@ public:
     AOmnisPlayerCharacter();
 
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Camera")
@@ -62,14 +66,60 @@ public:
     TObjectPtr<UOmnisHealthComponent> Health;
 
 protected:
-    void MoveForward(float Value);
-    void MoveRight(float Value);
-    void SprintPressed();
-    void SprintReleased();
-    void AttackPressed();
-    void InteractPressed();
-    void BuildPressed();
+    void MoveForwardInput(const FInputActionValue& Value);
+    void MoveRightInput(const FInputActionValue& Value);
+    void LookYawInput(const FInputActionValue& Value);
+    void LookPitchInput(const FInputActionValue& Value);
+    void JumpInput(const FInputActionValue& Value);
+    void SprintInput(const FInputActionValue& Value);
+    void AttackInput(const FInputActionValue& Value);
+    void InteractInput(const FInputActionValue& Value);
+    void BuildInput(const FInputActionValue& Value);
+    void MenuInput(const FInputActionValue& Value);
+    void BackInput(const FInputActionValue& Value);
 
     UFUNCTION()
     void HandlePlayerDeath();
+
+private:
+    void InitializeEnhancedInput();
+    void RemoveEnhancedInput();
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputMappingContext> InputMappingContext;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> MoveForwardAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> MoveRightAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> LookYawAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> LookPitchAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> JumpAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> SprintAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> AttackAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> InteractAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> BuildAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> MenuAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> BackAction;
+
+    bool bEnhancedInputRegistered = false;
 };

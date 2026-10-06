@@ -1,6 +1,6 @@
 # Omnis — Estándar de producción AAA
 
-Omnis se valida por capacidades funcionales medibles, estabilidad, rendimiento y evidencia de ejecución real. La cantidad de clases o directorios no se considera evidencia por sí sola.
+Omnis se valida por capacidades funcionales medibles, estabilidad, rendimiento y evidencia de ejecución real. La cantidad de clases, directorios, manifests o jobs no se considera evidencia por sí sola.
 
 ## 1. Dirección visual
 
@@ -24,12 +24,12 @@ Estado de ingeniería: la arquitectura admite estas capas, pero los assets final
 - Validación de memoria por región.
 - Streaming asíncrono de assets mediante StreamableManager.
 
-Estado de ingeniería: el runtime de streaming existe y tiene budgets/residencia; el profiling sobre mapas finales requiere hardware real.
+Estado de ingeniería: el runtime de streaming existe y ahora distingue solicitud de carga de residencia efectiva. El profiling sobre mapas finales requiere hardware real.
 
 ## 3. Gameplay
 
 - Una sola base de gameplay C++/UE5.6.
-- Input y gamepad comunes.
+- Enhanced Input como ruta única de entrada.
 - Cámara consistente.
 - Combate legible y equilibrado.
 - Traversal fiable.
@@ -37,6 +37,8 @@ Estado de ingeniería: el runtime de streaming existe y tiene budgets/residencia
 - Inventario y progresión persistentes.
 - Economía y balance medidos.
 - Loop de ciclo completo.
+
+Estado de ingeniería: el sistema input común se ejecuta mediante Enhanced Input; los assets finales de input mapeable y perfiles de plataforma siguen siendo contenido/configuración de producción.
 
 ## 4. Online
 
@@ -85,6 +87,7 @@ Estado de ingeniería: los controles existen; el presupuesto definitivo requiere
 - Identidad activa rastreada por provider.
 - Eventos de lifecycle.
 - Marcadores de crash/hang.
+- Recolección de evidencia de crash y build.
 
 ## 8. Accesibilidad y localización
 
@@ -112,13 +115,31 @@ Estado de contenido: las traducciones finales requieren producción y revisión 
 
 - Validación automática de arquitectura y catálogos.
 - Validación de contratos de plataforma.
-- Validación de localización.
+- Validación de datos de gameplay/economía.
 - Validación de jobs de packaging.
 - Tests de integración del API cloud.
 - Build UE5.6 real preparado para runner dedicado.
 - Jobs manuales separados por plataforma.
+- Generación de provenance verificable para cada pipeline.
 
-## 11. Certificación
+## 11. Release Candidate
+
+Un Release Candidate (RC) es una build candidata a validación final, no una declaración de certificación.
+
+El gate RC exige:
+
+1. CI de código y datos en verde;
+2. build UE5.6 real para la plataforma objetivo;
+3. contenido final auditado y sin referencias rotas;
+4. tests de gameplay, saves, red, memoria, streaming y lifecycle;
+5. provenance + manifest de artefacto;
+6. crash/hang evidence;
+7. firma externa aplicada fuera del repositorio;
+8. matriz de hardware ejecutada.
+
+La ausencia de SDK/hardware o de assets finales mantiene el RC en estado bloqueado.
+
+## 12. Certificación
 
 Los gates internos no equivalen a certificación del fabricante.
 

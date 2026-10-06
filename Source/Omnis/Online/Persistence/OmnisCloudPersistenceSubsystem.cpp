@@ -104,11 +104,24 @@ bool UOmnisCloudPersistenceSubsystem::SaveSlotJson(int32 Slot, const FString& St
         return false;
     }
 
-    const FString Body = FString::Printf(
-        TEXT("{"save_version":%d,"state":%s}"),
-        SaveVersion,
-        *StateJson
-    );
+    TSharedRef<FJsonObject> Envelope = MakeShared<FJsonObject>();
+    Envelope->SetNumberField(TEXT("save_version"), SaveVersion);
+
+    TSharedPtr<FJsonObject> StateObject;
+    const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(StateJson);
+    if (!FJsonSerializer::Deserialize(Reader, StateObject) || !StateObject.IsValid())
+    {
+        return false;
+    }
+
+    Envelope->SetObjectField(TEXT("state"), StateObject);
+
+    FString Body;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Body);
+    if (!FJsonSerializer::Serialize(Envelope, Writer))
+    {
+        return false;
+    }
 
     ExecuteRequest(TEXT("save_slot"), TEXT("PUT"), FString::Printf(TEXT("/v1/saves/%d"), Slot), Body);
     return true;

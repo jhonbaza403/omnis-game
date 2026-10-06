@@ -12,7 +12,14 @@ def require_text(path: str, fragments: list[str]) -> None:
 def main() -> None:
     require_text(
         "Config/DefaultInput.ini",
-        ["Gamepad_LeftY", "Gamepad_LeftX", "Gamepad_RightX", "Gamepad_RightY"],
+        [
+            "EnhancedPlayerInput",
+            "EnhancedInputComponent",
+        ],
+    )
+    require_text(
+        "Content/Omnis/Input/input-map.json",
+        [""system": "EnhancedInput"", ""legacyActionMappings": false", ""legacyAxisMappings": false"],
     )
     require_text(
         "Source/Omnis/UI/Accessibility/OmnisAccessibilitySubsystem.h",
