@@ -43,7 +43,7 @@ void UOmnisSessionSubsystem::Deinitialize()
     Super::Deinitialize();
 }
 
-bool UOmnisSessionSubsystem::CreateSession(FName NewSessionId, int32 InMaxPlayers)
+bool UOmnisSessionSubsystem::CreateSession(FName NewSessionId, int32 InMaxPlayers, FName NewPlaylistId)
 {
     if (bOperationPending || bSessionActive || NewSessionId.IsNone() || InMaxPlayers <= 0)
     {
@@ -83,12 +83,25 @@ bool UOmnisSessionSubsystem::CreateSession(FName NewSessionId, int32 InMaxPlayer
     Settings.bUseLobbiesIfAvailable = true;
     Settings.bUseLobbiesVoiceChatIfAvailable = true;
     Settings.BuildUniqueId = 1;
-    Settings.Set(FName(TEXT("OMNIS_GAME")), true, EOnlineDataAdvertisementType::ViaOnlineService);
+
+    Settings.Set(
+        FName(TEXT("OMNIS_GAME")),
+        true,
+        EOnlineDataAdvertisementType::ViaOnlineService
+    );
+
+    const FName SafePlaylist = NewPlaylistId.IsNone() ? FName(TEXT("default")) : NewPlaylistId;
+    Settings.Set(
+        FName(TEXT("OMNIS_PLAYLIST")),
+        SafePlaylist.ToString(),
+        EOnlineDataAdvertisementType::ViaOnlineService
+    );
 
     bOperationPending = Sessions->CreateSession(*UserId, NewSessionId, Settings);
     if (bOperationPending)
     {
         SessionId = NewSessionId;
+        PlaylistId = SafePlaylist;
         MaxPlayers = InMaxPlayers;
     }
 
@@ -134,6 +147,7 @@ void UOmnisSessionSubsystem::HandleCreateSessionComplete(FName NewSessionName, b
     if (!bWasSuccessful)
     {
         SessionId = NAME_None;
+        PlaylistId = NAME_None;
         MaxPlayers = 0;
     }
 
@@ -153,6 +167,7 @@ void UOmnisSessionSubsystem::HandleDestroySessionComplete(FName NewSessionName, 
     {
         bSessionActive = false;
         SessionId = NAME_None;
+        PlaylistId = NAME_None;
         MaxPlayers = 0;
     }
 
