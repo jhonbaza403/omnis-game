@@ -1,21 +1,18 @@
-# Omnis — Game Design
+# Omnis: El Último Ciclo — Game Design
 
-## Core fantasy
+## Identidad
 
-The player survives a world whose history is not a single line. Every cycle changes what can be discovered, who survives, which factions hold power and what the world remembers.
+Omnis es el producto; El Ciclo del Sin-Ciclo es su meta-bucle. La experiencia no repite una misma partida: cada ciclo hereda estado, transforma el mundo y abre nuevas posibilidades.
 
-## Pillars
+## Pilares
 
-- Exploration driven by observation and physical traversal.
-- Decisions with persistent narrative consequences.
-- Precision combat where timing and positioning matter.
-- Death as a transition to the Nexo rather than a simple reload.
-- Permanent progression that reshapes future cycles.
+- Exploración mediante terreno, rutas, recursos, arquitectura y rutinas de PNJ.
+- Construcción orientada a resolver traversal, protección, transporte y transformación del espacio.
+- Narrativa ramificada basada en decisiones, relaciones, facciones y consecuencias persistentes.
+- Combate técnico basado en lectura, tiempo, posición y defensa.
+- Nexo como transición jugable entre ciclos y punto de progresión permanente.
+- Mundo persistente como extensión futura del mismo modelo de estado.
 
-## Vertical slice
+## Referencias creativas
 
-BOOT → PRIMER CICLO → MUNDO → EXPLORACIÓN → NPC → DECISIÓN → COMBATE → FIN DEL CICLO → NEXO → MEJORA → NUEVO CICLO
-
-## Design rule
-
-A mechanic enters the production architecture only after its player-facing behavior and technical ownership are clear.
+Las referencias a Minecraft, Sekiro, Dota 2, CS2, Hades, Elden Ring, TLOU, GoW, BG3, RDR2 y TotK son influencias de diseño, no contenido a copiar.

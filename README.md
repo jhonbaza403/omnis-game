@@ -1,28 +1,25 @@
-# OMNIS — El Ciclo del Sin-Ciclo
+# OMNIS: El Último Ciclo
 
-Proyecto de videojuego Unreal Engine 5 con una arquitectura C++ modular y una primera implementación funcional de extremo a extremo.
+Proyecto de videojuego construido sobre Unreal Engine 5.
 
-## Vertical slice implementado
+## Identidad
 
-BOOT → PRIMER CICLO → MUNDO → EXPLORACIÓN → NPC → DECISIÓN → COMBATE → FIN DEL CICLO → NEXO → MEJORA → NUEVO CICLO
+**Omnis: El Último Ciclo** es el título definitivo. El concepto sistémico interno se denomina **El Ciclo del Sin-Ciclo**: una realidad que colapsa y renace innumerables veces y que atraviesa su último ciclo conocido.
 
-El ciclo de muerte ya conecta la transición al Nexo, la generación de un punto de mejora permanente, la mejora de vitalidad y el renacimiento del jugador.
+Omnis integra exploración, construcción, narrativa, combate, Nexo, progresión y futuro mundo persistente mediante un mismo modelo de estado y consecuencias.
 
-## Módulos runtime
+## Premisa
 
-Core, Gameplay, World, Narrative, AI, Multiplayer, Online, UI, Audio, Camera, Data, Systems y Developer disponen de implementación C++ concreta.
+El jugador despierta en una realidad moribunda donde civilizaciones, naturaleza salvaje, magia y tecnología olvidada se superponen después de incontables ciclos. Sus decisiones pueden modificar personajes, facciones, rutas y lugares; sus obras pueden dejar huellas históricas.
 
-## Infraestructura
+## Meta-bucle
 
-- Seis plugins Omnis con módulos Unreal reales.
-- Herramientas de validación, datos, mundo, build y automatización.
-- Suite de pruebas Python por dominio.
-- Pipeline GitLab CI para validación estática y pruebas.
-- Git LFS para activos binarios.
-- Manifiestos de contenido para mantener contratos explícitos antes de incorporar assets binarios.
+EXPLORAR → DESCUBRIR → INTERACTUAR → DECIDIR → COMBATIR → FIN DEL CICLO → NEXO → MEJORAR → RENACER
 
-## Reglas
+## Dirección artística
 
-No se crean migraciones ficticias, sistemas duplicados ni carpetas vacías utilizadas como sustituto de código.
+La dirección base queda establecida como **dark fantasy postapocalíptica**: ruinas monumentales, naturaleza invasiva, tecnología perdida y fenómenos extraordinarios coexistiendo en un mundo que se aproxima a su último colapso.
 
-Las integraciones online representan servicios locales y contratos de runtime hasta que exista un backend externo configurado; no se simulan respuestas de un proveedor inexistente.
+## Regla de ingeniería
+
+No se aceptan migraciones ficticias, duplicación de sistemas, falsos servicios externos, secretos en el repositorio ni artefactos binarios inventados para aparentar contenido.

@@ -1,15 +1,17 @@
-# Omnis — World Design
+# Omnis: El Último Ciclo — World Design
 
-The world is designed as an evolving simulation rather than a static backdrop.
+## Premisa
 
-## World state
+Omnis es una realidad que ha sobrevivido a múltiples colapsos. Cada renacimiento altera parte de la geografía y de la historia.
 
-World state records events that matter between cycles: discoveries, faction control, destroyed or restored locations, resource changes and narrative consequences.
+## Persistencia
 
-## Exploration
+Las acciones relevantes pueden dejar ruinas y huellas: puentes, fortalezas, rutas, asentamientos y zonas transformadas. La persistencia debe comunicar memoria histórica y no copiar literalmente cada objeto.
 
-The initial experience avoids dependence on a conventional map. Terrain, landmarks, weather, routes and physical affordances communicate navigation.
+## Dirección visual
 
-## Evolution
+Dark fantasy postapocalíptica: arquitectura monumental en decadencia, vegetación invasiva, tecnología perdida y fenómenos extraordinarios coexistiendo.
 
-The passage between cycles advances the world. New settlements, altered routes, changed NPC availability and environmental consequences become potential outputs of the cycle system.
+## PNJ
+
+Los PNJ combinan identidad, rutina, relaciones, objetivos y contexto del ciclo. Sus comportamientos pueden originar encuentros, misiones y consecuencias narrativas.
