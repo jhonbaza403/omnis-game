@@ -15,7 +15,8 @@ public class Omnis : ModuleRules
             "GameplayTags",
             "Http",
             "Json",
-            "JsonUtilities"
+            "JsonUtilities",
+            "OnlineSubsystem"
         });
     }
 }
