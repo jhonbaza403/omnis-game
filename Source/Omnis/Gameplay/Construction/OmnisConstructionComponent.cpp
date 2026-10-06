@@ -2,7 +2,6 @@
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
-#include "UObject/ConstructorHelpers.h"
 
 UOmnisConstructionComponent::UOmnisConstructionComponent()
 {
@@ -19,20 +18,19 @@ AActor* UOmnisConstructionComponent::ConstructForward()
     }
 
     const FVector Location = Owner->GetActorLocation() + Owner->GetActorForwardVector() * BuildDistance;
-    AActor* Piece = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
+    AActor* Piece = World->SpawnActor<AActor>(AActor::StaticClass(), Location, Owner->GetActorRotation());
     if (!Piece)
     {
         return nullptr;
     }
 
     UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(Piece, TEXT("ConstructionMesh"));
-    Mesh->RegisterComponent();
     Piece->SetRootComponent(Mesh);
+    Mesh->RegisterComponent();
 
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
-    if (CubeAsset.Succeeded())
+    if (UStaticMesh* CubeAsset = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube")))
     {
-        Mesh->SetStaticMesh(CubeAsset.Object);
+        Mesh->SetStaticMesh(CubeAsset);
     }
 
     Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

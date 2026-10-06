@@ -2,7 +2,7 @@
 
 void UOmnisReputationSubsystem::AddReputation(FName SubjectId, int32 Amount)
 {
-    if (!SubjectId.IsNone() || Amount != 0)
+    if (!SubjectId.IsNone() && Amount != 0)
     {
         Reputation.FindOrAdd(SubjectId) += Amount;
     }

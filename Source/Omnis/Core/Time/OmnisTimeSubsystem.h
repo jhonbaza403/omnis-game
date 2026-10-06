@@ -1,19 +1,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "OmnisTimeSubsystem.generated.h"
 
 UCLASS()
-class OMNIS_API UOmnisTimeSubsystem : public UGameInstanceSubsystem
+class OMNIS_API UOmnisTimeSubsystem : public UTickableWorldSubsystem
 {
     GENERATED_BODY()
 
 public:
-    UOmnisTimeSubsystem();
-
-    virtual void Tick(float DeltaSeconds);
-    virtual bool IsTickable() const { return true; }
+    virtual void Tick(float DeltaSeconds) override;
+    virtual bool IsTickable() const override { return true; }
+    virtual TStatId GetStatId() const override
+    {
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UOmnisTimeSubsystem, STATGROUP_Tickables);
+    }
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Time")
     void SetTimeScale(float NewScale);

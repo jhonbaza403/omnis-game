@@ -2,7 +2,13 @@
 
 bool UOmnisFriendsSubsystem::AddFriend(FName UserId)
 {
-    return !UserId.IsNone() && Friends.Add(UserId).IsValidId();
+    if (UserId.IsNone() || Friends.Contains(UserId))
+    {
+        return false;
+    }
+
+    Friends.Add(UserId);
+    return true;
 }
 
 void UOmnisFriendsSubsystem::RemoveFriend(FName UserId)
