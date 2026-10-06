@@ -1,1 +1,24 @@
-{"version":1,"items":[{"id":"Resource.Wood","type":"resource","maxStack":999},{"id":"Upgrade.Vitality","type":"upgrade","cost":1}],"characters":[{"id":"NPC.Wanderer","role":"ambient"}]}
+{
+  "version": 2,
+  "items": [
+    {"id":"Resource.Wood","type":"resource","maxStack":999},
+    {"id":"Upgrade.Vitality","type":"upgrade","cost":1}
+  ],
+  "characters": [
+    {"id":"NPC.Wanderer","role":"ambient"}
+  ],
+  "achievements": [
+    {"id":"OMNIS_FIRST_AWAKENING","name":"First Awakening","description":"Complete the first awakening."},
+    {"id":"OMNIS_FIRST_CYCLE","name":"First Cycle","description":"Complete one full cycle."},
+    {"id":"OMNIS_NEXUS_REBORN","name":"Return to Nexus","description":"Reach the Nexus and begin rebirth."},
+    {"id":"OMNIS_EXPLORER","name":"World Memory","description":"Discover 10 world interactions."},
+    {"id":"OMNIS_DECISION","name":"A Choice Remains","description":"Record your first consequential decision."},
+    {"id":"OMNIS_ALLIANCE","name":"First Alliance","description":"Establish positive standing with a faction."},
+    {"id":"OMNIS_PROGRESS","name":"Growing Beyond","description":"Reach progression level 5."},
+    {"id":"OMNIS_MASTER_PROGRESS","name":"Cycle Master","description":"Reach progression level 10."},
+    {"id":"OMNIS_SURVIVOR","name":"Through the Collapse","description":"Survive a complete crisis phase."},
+    {"id":"OMNIS_BUILDER","name":"Foundations","description":"Complete your first construction action."},
+    {"id":"OMNIS_SOCIAL","name":"Connected","description":"Enter an online session."},
+    {"id":"OMNIS_ENDURE","name":"The Last Cycle","description":"Reach the final cycle milestone."}
+  ]
+}
