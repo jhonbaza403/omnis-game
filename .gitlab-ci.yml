@@ -1,0 +1,24 @@
+stages:
+  - validate
+  - test
+  - unreal
+
+python_validate:
+  stage: validate
+  image: python:3.12
+  script:
+    - bash CI/Validation/validate.sh
+
+python_tests:
+  stage: test
+  image: python:3.12
+  script:
+    - bash CI/Tests/test.sh
+
+unreal_build:
+  stage: unreal
+  script:
+    - bash CI/Build/build.sh
+  rules:
+    - when: manual
+  allow_failure: false
