@@ -1,4 +1,4 @@
-"""Premium materialization layer for Omnis UE 5.6."""
+"""Premium materialization layer for Omnis UE 5.8."""
 import math
 import random
 import unreal
@@ -162,7 +162,7 @@ def main():
     sub=unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 
     if not unreal.EditorAssetLibrary.does_asset_exist(TEMPLATE):
-        raise RuntimeError("UE5.6 Open World template missing: " + TEMPLATE)
+        raise RuntimeError("UE5.8 Open World template missing: " + TEMPLATE)
 
     if not levels.new_level_from_template(MAP_PATH,TEMPLATE):
         raise RuntimeError("Failed to materialize Open World template: " + MAP_PATH)

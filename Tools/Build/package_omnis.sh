@@ -6,7 +6,7 @@ PROJECT_FILE="$ROOT/Omnis.uproject"
 UE_ENGINE_ROOT="$(printenv UE_ENGINE_ROOT || true)"
 
 if [[ -z "$UE_ENGINE_ROOT" ]]; then
-  echo "UE_ENGINE_ROOT must point to Unreal Engine 5.6 on the dedicated runner." >&2
+  echo "UE_ENGINE_ROOT must point to Unreal Engine 5.8 on the dedicated runner." >&2
   exit 1
 fi
 

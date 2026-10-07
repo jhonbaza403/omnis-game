@@ -1,5 +1,5 @@
 """
-Omnis UE 5.6 editor content generator.
+Omnis UE 5.8 editor content generator.
 
 Run inside Unreal Editor with PythonScriptPlugin enabled.
 
@@ -170,7 +170,7 @@ def main():
     sphere = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Sphere.Sphere")
     cylinder = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cylinder.Cylinder")
     if not cube or not sphere or not cylinder:
-        raise RuntimeError("Required UE 5.6 BasicShapes assets are unavailable")
+        raise RuntimeError("Required UE 5.8 BasicShapes assets are unavailable")
 
     player_start = spawn(actor_subsystem, unreal.PlayerStart, (-900, 0, 125))
     player_start.set_actor_label("Omnis_PlayerStart")

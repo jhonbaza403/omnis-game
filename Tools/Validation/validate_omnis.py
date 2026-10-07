@@ -40,8 +40,8 @@ def main() -> None:
         fail("placeholder remains: " + ", ".join(str(p.relative_to(ROOT)) for p in placeholders))
 
     project = json.loads((ROOT / "Omnis.uproject").read_text(encoding="utf-8"))
-    if project.get("EngineAssociation") != "5.6":
-        fail("Omnis.uproject must target Unreal Engine 5.6")
+    if project.get("EngineAssociation") != "5.8":
+        fail("Omnis.uproject must target Unreal Engine 5.8")
 
     print("[PASS] Omnis repository validation complete.")
 

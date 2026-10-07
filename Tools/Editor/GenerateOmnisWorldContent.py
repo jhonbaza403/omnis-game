@@ -1,4 +1,4 @@
-"""Omnis UE 5.6 open-world content materializer."""
+"""Omnis UE 5.8 open-world content materializer."""
 import math
 import unreal
 
