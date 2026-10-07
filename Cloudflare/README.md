@@ -10,7 +10,7 @@ La integración de Omnis usa Cloudflare Workers con Wrangler administrado desde 
 - Wrangler: `4.148.0` fijado en `package.json`
 - Node: `24+`
 - `workers.dev`: habilitado
-- Preview URLs: habilitadas
+- Preview URLs: habilitadas y activadas en Cloudflare (`previews_enabled=true`)
 
 Cloudflare recomienda `wrangler.jsonc` para proyectos nuevos y Wrangler 4.135.0 o posterior para Worker Previews. Omnis usa 4.148.0, fijado explícitamente en el proyecto.
 
@@ -58,7 +58,7 @@ El job `cloudflare_preview` ejecuta `npx wrangler preview` para ramas y merge re
 
 ## Workers Builds
 
-El Worker `omnis-game` existe en Cloudflare, pero la conexión GitLab de Workers Builds está actualmente desconectada en la cuenta. La API de Cloudflare rechazó la conexión mientras esa autorización no vuelva a estar activa.
+El Worker `omnis-game` existe en Cloudflare y sus Preview URLs de `workers.dev` están activadas. La conexión GitLab de Workers Builds sigue desconectada en la cuenta. La API de Cloudflare rechaza la vinculación porque falta la autorización de la aplicación GitLab.
 
 Cuando la integración GitLab se reautorice en Cloudflare, Workers Builds podrá crear las Previews automáticamente y publicar sus URLs en los merge requests. El comando de Preview recomendado es `npx wrangler preview`, usando la versión declarada por el `package.json`.
 
