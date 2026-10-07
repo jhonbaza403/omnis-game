@@ -67,3 +67,34 @@ No se usan Version URLs ni `wrangler versions upload --preview-alias` para proba
 ## Política
 
 No se crean UAsset/UMAP falsos, bindings ficticios ni servicios externos simulados. La materialización Unreal continúa dependiendo del runner UE 5.8 real.
+
+## GitLab OAuth — Omnis Runner Control
+
+El Worker implementa un flujo OAuth 2.0 de servidor para la aplicación **Omnis Runner Control**:
+
+- Inicio: `GET /oauth/start`
+- Callback: `GET /oauth/callback`
+- Estado: `GET /oauth/status`
+- Scopes mínimos: `create_runner manage_runner`
+- Callback registrado: `https://omnis-game.bazajhon.workers.dev/oauth/callback`
+
+El estado OAuth es de un solo uso y expira en 10 minutos. El token de GitLab se cifra con AES-256-GCM antes de persistirse en Workers KV. El Worker nunca devuelve el access token ni el refresh token en una respuesta.
+
+GitLab devuelve por defecto OAuth access tokens con una vida de dos horas y refresh tokens que permiten obtener credenciales nuevas; el flujo del Worker actualiza y reemplaza de forma automática la credencial cifrada cuando se aproxima la expiración. Esto sigue el comportamiento documentado por GitLab. 
+
+### Secretos requeridos
+
+No se almacenan en Git:
+
+- `GITLAB_OAUTH_CLIENT_SECRET` — secreto de la aplicación GitLab **Omnis Runner Control**.
+- `OMNIS_OAUTH_ENCRYPTION_KEY` — secreto de 32 bytes codificado en Base64 para cifrar los tokens.
+
+Para producción:
+
+`npx wrangler secret put GITLAB_OAUTH_CLIENT_SECRET`
+
+`npx wrangler secret put OMNIS_OAUTH_ENCRYPTION_KEY`
+
+Para Preview deben configurarse también como secretos de Preview/Base según el flujo actual de Wrangler. Nunca se deben añadir al repositorio, a `wrangler.jsonc` ni a logs.
+
+El Client Secret de GitLab solo estuvo disponible una vez al crear la aplicación; si se perdió o fue expuesto, usa **Renew secret** en GitLab y registra el nuevo secreto únicamente en Cloudflare. 
