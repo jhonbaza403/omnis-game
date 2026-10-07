@@ -3,9 +3,11 @@
 #include "Core/Cycle/OmnisCycleSubsystem.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
 #include "Dom/JsonObject.h"
+#include "EngineUtils.h"
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Gameplay/Player/OmnisPlayerController.h"
 #include "Multiplayer/World/OmnisMultiplayerWorldSubsystem.h"
+#include "Multiplayer/World/OmnisReplicatedWorldStateActor.h"
 #include "Online/Services/OmnisOnlineServiceSubsystem.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
@@ -69,6 +71,24 @@ void AOmnisGameMode::BeginPlay()
         GetGameInstance() ? GetGameInstance()->GetSubsystem<UOmnisMultiplayerWorldSubsystem>() : nullptr)
     {
         MultiplayerWorld->RefreshWorldState();
+    }
+
+    if (HasAuthority() && GetWorld())
+    {
+        bool bHasWorldStateActor = false;
+        for (TActorIterator<AOmnisReplicatedWorldStateActor> It(GetWorld()); It; ++It)
+        {
+            bHasWorldStateActor = true;
+            break;
+        }
+
+        if (!bHasWorldStateActor)
+        {
+            GetWorld()->SpawnActor<AOmnisReplicatedWorldStateActor>(
+                AOmnisReplicatedWorldStateActor::StaticClass(),
+                FVector::ZeroVector,
+                FRotator::ZeroRotator);
+        }
     }
 }
 
@@ -137,6 +157,15 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
                                 : nullptr)
                         {
                             MultiplayerWorld->RefreshWorldState();
+                        }
+
+                        if (WeakGameMode->GetWorld())
+                        {
+                            for (TActorIterator<AOmnisReplicatedWorldStateActor> It(WeakGameMode->GetWorld()); It; ++It)
+                            {
+                                It->RefreshFromBackend();
+                                break;
+                            }
                         }
                     }
                 });
