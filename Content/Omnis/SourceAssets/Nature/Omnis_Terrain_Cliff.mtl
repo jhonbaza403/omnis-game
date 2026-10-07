@@ -1,0 +1,6 @@
+newmtl Omnis_Terrain_Cliff
+Kd 0.30 0.27 0.23
+Ks 0.07 0.07 0.07
+Ns 18
+d 1
+illum 2
