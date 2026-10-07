@@ -1,11 +1,13 @@
 #include "UI/HUD/OmnisHUDWidget.h"
 
+#include "Blueprint/UserWidget.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Core/Cycle/OmnisCycleSubsystem.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
+#include "Engine/Engine.h"
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 
@@ -17,29 +19,24 @@ UOmnisHUDWidget::UOmnisHUDWidget(const FObjectInitializer& ObjectInitializer)
 void UOmnisHUDWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-
     BuildLayout();
     RefreshHUD();
 }
 
 void UOmnisHUDWidget::BuildLayout()
 {
-    if (WidgetTree->RootWidget)
-    {
-        return;
-    }
+    if (WidgetTree->RootWidget) return;
 
     UCanvasPanel* Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("Root"));
     WidgetTree->RootWidget = Root;
 
     TitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Title"));
     TitleText->SetText(FText::FromString(TEXT("OMNIS // EL ÚLTIMO CICLO")));
-    TitleText->SetFont(FSlateFontInfo(TitleText->GetFont().FontObject, 22));
     Root->AddChild(TitleText);
 
     if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(TitleText->Slot))
     {
-        Slot->SetPosition(FVector2D(32, 24));
+        Slot->SetPosition(FVector2D(32,24));
         Slot->SetAutoSize(true);
     }
 
@@ -47,7 +44,7 @@ void UOmnisHUDWidget::BuildLayout()
     Root->AddChild(WorldText);
     if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(WorldText->Slot))
     {
-        Slot->SetPosition(FVector2D(32, 58));
+        Slot->SetPosition(FVector2D(32,58));
         Slot->SetAutoSize(true);
     }
 
@@ -55,9 +52,9 @@ void UOmnisHUDWidget::BuildLayout()
     Root->AddChild(HealthText);
     if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(HealthText->Slot))
     {
-        Slot->SetPosition(FVector2D(32, -92));
         Slot->SetAnchors(FAnchors(0,1,0,1));
         Slot->SetAlignment(FVector2D(0,1));
+        Slot->SetPosition(FVector2D(32,-92));
         Slot->SetAutoSize(true);
     }
 
@@ -67,8 +64,8 @@ void UOmnisHUDWidget::BuildLayout()
     {
         Slot->SetAnchors(FAnchors(0,1,0,1));
         Slot->SetAlignment(FVector2D(0,1));
-        Slot->SetPosition(FVector2D(32, -58));
-        Slot->SetSize(FVector2D(320, 12));
+        Slot->SetPosition(FVector2D(32,-58));
+        Slot->SetSize(FVector2D(320,12));
     }
 
     ControlsText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Controls"));
@@ -78,7 +75,7 @@ void UOmnisHUDWidget::BuildLayout()
     {
         Slot->SetAnchors(FAnchors(0,1,0,1));
         Slot->SetAlignment(FVector2D(0,1));
-        Slot->SetPosition(FVector2D(32, -30));
+        Slot->SetPosition(FVector2D(32,-30));
         Slot->SetAutoSize(true);
     }
 
@@ -88,7 +85,7 @@ void UOmnisHUDWidget::BuildLayout()
     {
         Slot->SetAnchors(FAnchors(1,0,1,0));
         Slot->SetAlignment(FVector2D(1,0));
-        Slot->SetPosition(FVector2D(-32, 30));
+        Slot->SetPosition(FVector2D(-32,30));
         Slot->SetAutoSize(true);
     }
 }
@@ -137,9 +134,9 @@ void UOmnisHUDWidget::RefreshHUD()
 
     if (HealthText)
     {
-        HealthText->SetText(FText::FromString(
-            FString::Printf(TEXT("VITALIDAD  %.0f / %.0f"), Health, MaxHealth)
-        ));
+        HealthText->SetText(FText::FromString(FString::Printf(
+            TEXT("VITALIDAD  %.0f / %.0f"), Health, MaxHealth
+        )));
     }
 
     if (HealthBar)
