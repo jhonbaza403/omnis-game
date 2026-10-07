@@ -13,6 +13,13 @@
     "GITLAB_OAUTH_SCOPES": "create_runner manage_runner"
   },
 
+  "secrets": {
+    "required": [
+      "GITLAB_OAUTH_CLIENT_SECRET",
+      "OMNIS_OAUTH_ENCRYPTION_KEY"
+    ]
+  },
+
   "kv_namespaces": [
     {
       "binding": "OMNIS_OAUTH_KV",
