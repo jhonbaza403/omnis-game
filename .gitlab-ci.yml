@@ -41,7 +41,6 @@ unreal_pipeline:
   image: "$OMNIS_UNREAL_IMAGE"
   needs:
     - python_tests
-  resource_group: unreal56-linux
   allow_failure: false
   script: |
     set -euo pipefail
