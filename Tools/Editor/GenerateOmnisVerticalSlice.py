@@ -33,10 +33,7 @@ def spawn(actor_subsystem, actor_class, location, rotation=unreal.Rotator(0, 0, 
 
 def main():
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    level_subsystem = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
-    asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
-
-    unreal.EditorAssetLibrary.make_directory("/Game/Omnis")
+    level_subsystem = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)\n    unreal.EditorAssetLibrary.make_directory("/Game/Omnis")
     unreal.EditorAssetLibrary.make_directory("/Game/Omnis/Maps")
 
     if not level_subsystem.new_level(MAP_PATH):
@@ -45,6 +42,34 @@ def main():
     world = unreal.EditorLevelLibrary.get_editor_world()
     if not world:
         raise RuntimeError("Editor world was not created")
+
+    asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
+
+    source_files = [
+        (
+            unreal.Paths.project_dir() + "Content/Omnis/SourceAssets/Obelisk/Omnis_Obelisk.obj",
+            "/Game/Omnis/Art/Obelisk"
+        ),
+        (
+            unreal.Paths.project_dir() + "Content/Omnis/SourceAssets/Textures/Omnis_Nexus_Texture.svg",
+            "/Game/Omnis/Art/Textures"
+        ),
+    ]
+
+    unreal.EditorAssetLibrary.make_directory("/Game/Omnis/Art")
+    unreal.EditorAssetLibrary.make_directory("/Game/Omnis/Art/Textures")
+
+    import_tasks = []
+    for filename, destination in source_files:
+        task = unreal.AssetImportTask()
+        task.set_editor_property("filename", filename)
+        task.set_editor_property("destination_path", destination)
+        task.set_editor_property("automated", True)
+        task.set_editor_property("replace_existing", True)
+        task.set_editor_property("save", True)
+        import_tasks.append(task)
+
+    asset_tools.import_asset_tasks(import_tasks)
 
     cube = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cube.Cube")
     sphere = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Sphere.Sphere")
