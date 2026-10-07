@@ -65,6 +65,8 @@ docker_services:
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/cycle/advance', data=b'{"reason":"ci_probe"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 200"
     - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
   after_script:
+    - export OMNIS_SERVICE_TOKEN=ci-test-token
+    - docker compose -f infra/docker/compose.yaml ps -a || true
     - docker compose -f infra/docker/compose.yaml logs --no-color || true
     - docker compose -f infra/docker/compose.yaml down -v || true
 
