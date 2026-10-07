@@ -1,0 +1,4 @@
+**
+!services/omnis_platform.py
+!infra/docker/**
+!Build/OmnisServer/**

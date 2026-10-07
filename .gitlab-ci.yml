@@ -2,9 +2,11 @@ stages:
   - validate
   - test
   - cloudflare
+  - docker_services
   - unreal_validate
   - unreal
   - package
+  - container
 
 python_validate:
   stage: validate
@@ -19,6 +21,24 @@ python_tests:
   image: python:3.12
   script:
     - bash CI/Tests/test.sh
+
+docker_services:
+  stage: docker_services
+  image: docker:27.4.1
+  services:
+    - name: docker:27.4.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - docker build --pull -f infra/docker/platform.Dockerfile -t "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" .
+    - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 cloudflare_validate:
   stage: cloudflare
@@ -92,7 +112,7 @@ unreal_build:
     paths:
       - Saved/Logs/omnis_ue56_build.log
 
-package_game:
+unreal_server_package:
   stage: package
   tags:
     - unreal56-linux
@@ -102,6 +122,7 @@ package_game:
     - bash CI/Packaging/package.sh
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - when: never
   resource_group: unreal56-linux
   allow_failure: false
@@ -109,4 +130,27 @@ package_game:
     when: always
     expire_in: 7 days
     paths:
-      - Build/Omnis/
+      - Build/OmnisServer/
+      - Saved/Logs/omnis_ue56_server_package.log
+
+container_server_image:
+  stage: container
+  image: docker:27.4.1
+  services:
+    - name: docker:27.4.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+  needs:
+    - job: unreal_server_package
+      artifacts: true
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - test -d Build/OmnisServer
+    - docker build --pull -f infra/docker/unreal-server/Dockerfile -t "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA" .
+    - docker push "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: false
