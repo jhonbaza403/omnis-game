@@ -8,6 +8,10 @@ stages:
   - container
   - container_smoke
 
+default:
+  tags:
+    - omnis-ci-linux
+
 variables:
   OMNIS_UNREAL_IMAGE: "wukakuki/unreal-engine:dev-slim-5.6.1@sha256:7ff40023124f2e2773fc43ad904f3b1305c1157c7b58328e0c08937edeb425d9"
   UE_ENGINE_ROOT: "/home/ue4/UnrealEngine"
@@ -36,11 +40,30 @@ cloudflare_validate:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
+runner_preflight:
+  stage: runner_preflight
+  image: docker:27.4.1
+  script:
+    - docker info
+    - |
+      CPU="$(nproc)"
+      MEM_KB="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+      DISK_KB="$(df -Pk "$CI_PROJECT_DIR" | awk 'NR==2 {print $4}')"
+      echo "CPU=${CPU}"
+      echo "MEM_KB=${MEM_KB}"
+      echo "FREE_DISK_KB=${DISK_KB}"
+      test "$CPU" -ge 8
+      test "$MEM_KB" -ge 24000000
+      test "$DISK_KB" -ge 80000000
+      echo "=== RESULT: OMNIS SELF-HOSTED RUNNER CAPACITY PASSED ==="
+
 unreal_pipeline:
   stage: unreal
-  image: "$OMNIS_UNREAL_IMAGE"
-  tags:
-    - "saas-linux-small-amd64"
+  image:
+    name: "$OMNIS_UNREAL_IMAGE"
+    docker:
+      platform: linux/amd64
+      user: "0"
   timeout: 3h
   interruptible: true
   needs:
