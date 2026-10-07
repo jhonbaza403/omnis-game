@@ -34,11 +34,16 @@ docker_services:
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
+    - export OMNIS_SERVICE_TOKEN=ci-test-token
+    - docker compose -f infra/docker/compose.yaml config --quiet
     - docker build --pull -f infra/docker/platform.Dockerfile -t "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" .
+    - docker compose -f infra/docker/compose.yaml up -d --build redis matchmaking session world gateway
+    - trap 'docker compose -f infra/docker/compose.yaml down -v' EXIT
+    - docker compose -f infra/docker/compose.yaml ps
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8080/healthz').status == 200"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle'); assert r.status == 200 and b'Ruinas de Piedra Cienaga' not in r.read()"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{\"playlist\":\"open-world\"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
     - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 cloudflare_validate:
   stage: cloudflare
