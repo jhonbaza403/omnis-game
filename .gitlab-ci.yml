@@ -43,6 +43,18 @@ docker_services:
     - docker compose -f infra/docker/compose.yaml config --quiet
     - docker build --pull -f infra/docker/platform.Dockerfile -t "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" .
     - docker compose -f infra/docker/compose.yaml up -d --build redis matchmaking session world gateway
+    - |
+      for i in $(seq 1 30); do
+        if docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)" >/dev/null 2>&1; then
+          echo "gateway is healthy"
+          break
+        fi
+        if [ "$i" -eq 30 ]; then
+          echo "gateway did not become ready"
+          exit 1
+        fi
+        sleep 2
+      done
     - trap 'docker compose -f infra/docker/compose.yaml down -v' EXIT
     - docker compose -f infra/docker/compose.yaml ps
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle')); assert d['era']=='Ruinas de Piedra CiÃ©naga'"
@@ -52,6 +64,9 @@ docker_services:
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/events', data=b'{"event_type":"ci_world_probe","player_id":"ci-player","payload":{"source":"gitlab-ci"}}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/cycle/advance', data=b'{"reason":"ci_probe"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 200"
     - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
+  after_script:
+    - docker compose -f infra/docker/compose.yaml logs --no-color || true
+    - docker compose -f infra/docker/compose.yaml down -v || true
 
 cloudflare_validate:
   stage: cloudflare
