@@ -39,9 +39,7 @@ unreal_content:
     - bash CI/Build/generate_content.sh
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
     - when: never
   resource_group: unreal56-linux
   allow_failure: false
@@ -63,9 +61,7 @@ unreal_automation:
     - bash CI/Tests/run_unreal_automation.sh
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
     - when: never
   resource_group: unreal56-linux
   allow_failure: false
@@ -86,9 +82,7 @@ unreal_build:
     - bash CI/Build/build.sh
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
     - when: never
   resource_group: unreal56-linux
   allow_failure: false
@@ -108,7 +102,6 @@ package_game:
     - bash CI/Packaging/package.sh
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
     - when: never
   resource_group: unreal56-linux
   allow_failure: false
