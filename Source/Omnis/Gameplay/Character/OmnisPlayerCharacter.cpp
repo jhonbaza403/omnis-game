@@ -158,10 +158,18 @@ void AOmnisPlayerCharacter::InteractPressed()
 
 void AOmnisPlayerCharacter::BuildPressed()
 {
-    if (Construction)
+    if (!Construction)
+    {
+        return;
+    }
+
+    if (HasAuthority())
     {
         Construction->ConstructForward();
+        return;
     }
+
+    Construction->ServerConstructForward();
 }
 
 void AOmnisPlayerCharacter::ApplyAvatarVisuals()
