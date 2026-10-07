@@ -21,6 +21,15 @@ function json(data, status = 200, extra = {}) {
   });
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function html(title, body, status = 200) {
   return new Response(`<!doctype html>
 <html lang="en">
@@ -213,7 +222,13 @@ async function handleCallback(request, env) {
   const url = new URL(request.url);
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
-  if (error) return html("Omnis OAuth", `<h1>GitLab authorization not completed</h1><p>${errorDescription ?? error}</p>`, 400);
+  if (error) {
+    return html(
+      "Omnis OAuth",
+      `<h1>GitLab authorization not completed</h1><p>${escapeHtml(errorDescription ?? error)}</p>`,
+      400
+    );
+  }
 
   const state = url.searchParams.get("state");
   const code = url.searchParams.get("code");
@@ -261,15 +276,11 @@ async function handleCallback(request, env) {
 
 async function oauthStatus(env) {
   requireConfig(env);
-  const metadata = await env.OMNIS_OAUTH_KV.get(META_KV_KEY, "json");
   const credential = await env.OMNIS_OAUTH_KV.get(TOKEN_KV_KEY);
   return json({
     service: "omnis-gitlab-oauth",
     configured: true,
     connected: Boolean(credential),
-    user: metadata
-      ? { id: metadata.gitlab_user_id, username: metadata.username, name: metadata.name }
-      : null,
     scopes: scopes(env),
     redirect_uri: env.GITLAB_OAUTH_REDIRECT_URI
   });
