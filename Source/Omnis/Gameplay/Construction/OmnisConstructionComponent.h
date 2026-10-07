@@ -15,6 +15,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Construction")
     AActor* ConstructForward();
 
+    UFUNCTION(Server, Reliable)
+    void ServerConstructForward();
+
     UFUNCTION(BlueprintCallable, Category="Omnis|Construction")
     bool RemoveLastPiece();
 

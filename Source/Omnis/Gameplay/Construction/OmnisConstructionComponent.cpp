@@ -20,6 +20,11 @@ FVector UOmnisConstructionComponent::SnapLocation(const FVector& Location) const
         FMath::GridSnap(Location.Z, SafeGrid));
 }
 
+void UOmnisConstructionComponent::ServerConstructForward_Implementation()
+{
+    ConstructForward();
+}
+
 AActor* UOmnisConstructionComponent::ConstructForward()
 {
     AActor* Owner = GetOwner();
@@ -91,6 +96,8 @@ AActor* UOmnisConstructionComponent::ConstructForward()
         }
     }
 
+    Piece->SetReplicates(true);
+    Piece->SetReplicateMovement(true);
     Piece->Tags.Add(TEXT("Omnis.Construction"));
     BuiltPieces.Add(Piece);
     return Piece;
