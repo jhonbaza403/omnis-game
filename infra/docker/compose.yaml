@@ -24,15 +24,15 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      matchmaking: { condition: service_healthy }
-      session: { condition: service_healthy }
-      world: { condition: service_healthy }
+      matchmaking: { condition: service_started }
+      session: { condition: service_started }
+      world: { condition: service_started }
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)"]
+      interval: 5s
       timeout: 3s
-      retries: 5
-      start_period: 5s
+      retries: 12
+      start_period: 10s
 
   matchmaking:
     <<: *platform
@@ -44,10 +44,11 @@ services:
     depends_on:
       redis: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)"]
+      interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 12
+      start_period: 10s
 
   session:
     <<: *platform
@@ -59,10 +60,11 @@ services:
     depends_on:
       redis: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)"]
+      interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 12
+      start_period: 10s
 
   world:
     <<: *platform
@@ -74,10 +76,11 @@ services:
     depends_on:
       redis: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)"]
+      interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 12
+      start_period: 10s
 
   redis:
     image: redis:7.4-alpine
