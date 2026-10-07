@@ -7,6 +7,7 @@
 
 class UStaticMeshComponent;
 class UOmnisHealthComponent;
+class UOmnisProceduralAnimationComponent;
 
 UCLASS()
 class OMNIS_API AOmnisNPCCharacter : public ACharacter, public IOmnisInteractableInterface
@@ -28,6 +29,9 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|NPC")
     TObjectPtr<UOmnisHealthComponent> Health;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Animation")
+    TObjectPtr<UOmnisProceduralAnimationComponent> ProceduralAnimation;
 
 private:
     UPROPERTY(VisibleAnywhere)
