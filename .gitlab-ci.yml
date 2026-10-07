@@ -39,6 +39,8 @@ cloudflare_validate:
 unreal_pipeline:
   stage: unreal
   image: "$OMNIS_UNREAL_IMAGE"
+  tags:
+    - "saas-linux-medium-amd64"
   needs:
     - python_tests
   allow_failure: false
