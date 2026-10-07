@@ -1,4 +1,9 @@
-**
+*
+!services/
 !services/omnis_platform.py
+!infra/
+!infra/docker/
 !infra/docker/**
+!Build/
+!Build/OmnisServer/
 !Build/OmnisServer/**
