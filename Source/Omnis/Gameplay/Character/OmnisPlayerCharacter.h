@@ -15,6 +15,7 @@ class UOmnisAbilityComponent;
 class UOmnisInventoryComponent;
 class UOmnisEquipmentComponent;
 class UOmnisHealthComponent;
+class UOmnisProceduralAnimationComponent;
 class UInputComponent;
 
 UCLASS()
@@ -60,6 +61,9 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Gameplay")
     TObjectPtr<UOmnisHealthComponent> Health;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Animation")
+    TObjectPtr<UOmnisProceduralAnimationComponent> ProceduralAnimation;
 
 protected:
     void MoveForward(float Value);
