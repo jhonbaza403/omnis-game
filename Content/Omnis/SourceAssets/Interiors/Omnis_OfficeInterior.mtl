@@ -1,0 +1,6 @@
+newmtl Omnis_OfficeInterior
+Kd 0.38 0.40 0.42
+Ks 0.18 0.18 0.18
+Ns 36
+d 1
+illum 2
