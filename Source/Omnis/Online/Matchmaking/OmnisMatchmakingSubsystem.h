@@ -16,8 +16,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Online")
     void Dequeue();
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Online")
+    void RefreshStatus();
+
     UFUNCTION(BlueprintPure, Category="Omnis|Online")
     bool IsQueued() const { return bQueued; }
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Online")
+    FName GetPlaylistId() const { return PlaylistId; }
 
 private:
     UPROPERTY()

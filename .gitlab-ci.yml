@@ -3,10 +3,14 @@ stages:
   - test
   - cloudflare
   - docker_services
+  - unreal_runner
   - unreal_validate
   - unreal
   - package
   - container
+
+variables:
+  OMNIS_UNREAL_RUNNER_TAG: "unreal56-linux"
 
 python_validate:
   stage: validate
@@ -40,9 +44,9 @@ docker_services:
     - docker compose -f infra/docker/compose.yaml up -d --build redis matchmaking session world gateway
     - trap 'docker compose -f infra/docker/compose.yaml down -v' EXIT
     - docker compose -f infra/docker/compose.yaml ps
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8080/healthz').status == 200"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle'); assert r.status == 200 and b'Ruinas de Piedra Cienaga' not in r.read()"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{\"playlist\":\"open-world\"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle')); assert d['era']=='Ruinas de Piedra Ciénaga'"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{"playlist":"open-world"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/healthz'); assert r.status == 200"
     - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
 
 cloudflare_validate:
@@ -54,12 +58,30 @@ cloudflare_validate:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
+unreal_runner_preflight:
+  stage: unreal_runner
+  tags:
+    - "$OMNIS_UNREAL_RUNNER_TAG"
+  script:
+    - test -n "$UE_ENGINE_ROOT"
+    - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUBT.sh"
+    - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUAT.sh"
+    - test -f "$UE_ENGINE_ROOT/Engine/Build/Build.version"
+    - python3 -c 'import json; p=json.load(open("'$UE_ENGINE_ROOT/Engine/Build/Build.version'")); assert (p["MajorVersion"],p["MinorVersion"])==(5,6), p'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - when: never
+  resource_group: unreal56-linux
+  allow_failure: false
+
 unreal_content:
   stage: unreal_validate
   tags:
-    - unreal56-linux
+    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - python_tests
+    - unreal_runner_preflight
   script:
     - bash CI/Build/generate_content.sh
   rules:
@@ -79,7 +101,7 @@ unreal_content:
 unreal_automation:
   stage: unreal_validate
   tags:
-    - unreal56-linux
+    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - unreal_content
   script:
@@ -99,10 +121,9 @@ unreal_automation:
 unreal_build:
   stage: unreal
   tags:
-    - unreal56-linux
+    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
-    - job: unreal_content
-      artifacts: true
+    - unreal_content
   script:
     - bash CI/Build/build.sh
   rules:
@@ -120,7 +141,7 @@ unreal_build:
 unreal_server_package:
   stage: package
   tags:
-    - unreal56-linux
+    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - unreal_build
   script:
@@ -154,7 +175,9 @@ container_server_image:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
     - test -d Build/OmnisServer
+    - test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname 'OmnisServer*' -print -quit)"
     - docker build --pull -f infra/docker/unreal-server/Dockerfile -t "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA" .
+    - docker image inspect "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
     - docker push "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'

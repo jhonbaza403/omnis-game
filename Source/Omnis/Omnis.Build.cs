@@ -15,7 +15,10 @@ public class Omnis : ModuleRules
             "GameplayTags",
             "UMG",
             "Slate",
-            "SlateCore"
+            "SlateCore",
+            "HTTP",
+            "Json",
+            "JsonUtilities"
         });
     }
 }
