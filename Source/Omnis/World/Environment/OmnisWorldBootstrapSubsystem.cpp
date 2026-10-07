@@ -3,6 +3,7 @@
 #include "Engine/PointLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerStart.h"
@@ -10,6 +11,7 @@
 #include "Materials/MaterialInterface.h"
 #include "Gameplay/Interaction/OmnisInteractiveActor.h"
 #include "AI/NPC/OmnisNPCCharacter.h"
+#include "World/Environment/OmnisNexusVisualActor.h"
 
 namespace
 {
@@ -120,20 +122,14 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
     }
 
     UWorld* World = GetWorld();
-    if (!World)
+    if (!World || !World->GetAuthGameMode())
     {
         return;
     }
 
     UStaticMesh* Cube = LoadEngineMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-    UStaticMesh* Sphere = LoadEngineMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
     UStaticMesh* Cylinder = LoadEngineMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-    if (!Cube || !Sphere || !Cylinder)
-    {
-        return;
-    }
-
-    if (!World->GetAuthGameMode())
+    if (!Cube || !Cylinder)
     {
         return;
     }
@@ -143,7 +139,14 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
         World->GetWorldSettings()->WorldToMeters = 100.0f;
     }
 
-    if (World->FindActorByLabel(TEXT("Omnis_Runtime_PlayerStart")) == nullptr)
+    bool bHasPlayerStart = false;
+    for (TActorIterator<APlayerStart> It(World); It; ++It)
+    {
+        bHasPlayerStart = true;
+        break;
+    }
+
+    if (!bHasPlayerStart)
     {
         APlayerStart* PlayerStart = World->SpawnActor<APlayerStart>(
             APlayerStart::StaticClass(),
@@ -171,8 +174,17 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
     const FLinearColor Gold(1.0f, 0.55f, 0.12f);
     const FLinearColor Green(0.1f, 1.0f, 0.48f);
 
-    SpawnMeshActor(World, Sphere, FVector(0.0f, 0.0f, 165.0f), FVector(2.3f), Violet, false);
-    SpawnPointLight(World, FVector(0.0f, 0.0f, 220.0f), Violet, 4200.0f, 900.0f);
+    if (!World->FindActorByLabel(TEXT("Omnis_Runtime_Nexus")))
+    {
+        if (AOmnisNexusVisualActor* Nexus = World->SpawnActor<AOmnisNexusVisualActor>(
+            AOmnisNexusVisualActor::StaticClass(),
+            FVector(0.0f, 0.0f, 165.0f),
+            FRotator::ZeroRotator
+        ))
+        {
+            Nexus->SetActorLabel(TEXT("Omnis_Runtime_Nexus"));
+        }
+    }
 
     const TArray<FVector> Pillars = {
         FVector(800.0f, 0.0f, 150.0f),
