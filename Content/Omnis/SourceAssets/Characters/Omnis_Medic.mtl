@@ -1,0 +1,6 @@
+newmtl Omnis_Medic
+Kd 0.82 0.82 0.78
+Ks 0.18 0.18 0.18
+Ns 30
+d 1
+illum 2
