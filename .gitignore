@@ -19,6 +19,8 @@ Saved/
 *.ue4stats
 *.prof
 Content/*/Autosaves/
+!Content/Omnis/SourceAssets/**/*.obj
+!Content/Omnis/SourceAssets/**/*.mtl
 TestResults/
 TestOutput/
 Coverage/

@@ -11,6 +11,8 @@ python_validate:
   image: python:3.12
   script:
     - bash CI/Validation/validate.sh
+    - python -m py_compile Tools/Editor/GenerateOmnisVerticalSlice.py Tools/Editor/GenerateOmnisWorldContent.py CI/Validation/validate_content_sources.py
+    - python CI/Validation/validate_content_sources.py
 
 python_tests:
   stage: test
@@ -70,6 +72,7 @@ unreal_content:
     expire_in: 7 days
     paths:
       - Content/Omnis/Maps/*.umap
+      - Content/Omnis/Art/**/*.uasset
       - Saved/Logs/omnis_content_generation.log
 
 unreal_build:
@@ -77,7 +80,8 @@ unreal_build:
   tags:
     - unreal56-linux
   needs:
-    - python_tests
+    - job: unreal_content
+      artifacts: true
   script:
     - bash CI/Build/build.sh
   rules:
