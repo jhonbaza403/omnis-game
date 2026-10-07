@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
 LOG_FILE="$ROOT/Saved/Logs/omnis_ue56_build.log"
 
-: "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT to the Unreal Engine 5.6 installation on the dedicated runner}"
+: "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT to the Unreal Engine 5.8 installation on the dedicated runner}"
 
 if [[ ! -d "$UE_ENGINE_ROOT/Engine" ]]; then
   echo "UE_ENGINE_ROOT does not contain an Unreal Engine installation: $UE_ENGINE_ROOT" >&2
@@ -29,8 +29,8 @@ UE_MAJOR="$(sed -n 's/.*"MajorVersion"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*
 UE_MINOR="$(sed -n 's/.*"MinorVersion"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$VERSION_FILE" | head -n 1)"
 UE_PATCH="$(sed -n 's/.*"PatchVersion"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$VERSION_FILE" | head -n 1)"
 
-if [[ "$UE_MAJOR.$UE_MINOR" != "5.6" ]]; then
-  echo "Wrong Unreal Engine version: detected $UE_MAJOR.$UE_MINOR.$UE_PATCH; required 5.6.x" >&2
+if [[ "$UE_MAJOR.$UE_MINOR" != "5.8" ]]; then
+  echo "Wrong Unreal Engine version: detected $UE_MAJOR.$UE_MINOR.$UE_PATCH; required 5.8.x" >&2
   exit 1
 fi
 
@@ -40,7 +40,7 @@ if [[ ! -x "$RUN_UBT" ]]; then
   exit 1
 fi
 
-echo "=== OMNIS UE 5.6 REAL BUILD ===" | tee "$LOG_FILE"
+echo "=== OMNIS UE 5.8 REAL BUILD ===" | tee "$LOG_FILE"
 echo "Commit: ${CI_COMMIT_SHA:-local}" | tee -a "$LOG_FILE"
 echo "Runner: ${CI_RUNNER_DESCRIPTION:-local}" | tee -a "$LOG_FILE"
 echo "UE_ENGINE_ROOT: $UE_ENGINE_ROOT" | tee -a "$LOG_FILE"
@@ -91,4 +91,4 @@ if ! find "$ROOT/Binaries" -type f -iname '*Omnis*' -print -quit 2>/dev/null | g
   exit 1
 fi
 
-echo "=== RESULT: UE 5.6 UHT + UBT + module link + Editor/Game build PASSED ===" | tee -a "$LOG_FILE"
+echo "=== RESULT: UE 5.8 UHT + UBT + module link + Editor/Game build PASSED ===" | tee -a "$LOG_FILE"

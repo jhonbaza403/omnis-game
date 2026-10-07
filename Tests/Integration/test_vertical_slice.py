@@ -29,7 +29,7 @@ class VerticalSliceContractTests(unittest.TestCase):
         project = json.loads(
             (ROOT / "Omnis.uproject").read_text(encoding="utf-8")
         )
-        self.assertEqual(project["EngineAssociation"], "5.6")
+        self.assertEqual(project["EngineAssociation"], "5.8")
         plugin_names = {plugin["Name"] for plugin in project["Plugins"]}
         self.assertIn("PythonScriptPlugin", plugin_names)
         self.assertIn("ChaosVehiclesPlugin", plugin_names)

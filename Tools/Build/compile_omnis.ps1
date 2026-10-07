@@ -10,7 +10,7 @@ $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 $ProjectFile = Join-Path $ProjectRoot "Omnis.uproject"
 
 if ([string]::IsNullOrWhiteSpace($UnrealRoot)) {
-    throw "Provide -UnrealRoot or set UE_ENGINE_ROOT to a UE 5.6 installation."
+    throw "Provide -UnrealRoot or set UE_ENGINE_ROOT to a UE 5.8 installation."
 }
 
 $BuildVersion = Join-Path $UnrealRoot "Engine/Build/Build.version"
@@ -24,8 +24,8 @@ if (-not (Test-Path $RunUBT)) {
 }
 
 $Version = Get-Content $BuildVersion -Raw | ConvertFrom-Json
-if ("$($Version.MajorVersion).$($Version.MinorVersion)" -ne "5.6") {
-    throw "Wrong Unreal Engine version: detected $($Version.MajorVersion).$($Version.MinorVersion).$($Version.PatchVersion); required 5.6.x"
+if ("$($Version.MajorVersion).$($Version.MinorVersion)" -ne "5.8") {
+    throw "Wrong Unreal Engine version: detected $($Version.MajorVersion).$($Version.MinorVersion).$($Version.PatchVersion); required 5.8.x"
 }
 
 & $RunUBT "-Mode=UnrealHeaderTool" "-Target=OmnisEditor $Platform $Configuration" "-Project=$ProjectFile"
@@ -37,4 +37,4 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $RunUBT "Omnis" $Platform $Configuration "-Project=$ProjectFile" "-WaitMutex"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host "UE 5.6 UHT + UBT + module link + Editor/Game build completed successfully."
+Write-Host "UE 5.8 UHT + UBT + module link + Editor/Game build completed successfully."

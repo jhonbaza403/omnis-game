@@ -40,4 +40,4 @@ El vertical slice integra:
 - controles sociales de bloqueo y reportes;
 - ciclo narrativo y Nexo.
 
-Los assets nativos UAsset y el mapa UMAP se generan exclusivamente dentro de Unreal Engine 5.6 mediante CI. No se crean binarios ficticios para aparentar materialización.
+Los assets nativos UAsset y el mapa UMAP se generan exclusivamente dentro de Unreal Engine 5.8 mediante CI. No se crean binarios ficticios para aparentar materialización.
