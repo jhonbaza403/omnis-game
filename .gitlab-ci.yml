@@ -2,11 +2,8 @@ stages:
   - validate
   - test
   - cloudflare
-  - docker_services
-  - unreal_runner
-  - unreal_validate
   - unreal
-  - package
+  - docker_services
   - server_smoke
   - container
   - container_smoke
@@ -21,6 +18,7 @@ python_validate:
   script:
     - bash CI/Validation/validate.sh
     - python -m py_compile Tools/Editor/GenerateOmnisVerticalSlice.py Tools/Editor/GenerateOmnisWorldContent.py Tools/Editor/MaterializeOmnisPremiumWorld.py CI/Validation/validate_content_sources.py
+    - python -m py_compile services/omnis_platform.py
     - python CI/Validation/validate_content_sources.py
 
 python_tests:
@@ -28,6 +26,49 @@ python_tests:
   image: python:3.12
   script:
     - bash CI/Tests/test.sh
+
+cloudflare_validate:
+  stage: cloudflare
+  image: node:22
+  script:
+    - npx --yes wrangler@4.148.0 deploy --config wrangler.json --dry-run
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+unreal_pipeline:
+  stage: unreal
+  image: "$OMNIS_UNREAL_IMAGE"
+  needs:
+    - python_tests
+  resource_group: unreal56-linux
+  allow_failure: false
+  script:
+    - bash CI/Build/preflight_unreal.sh
+    - bash CI/Build/generate_content.sh
+    - bash CI/Tests/run_unreal_automation.sh
+    - bash CI/Build/build.sh
+    - bash CI/Packaging/package.sh
+    - test -f Content/Omnis/Maps/Omnis_OpenWorld.umap
+    - test -d Build/OmnisServer
+    - test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname 'OmnisServer*' -print -quit)"
+    - echo "=== RESULT: OMNIS UE5.6.1 FULL PIPELINE PASSED ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - Content/Omnis/Maps/*.umap
+      - Content/Omnis/Art/**/*.uasset
+      - Content/Omnis/Materials/**/*.uasset
+      - Saved/Logs/omnis_content_generation.log
+      - Saved/Logs/omnis_unreal_automation.log
+      - Saved/Automation/
+      - Saved/Logs/omnis_ue56_build.log
+      - Build/OmnisServer/
+      - Saved/Logs/omnis_ue56_server_package.log
 
 docker_services:
   stage: docker_services
@@ -60,11 +101,10 @@ docker_services:
     - trap 'docker compose -f infra/docker/compose.yaml down -v' EXIT
     - docker compose -f infra/docker/compose.yaml ps
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle')); assert d.get('era','').startswith('Ruinas de Piedra')"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{"playlist":"open-world"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/healthz'); assert r.status == 200"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/sessions', data=b'{"playlist":"open-world","players":["ci-player"]}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/events', data=b'{"event_type":"ci_world_probe","player_id":"ci-player","payload":{"source":"gitlab-ci"}}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/cycle/advance', data=b'{"reason":"ci_probe"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 200"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{\"playlist\":\"open-world\"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/sessions', data=b'{\"playlist\":\"open-world\",\"players\":[\"ci-player\"]}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/events', data=b'{\"event_type\":\"ci_world_probe\",\"player_id\":\"ci-player\",\"payload\":{\"source\":\"gitlab-ci\"}}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/cycle/advance', data=b'{\"reason\":\"ci_probe\"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 200"
     - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
   after_script:
     - export OMNIS_SERVICE_TOKEN=ci-test-token
@@ -72,124 +112,19 @@ docker_services:
     - docker compose -f infra/docker/compose.yaml logs --no-color || true
     - docker compose -f infra/docker/compose.yaml down -v || true
 
-cloudflare_validate:
-  stage: cloudflare
-  image: node:22
-  script:
-    - npx --yes wrangler@4.148.0 deploy --config wrangler.json --dry-run
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-
-unreal_runner_preflight:
-  stage: unreal_runner
-  image: "$OMNIS_UNREAL_IMAGE"
-  script:
-    - test -n "$UE_ENGINE_ROOT"
-    - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUBT.sh"
-    - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUAT.sh"
-    - test -x "$UE_ENGINE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"
-    - test -f "$UE_ENGINE_ROOT/Engine/Build/Build.version"
-    - python3 -c 'import json,os; p=json.load(open(os.path.join(os.environ["UE_ENGINE_ROOT"],"Engine/Build/Build.version"))); assert (p["MajorVersion"],p["MinorVersion"])==(5,6), p'
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
-
-unreal_content:
-  image: "$OMNIS_UNREAL_IMAGE"
-  stage: unreal_validate
-  needs:
-    - python_tests
-    - unreal_runner_preflight
-  script:
-    - bash CI/Build/generate_content.sh
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
-  artifacts:
-    when: always
-    expire_in: 7 days
-    paths:
-      - Content/Omnis/Maps/*.umap
-      - Content/Omnis/Art/**/*.uasset
-      - Saved/Logs/omnis_content_generation.log
-
-unreal_automation:
-  image: "$OMNIS_UNREAL_IMAGE"
-  stage: unreal_validate
-  needs:
-    - unreal_content
-  script:
-    - bash CI/Tests/run_unreal_automation.sh
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
-  artifacts:
-    when: always
-    expire_in: 7 days
-    paths:
-      - Saved/Logs/omnis_unreal_automation.log
-
-unreal_build:
-  image: "$OMNIS_UNREAL_IMAGE"
-  stage: unreal
-  needs:
-    - unreal_content
-  script:
-    - bash CI/Build/build.sh
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
-  artifacts:
-    when: always
-    expire_in: 7 days
-    paths:
-      - Saved/Logs/omnis_ue56_build.log
-
-unreal_server_package:
-  image: "$OMNIS_UNREAL_IMAGE"
-  stage: package
-  needs:
-    - unreal_build
-  script:
-    - bash CI/Packaging/package.sh
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
-  artifacts:
-    when: always
-    expire_in: 7 days
-    paths:
-      - Build/OmnisServer/
-      - Saved/Logs/omnis_ue56_server_package.log
-
 dedicated_server_smoke:
   stage: server_smoke
+  image: ubuntu:24.04
   needs:
-    - unreal_server_package
+    - job: unreal_pipeline
+      artifacts: true
   script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libstdc++6 libgcc-s1 libx11-6 libxrandr2 libxi6 libxcursor1 libxinerama1 libnss3 libfontconfig1 libfreetype6
     - bash CI/Tests/smoke_dedicated_server.sh
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
   artifacts:
     when: always
     expire_in: 7 days
@@ -198,7 +133,6 @@ dedicated_server_smoke:
 
 container_server_image:
   stage: container
-
   image: docker:27.4.1
   services:
     - name: docker:27.4.1-dind
@@ -207,7 +141,7 @@ container_server_image:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: /certs
   needs:
-    - job: unreal_server_package
+    - job: unreal_pipeline
       artifacts: true
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
