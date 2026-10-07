@@ -1,0 +1,44 @@
+{
+  "title": "Omnis: El Último Ciclo",
+  "experience_loop": [
+    "explore",
+    "play",
+    "create",
+    "customize",
+    "share",
+    "compete",
+    "progress",
+    "change_world"
+  ],
+  "pillars": {
+    "visual_identity": true,
+    "expressive_characters": true,
+    "rewarding_progression": true,
+    "creative_building": true,
+    "cooperative_play": true,
+    "social_presence": true,
+    "ranked_competition": true,
+    "cinematic_narrative": true,
+    "cycle_world_state": true,
+    "ugc_creation": true,
+    "player_safety": true
+  },
+  "systems": {
+    "avatar": "Source/Omnis/Core/Identity/OmnisAvatarSubsystem",
+    "rewards": "Source/Omnis/Core/Progression/OmnisRewardSubsystem",
+    "construction": "Source/Omnis/Gameplay/Construction/OmnisConstructionComponent",
+    "party": "Source/Omnis/Online/Friends/OmnisPartySubsystem",
+    "ranked": "Source/Omnis/Online/Competitive/OmnisRankedSubsystem",
+    "creators": "Source/Omnis/Online/Creators/OmnisCreatorSubsystem",
+    "safety": "Source/Omnis/Online/Safety/OmnisSafetySubsystem",
+    "cycle": "Source/Omnis/Core/Cycle/OmnisCycleSubsystem",
+    "world": "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem"
+  },
+  "non_negotiables": [
+    "No pay-to-win competitive advantage",
+    "No paid randomized loot boxes",
+    "Server authority for construction and competitive outcomes",
+    "Block/report/privacy controls for social interactions",
+    "No fake binary assets or fake external services"
+  ]
+}

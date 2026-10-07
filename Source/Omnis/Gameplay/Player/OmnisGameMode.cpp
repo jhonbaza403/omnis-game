@@ -2,7 +2,7 @@
 
 #include "Core/Cycle/OmnisCycleSubsystem.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
-#include "Dom/JsonObject.h"
+#include "Core/Progression/OmnisRewardSubsystem.h"
 #include "EngineUtils.h"
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Gameplay/Player/OmnisPlayerController.h"
@@ -55,20 +55,36 @@ void AOmnisGameMode::BeginPlay()
         {
             Cycle->BeginCycle();
         }
+
+        if (UOmnisRewardSubsystem* Rewards =
+            GameInstance->GetSubsystem<UOmnisRewardSubsystem>())
+        {
+            if (Rewards->GetRewardCount() == 0)
+            {
+                Rewards->GrantActivityReward(
+                    TEXT("Awakening"),
+                    50,
+                    TEXT("Emote.Awakening"));
+            }
+        }
     }
 
-    if (UOmnisWorldBootstrapSubsystem* Bootstrap = GetWorld()->GetSubsystem<UOmnisWorldBootstrapSubsystem>())
+    if (UOmnisWorldBootstrapSubsystem* Bootstrap =
+        GetWorld()->GetSubsystem<UOmnisWorldBootstrapSubsystem>())
     {
         Bootstrap->BuildInitialWorld();
     }
 
-    if (UOmnisWorldContentSubsystem* Content = GetWorld()->GetSubsystem<UOmnisWorldContentSubsystem>())
+    if (UOmnisWorldContentSubsystem* Content =
+        GetWorld()->GetSubsystem<UOmnisWorldContentSubsystem>())
     {
         Content->BuildProductionWorld();
     }
 
     if (UOmnisMultiplayerWorldSubsystem* MultiplayerWorld =
-        GetGameInstance() ? GetGameInstance()->GetSubsystem<UOmnisMultiplayerWorldSubsystem>() : nullptr)
+        GetGameInstance()
+            ? GetGameInstance()->GetSubsystem<UOmnisMultiplayerWorldSubsystem>()
+            : nullptr)
     {
         MultiplayerWorld->RefreshWorldState();
     }
@@ -98,13 +114,16 @@ void AOmnisGameMode::RestartPlayer(AController* NewPlayer)
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
-        if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
+        if (UOmnisNexusSubsystem* Nexus =
+            GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
         {
-            if (AOmnisPlayerCharacter* Player = NewPlayer ? Cast<AOmnisPlayerCharacter>(NewPlayer->GetPawn()) : nullptr)
+            if (AOmnisPlayerCharacter* Player =
+                NewPlayer ? Cast<AOmnisPlayerCharacter>(NewPlayer->GetPawn()) : nullptr)
             {
                 if (UOmnisHealthComponent* Health = Player->Health)
                 {
-                    const float MaxHealth = 100.0f + (10.0f * Nexus->GetPermanentVitalityLevel());
+                    const float MaxHealth =
+                        100.0f + (10.0f * Nexus->GetPermanentVitalityLevel());
                     Health->SetMaxHealth(MaxHealth);
                     Health->Restore(MaxHealth);
                 }
@@ -122,14 +141,22 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
-        if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
+        if (UOmnisCycleSubsystem* Cycle =
+            GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
         {
             Cycle->EnterNexus();
         }
 
-        if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
+        if (UOmnisNexusSubsystem* Nexus =
+            GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
         {
             Nexus->AddPermanentUpgradePoints(1);
+        }
+
+        if (UOmnisRewardSubsystem* Rewards =
+            GameInstance->GetSubsystem<UOmnisRewardSubsystem>())
+        {
+            Rewards->GrantActivityReward(TEXT("Cycle.End"), 25);
         }
 
         if (UOmnisOnlineServiceSubsystem* Online =
@@ -153,7 +180,8 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
                     {
                         if (UOmnisMultiplayerWorldSubsystem* MultiplayerWorld =
                             WeakGameMode->GetGameInstance()
-                                ? WeakGameMode->GetGameInstance()->GetSubsystem<UOmnisMultiplayerWorldSubsystem>()
+                                ? WeakGameMode->GetGameInstance()
+                                    ->GetSubsystem<UOmnisMultiplayerWorldSubsystem>()
                                 : nullptr)
                         {
                             MultiplayerWorld->RefreshWorldState();
@@ -161,7 +189,8 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
 
                         if (WeakGameMode->GetWorld())
                         {
-                            for (TActorIterator<AOmnisReplicatedWorldStateActor> It(WeakGameMode->GetWorld()); It; ++It)
+                            for (TActorIterator<AOmnisReplicatedWorldStateActor> It(
+                                WeakGameMode->GetWorld()); It; ++It)
                             {
                                 It->RefreshFromBackend();
                                 break;
@@ -174,7 +203,10 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
 
     GetWorldTimerManager().SetTimer(
         RespawnTimer,
-        FTimerDelegate::CreateUObject(this, &AOmnisGameMode::RespawnAfterNexus, PlayerController),
+        FTimerDelegate::CreateUObject(
+            this,
+            &AOmnisGameMode::RespawnAfterNexus,
+            PlayerController),
         1.5f,
         false);
 }
@@ -188,12 +220,14 @@ void AOmnisGameMode::RespawnAfterNexus(AController* PlayerController)
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
-        if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
+        if (UOmnisNexusSubsystem* Nexus =
+            GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
         {
             Nexus->PurchaseVitalityUpgrade();
         }
 
-        if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
+        if (UOmnisCycleSubsystem* Cycle =
+            GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
         {
             Cycle->BeginRebirth();
         }
