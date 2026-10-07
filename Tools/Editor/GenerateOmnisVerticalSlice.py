@@ -51,7 +51,7 @@ def main():
             "/Game/Omnis/Art/Obelisk"
         ),
         (
-            unreal.Paths.project_dir() + "Content/Omnis/SourceAssets/Textures/Omnis_Nexus_Texture.svg",
+            unreal.Paths.project_dir() + "Content/Omnis/SourceAssets/Textures/Omnis_Nexus_Albedo.png",
             "/Game/Omnis/Art/Textures"
         ),
     ]
@@ -71,6 +71,35 @@ def main():
 
     asset_tools.import_asset_tasks(import_tasks)
 
+    imported_mesh_assets = unreal.EditorAssetLibrary.list_assets(
+        "/Game/Omnis/Art/Obelisk",
+        recursive=True,
+        include_folder=False
+    )
+    imported_texture_assets = unreal.EditorAssetLibrary.list_assets(
+        "/Game/Omnis/Art/Textures",
+        recursive=True,
+        include_folder=False
+    )
+
+    if not imported_mesh_assets:
+        raise RuntimeError("The authored Obelisk OBJ did not import into Unreal")
+    if not imported_texture_assets:
+        raise RuntimeError("The authored Nexus texture did not import into Unreal")
+
+    obelisk_mesh = None
+    for asset_path in imported_mesh_assets:
+        candidate = unreal.EditorAssetLibrary.load_asset(asset_path)
+        if isinstance(candidate, unreal.StaticMesh):
+            obelisk_mesh = candidate
+            break
+
+    nexus_texture = unreal.EditorAssetLibrary.load_asset(imported_texture_assets[0])
+    if not obelisk_mesh:
+        raise RuntimeError("The authored Obelisk did not produce a StaticMesh asset")
+    if not nexus_texture:
+        raise RuntimeError("The authored Nexus texture could not be loaded")
+
     cube = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cube.Cube")
     sphere = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Sphere.Sphere")
     if not cube or not sphere:
@@ -88,6 +117,11 @@ def main():
     nexus.set_actor_label("Omnis_Nexus_EditorPreview")
     nexus.static_mesh_component.set_static_mesh(sphere)
     nexus.set_actor_scale3d(unreal.Vector(2.2, 2.2, 2.2))
+
+    obelisk = spawn(actor_subsystem, unreal.StaticMeshActor, (0, 950, 95))
+    obelisk.set_actor_label("Omnis_Authored_Obelisk")
+    obelisk.static_mesh_component.set_static_mesh(obelisk_mesh)
+    obelisk.set_actor_scale3d(unreal.Vector(140, 140, 140))
 
     for index, (x, y) in enumerate(((800, 0), (-800, 0), (0, 800), (0, -800)), 1):
         pillar = spawn(actor_subsystem, unreal.StaticMeshActor, (x, y, 120))
