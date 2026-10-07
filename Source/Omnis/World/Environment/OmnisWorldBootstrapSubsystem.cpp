@@ -174,7 +174,14 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
     const FLinearColor Gold(1.0f, 0.55f, 0.12f);
     const FLinearColor Green(0.1f, 1.0f, 0.48f);
 
-    if (!World->FindActorByLabel(TEXT("Omnis_Runtime_Nexus")))
+    bool bHasNexus = false;
+    for (TActorIterator<AOmnisNexusVisualActor> It(World); It; ++It)
+    {
+        bHasNexus = true;
+        break;
+    }
+
+    if (!bHasNexus)
     {
         if (AOmnisNexusVisualActor* Nexus = World->SpawnActor<AOmnisNexusVisualActor>(
             AOmnisNexusVisualActor::StaticClass(),
