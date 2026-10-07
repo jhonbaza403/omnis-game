@@ -7,7 +7,7 @@ Host Linux x86_64 con Docker Engine.
 
 Recomendado para el pipeline completo: 8 CPU, 24 GB RAM y al menos 80 GB libres; 120+ GB es preferible.
 
-Imagen Unreal: wukakuki/unreal-engine:dev-slim-5.8.3@sha256:7ff40023124f2e2773fc43ad904f3b1305c1157c7b58328e0c08937edeb425d9
+Imagen Unreal: wukakuki/unreal-engine:dev-slim-5.8.3@sha256:3f0886cf0d7e5bc9cea0e7ba27f417e0d0febb5ad0c371c9a89223c6112c80ef
 
 ## Crear el runner
 GitLab → Settings → CI/CD → Runners → Create project runner.
