@@ -98,3 +98,14 @@ Para producción:
 Para Preview deben configurarse también como secretos de Preview/Base según el flujo actual de Wrangler. Nunca se deben añadir al repositorio, a `wrangler.jsonc` ni a logs.
 
 El Client Secret de GitLab solo estuvo disponible una vez al crear la aplicación; si se perdió o fue expuesto, usa **Renew secret** en GitLab y registra el nuevo secreto únicamente en Cloudflare. 
+
+### Estado de la integración OAuth
+
+El código del callback ya está desplegado en el Worker `omnis-game` y el Worker tiene el binding de producción `OMNIS_OAUTH_KV`. El listado de secretos de Cloudflare no muestra todavía credenciales configuradas; por diseño, el Client Secret nunca se almacena en Git ni se devuelve por API.
+
+El último paso de activación es ejecutar `bash Cloudflare/configure_gitlab_oauth.sh` en una máquina confiable con acceso a Wrangler. El script solicita el Client Secret de forma silenciosa, genera una clave de cifrado nueva y guarda ambos valores únicamente como secretos de producción.
+
+El formulario OAuth de GitLab debe tener exactamente este callback:
+`https://omnis-game.bazajhon.workers.dev/oauth/callback`
+
+No se utiliza `localhost` en producción.
