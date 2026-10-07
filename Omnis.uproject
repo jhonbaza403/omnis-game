@@ -11,11 +11,33 @@
     }
   ],
   "Plugins": [
-    { "Name": "OmnisCore", "Enabled": true },
-    { "Name": "OmnisGameplay", "Enabled": true },
-    { "Name": "OmnisNarrative", "Enabled": true },
-    { "Name": "OmnisWorld", "Enabled": true },
-    { "Name": "OmnisAI", "Enabled": true },
-    { "Name": "OmnisOnline", "Enabled": true }
+    {
+      "Name": "OmnisCore",
+      "Enabled": true
+    },
+    {
+      "Name": "OmnisGameplay",
+      "Enabled": true
+    },
+    {
+      "Name": "OmnisNarrative",
+      "Enabled": true
+    },
+    {
+      "Name": "OmnisWorld",
+      "Enabled": true
+    },
+    {
+      "Name": "OmnisAI",
+      "Enabled": true
+    },
+    {
+      "Name": "OmnisOnline",
+      "Enabled": true
+    },
+    {
+      "Name": "PythonScriptPlugin",
+      "Enabled": true
+    }
   ]
 }
