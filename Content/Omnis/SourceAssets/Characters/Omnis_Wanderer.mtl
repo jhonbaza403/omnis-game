@@ -1,0 +1,6 @@
+newmtl OmnisWanderer
+Ka 0.03 0.05 0.08
+Kd 0.16 0.30 0.46
+Ks 0.55 0.70 0.90
+Ns 96.0
+illum 2
