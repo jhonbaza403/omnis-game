@@ -13,7 +13,7 @@ export default {
     }
 
     if (url.pathname === "/") {
-      return Response.json( {
+      return Response.json({
         name: "Omnis: El Último Ciclo",
         service: "Cloudflare Worker",
         environment,
