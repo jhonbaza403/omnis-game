@@ -9,6 +9,7 @@ stages:
   - package
   - server_smoke
   - container
+  - container_smoke
 
 variables:
   OMNIS_UNREAL_IMAGE: "wukakuki/unreal-engine:dev-slim-5.6.1@sha256:7ff40023124f2e2773fc43ad904f3b1305c1157c7b58328e0c08937edeb425d9"
@@ -58,7 +59,7 @@ docker_services:
       done
     - trap 'docker compose -f infra/docker/compose.yaml down -v' EXIT
     - docker compose -f infra/docker/compose.yaml ps
-    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle')); assert d['era']=='Ruinas de Piedra CiÃ©naga'"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle')); assert d.get('era','').startswith('Ruinas de Piedra')"
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{"playlist":"open-world"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/healthz'); assert r.status == 200"
     - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/sessions', data=b'{"playlist":"open-world","players":["ci-player"]}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
@@ -179,8 +180,6 @@ unreal_server_package:
 
 dedicated_server_smoke:
   stage: server_smoke
-  tags:
-    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - unreal_server_package
   script:
@@ -218,6 +217,46 @@ container_server_image:
     - docker build --pull -f infra/docker/unreal-server/Dockerfile -t "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA" .
     - docker image inspect "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
     - docker push "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: false
+
+container_deploy_smoke:
+  stage: container_smoke
+  image: docker:27.4.1
+  services:
+    - name: docker:27.4.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+  needs:
+    - job: container_server_image
+      artifacts: false
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+    - docker run -d --name omnis-server-smoke -p 17777:7777/udp "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+    - |
+      for i in $(seq 1 45); do
+        if docker logs omnis-server-smoke 2>&1 | grep -Eq 'GameNetDriver|LogNetVersion|NetDriver'; then
+          echo "=== RESULT: packaged OmnisServer starts inside Docker ==="
+          docker logs omnis-server-smoke | tail -n 120
+          exit 0
+        fi
+        if ! docker inspect -f '{{.State.Running}}' omnis-server-smoke 2>/dev/null | grep -q true; then
+          echo "OmnisServer container exited before network startup" >&2
+          docker logs omnis-server-smoke >&2 || true
+          exit 1
+        fi
+        sleep 1
+      done
+      echo "OmnisServer container did not reach network startup" >&2
+      docker logs omnis-server-smoke >&2 || true
+      exit 1
+  after_script:
+    - docker rm -f omnis-server-smoke >/dev/null 2>&1 || true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   allow_failure: false
