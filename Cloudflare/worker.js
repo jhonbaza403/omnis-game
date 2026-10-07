@@ -55,6 +55,10 @@ ${body}
   });
 }
 
+function oauthEnabled(env) {
+  return env.GITLAB_OAUTH_ENABLED === "true";
+}
+
 function requireConfig(env) {
   const missing = [];
   if (!env.GITLAB_OAUTH_CLIENT_ID) missing.push("GITLAB_OAUTH_CLIENT_ID");
@@ -299,7 +303,8 @@ export default {
           environment,
           status: "ok",
           oauth: {
-            configured: Boolean(
+            enabled: oauthEnabled(env),
+            configured: oauthEnabled(env) && Boolean(
               env.GITLAB_OAUTH_CLIENT_ID &&
               env.GITLAB_OAUTH_CLIENT_SECRET &&
               env.OMNIS_OAUTH_ENCRYPTION_KEY &&
@@ -310,15 +315,18 @@ export default {
         });
       }
 
-      if (url.pathname === "/oauth/start" && request.method === "GET") {
+      if (oauthEnabled(env) && url.pathname === "/oauth/start" && request.method === "GET") {
         return await startOAuth(env);
       }
 
-      if (url.pathname === "/oauth/callback" && request.method === "GET") {
+      if (oauthEnabled(env) && url.pathname === "/oauth/callback" && request.method === "GET") {
         return await handleCallback(request, env);
       }
 
       if (url.pathname === "/oauth/status" && request.method === "GET") {
+        if (!oauthEnabled(env)) {
+          return json({ service: "omnis-gitlab-oauth", enabled: false, environment });
+        }
         return await oauthStatus(env);
       }
 
@@ -328,11 +336,13 @@ export default {
           service: "Cloudflare Worker",
           environment,
           status: "online",
-          oauth: {
-            authorize: "/oauth/start",
-            callback: "/oauth/callback",
-            status: "/oauth/status"
-          }
+          oauth: oauthEnabled(env)
+            ? {
+                authorize: "/oauth/start",
+                callback: "/oauth/callback",
+                status: "/oauth/status"
+              }
+            : { enabled: false }
         });
       }
 
