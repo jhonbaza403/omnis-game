@@ -29,28 +29,6 @@ cloudflare_validate:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
-unreal_automation:
-  stage: unreal_validate
-  tags:
-    - unreal56-linux
-  needs:
-    - python_tests
-  script:
-    - bash CI/Tests/run_unreal_automation.sh
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
-    - when: never
-  resource_group: unreal56-linux
-  allow_failure: false
-  artifacts:
-    when: always
-    expire_in: 7 days
-    paths:
-      - Saved/Logs/omnis_unreal_automation.log
-
 unreal_content:
   stage: unreal_validate
   tags:
@@ -74,6 +52,28 @@ unreal_content:
       - Content/Omnis/Maps/*.umap
       - Content/Omnis/Art/**/*.uasset
       - Saved/Logs/omnis_content_generation.log
+
+unreal_automation:
+  stage: unreal_validate
+  tags:
+    - unreal56-linux
+  needs:
+    - unreal_content
+  script:
+    - bash CI/Tests/run_unreal_automation.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - when: never
+  resource_group: unreal56-linux
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - Saved/Logs/omnis_unreal_automation.log
 
 unreal_build:
   stage: unreal

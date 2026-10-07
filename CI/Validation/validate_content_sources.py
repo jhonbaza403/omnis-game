@@ -4,24 +4,37 @@ from pathlib import Path
 import json
 
 ROOT = Path(__file__).resolve().parents[2]
-catalog = ROOT / "Content/Omnis/Data/world-content-catalog.json"
+catalog_path = ROOT / "Content/Omnis/Data/world-content-catalog.json"
 source_root = ROOT / "Content/Omnis/SourceAssets"
 
-data = json.loads(catalog.read_text(encoding="utf-8"))
-missing = []
+data = json.loads(catalog_path.read_text(encoding="utf-8"))
 
-for family, names in data["families"].items():
-    if family not in {"characters","animals","nature","architecture","vehicles","aviation","infrastructure","tools"}:
-        continue
-    for name in names:
-        # Character Wanderer already exists under Characters; other families map directly.
-        folder = "Characters" if family == "characters" else family.title()
+family_dirs = {
+    "characters": "Characters",
+    "animals": "Animals",
+    "nature": "Nature",
+    "architecture": "Architecture",
+    "interiors": "Interiors",
+    "vehicles": "Vehicles",
+    "aviation": "Aviation",
+    "infrastructure": "Infrastructure",
+    "tools": "Tools",
+}
+
+missing = []
+validated = 0
+
+for family, folder in family_dirs.items():
+    for name in data["families"].get(family, []):
         path = source_root / folder / (name + ".obj")
         if not path.is_file():
             missing.append(str(path.relative_to(ROOT)))
+        else:
+            validated += 1
 
 if missing:
-    raise SystemExit("Missing authored source meshes:\\n" + "\\n".join(missing))
+    raise SystemExit("Missing authored source meshes:\n" + "\n".join(missing))
 
 print("Source content validation passed.")
-print("Families validated:", ", ".join(sorted(k for k in data["families"] if k in {"characters","animals","nature","architecture","vehicles","aviation","infrastructure","tools"})))
+print("Meshes validated:", validated)
+print("Families validated:", ", ".join(family_dirs))
