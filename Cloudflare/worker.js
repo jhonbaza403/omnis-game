@@ -1,19 +1,22 @@
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
+    const environment = env.OMNIS_ENVIRONMENT ?? "unknown";
 
     if (url.pathname === "/health") {
       return Response.json({
         service: "omnis-cloudflare-worker",
         game: "Omnis: El Último Ciclo",
+        environment,
         status: "ok"
       });
     }
 
     if (url.pathname === "/") {
-      return Response.json({
+      return Response.json( {
         name: "Omnis: El Último Ciclo",
         service: "Cloudflare Worker",
+        environment,
         status: "online"
       });
     }
