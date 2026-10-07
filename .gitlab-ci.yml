@@ -36,10 +36,36 @@ cloudflare_validate:
   stage: cloudflare
   image: node:22
   script:
-    - npx --yes wrangler@4.148.0 deploy --config wrangler.json --dry-run
+    - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+    - test "$(node -p \"require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
+    - npx wrangler --version
+    - npm run cf:check
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+cloudflare_preview:
+  stage: cloudflare
+  image: node:22
+  needs:
+    - python_tests
+  script:
+    - test -n "$CLOUDFLARE_ACCOUNT_ID"
+    - test -n "$CLOUDFLARE_API_TOKEN"
+    - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+    - test "$(node -p \"require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
+    - npx wrangler --version
+    - PREVIEW_NAME="${CI_COMMIT_REF_SLUG:-omnis-preview}"
+    - npx wrangler preview --config wrangler.jsonc --name "$PREVIEW_NAME" --message "GitLab CI ${CI_COMMIT_SHA}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CLOUDFLARE_ACCOUNT_ID && $CLOUDFLARE_API_TOKEN'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CLOUDFLARE_ACCOUNT_ID && $CLOUDFLARE_API_TOKEN'
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - .wrangler/
 
 runner_preflight:
   stage: runner_preflight
