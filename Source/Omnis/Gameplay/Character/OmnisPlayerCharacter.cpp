@@ -13,6 +13,7 @@
 #include "Gameplay/Inventory/OmnisInventoryComponent.h"
 #include "Gameplay/Equipment/OmnisEquipmentComponent.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
+#include "Gameplay/Character/OmnisProceduralAnimationComponent.h"
 #include "Gameplay/Player/OmnisGameMode.h"
 
 AOmnisPlayerCharacter::AOmnisPlayerCharacter()
@@ -39,13 +40,25 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     BodyMesh->SetupAttachment(GetCapsuleComponent());
     BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-    if (CubeMesh.Succeeded())
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> AuthoredMesh(
+        TEXT("/Game/Omnis/Art/Characters/Omnis_Wanderer.Omnis_Wanderer")
+    );
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> FallbackMesh(
+        TEXT("/Engine/BasicShapes/Cube.Cube")
+    );
+
+    if (AuthoredMesh.Succeeded())
     {
-        BodyMesh->SetStaticMesh(CubeMesh.Object);
+        BodyMesh->SetStaticMesh(AuthoredMesh.Object);
+    }
+    else if (FallbackMesh.Succeeded())
+    {
+        BodyMesh->SetStaticMesh(FallbackMesh.Object);
     }
 
-    BodyMesh->SetRelativeScale3D(FVector(0.55f, 0.55f, 1.2f));
+    BodyMesh->SetRelativeScale3D(
+        AuthoredMesh.Succeeded() ? FVector(75.0f) : FVector(0.55f, 0.55f, 1.2f)
+    );
     BodyMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 12.0f));
 
     Exploration = CreateDefaultSubobject<UOmnisExplorationComponent>(TEXT("Exploration"));
@@ -57,6 +70,7 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     Inventory = CreateDefaultSubobject<UOmnisInventoryComponent>(TEXT("Inventory"));
     Equipment = CreateDefaultSubobject<UOmnisEquipmentComponent>(TEXT("Equipment"));
     Health = CreateDefaultSubobject<UOmnisHealthComponent>(TEXT("Health"));
+    ProceduralAnimation = CreateDefaultSubobject<UOmnisProceduralAnimationComponent>(TEXT("ProceduralAnimation"));
 }
 
 void AOmnisPlayerCharacter::BeginPlay()
