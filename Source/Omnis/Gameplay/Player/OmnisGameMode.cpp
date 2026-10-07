@@ -1,6 +1,7 @@
 #include "Gameplay/Player/OmnisGameMode.h"
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Gameplay/Player/OmnisPlayerController.h"
+#include "UI/HUD/OmnisHUD.h"
 #include "Core/Cycle/OmnisCycleSubsystem.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
@@ -10,6 +11,7 @@ AOmnisGameMode::AOmnisGameMode()
 {
     DefaultPawnClass = AOmnisPlayerCharacter::StaticClass();
     PlayerControllerClass = AOmnisPlayerController::StaticClass();
+    HUDClass = AOmnisHUD::StaticClass();
 }
 
 void AOmnisGameMode::BeginPlay()
