@@ -8,7 +8,7 @@ La integración de Omnis usa Cloudflare Workers con Wrangler administrado desde 
 - Entry point: `Cloudflare/worker.js`
 - Configuración: `wrangler.jsonc`
 - Wrangler: `4.148.0` fijado en `package.json`
-- Node: `22+`
+- Node: `24+`
 - `workers.dev`: habilitado
 - Preview URLs: habilitadas
 

@@ -34,7 +34,7 @@ python_tests:
 
 cloudflare_validate:
   stage: cloudflare
-  image: node:22
+  image: node:24
   script:
     - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
     - test "$(node -p \"require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
@@ -46,7 +46,7 @@ cloudflare_validate:
 
 cloudflare_preview:
   stage: cloudflare
-  image: node:22
+  image: node:24
   needs:
     - python_tests
   script:

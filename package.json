@@ -10,7 +10,7 @@
     "cf:types": "wrangler types --config wrangler.jsonc"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "devDependencies": {
     "wrangler": "4.148.0"
