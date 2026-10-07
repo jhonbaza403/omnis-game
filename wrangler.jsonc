@@ -7,8 +7,18 @@
   "preview_urls": true,
 
   "vars": {
-    "OMNIS_ENVIRONMENT": "production"
+    "OMNIS_ENVIRONMENT": "production",
+    "GITLAB_OAUTH_CLIENT_ID": "37bf6a8424c159c7305dadf922fddad94e12f35046776d5f6965af67124a4df8",
+    "GITLAB_OAUTH_REDIRECT_URI": "https://omnis-game.bazajhon.workers.dev/oauth/callback",
+    "GITLAB_OAUTH_SCOPES": "create_runner manage_runner"
   },
+
+  "kv_namespaces": [
+    {
+      "binding": "OMNIS_OAUTH_KV",
+      "id": "5ded51a5b5124661b93628a1e14ea5d3"
+    }
+  ],
 
   "queues": {
     "producers": [
@@ -52,8 +62,17 @@
 
   "previews": {
     "vars": {
-      "OMNIS_ENVIRONMENT": "preview"
+      "OMNIS_ENVIRONMENT": "preview",
+      "GITLAB_OAUTH_CLIENT_ID": "37bf6a8424c159c7305dadf922fddad94e12f35046776d5f6965af67124a4df8",
+      "GITLAB_OAUTH_REDIRECT_URI": "https://omnis-game.bazajhon.workers.dev/oauth/callback",
+      "GITLAB_OAUTH_SCOPES": "create_runner manage_runner"
     },
+    "kv_namespaces": [
+      {
+        "binding": "OMNIS_OAUTH_KV",
+        "id": "2ac87a033a4845e6a15a77e6bf17b70a"
+      }
+    ],
     "observability": {
       "enabled": true,
       "head_sampling_rate": 1,
