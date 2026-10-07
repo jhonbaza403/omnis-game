@@ -1,104 +1,22 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "engine": "Unreal Engine 5.6",
   "native_materialization": {
     "map": "/Game/Omnis/Maps/Omnis_OpenWorld",
     "asset_root": "/Game/Omnis/Art"
   },
   "families": {
-    "characters": [
-      "Omnis_Wanderer",
-      "Omnis_Civilian",
-      "Omnis_PoliceOfficer",
-      "Omnis_Medic",
-      "Omnis_Pilot"
-    ],
-    "animals": [
-      "Omnis_Dog",
-      "Omnis_Cat",
-      "Omnis_Horse",
-      "Omnis_Bird",
-      "Omnis_Fish"
-    ],
-    "nature": [
-      "Omnis_Tree",
-      "Omnis_Palm",
-      "Omnis_Bush",
-      "Omnis_Rock",
-      "Omnis_Grass"
-    ],
-    "architecture": [
-      "Omnis_House",
-      "Omnis_Villa",
-      "Omnis_Mansion",
-      "Omnis_Apartment",
-      "Omnis_Office",
-      "Omnis_Hotel",
-      "Omnis_Hospital",
-      "Omnis_School",
-      "Omnis_Bank",
-      "Omnis_Police_Station",
-      "Omnis_Industrial",
-      "Omnis_Nightclub"
-    ],
-    "interiors": [
-      "Omnis_LivingRoom",
-      "Omnis_Kitchen",
-      "Omnis_Bedroom",
-      "Omnis_Bathroom",
-      "Omnis_Garage",
-      "Omnis_OfficeInterior",
-      "Omnis_NightclubInterior"
-    ],
-    "vehicles": [
-      "Omnis_Sedan",
-      "Omnis_SUV",
-      "Omnis_Bus",
-      "Omnis_Truck",
-      "Omnis_Police_Car",
-      "Omnis_Ambulance",
-      "Omnis_Motorcycle"
-    ],
-    "aviation": [
-      "Omnis_Commercial_Jet",
-      "Omnis_Private_Jet",
-      "Omnis_Helicopter"
-    ],
-    "infrastructure": [
-      "Omnis_Road_Segment",
-      "Omnis_Sidewalk",
-      "Omnis_Street_Lamp",
-      "Omnis_Fence",
-      "Omnis_Bridge",
-      "Omnis_Airport_Terminal",
-      "Omnis_Hangar",
-      "Omnis_Runway_Segment",
-      "Omnis_Dock",
-      "Omnis_Boat"
-    ],
-    "tools": [
-      "Omnis_Hammer",
-      "Omnis_Wrench",
-      "Omnis_Flashlight",
-      "Omnis_Toolbox"
-    ]
+    "characters": ["Omnis_Wanderer","Omnis_Civilian","Omnis_PoliceOfficer","Omnis_Medic","Omnis_Pilot"],
+    "animals": ["Omnis_Dog","Omnis_Cat","Omnis_Horse","Omnis_Bird","Omnis_Fish"],
+    "nature": ["Omnis_Tree","Omnis_Palm","Omnis_Bush","Omnis_Rock","Omnis_Grass","Omnis_Mountain_Ridge","Omnis_Terrain_Cliff","Omnis_Beach","Omnis_Water_Surface"],
+    "architecture": ["Omnis_House","Omnis_Villa","Omnis_Mansion","Omnis_Apartment","Omnis_Office","Omnis_Hotel","Omnis_Hospital","Omnis_School","Omnis_Bank","Omnis_Police_Station","Omnis_Industrial","Omnis_Nightclub"],
+    "interiors": ["Omnis_LivingRoom","Omnis_Kitchen","Omnis_Bedroom","Omnis_Bathroom","Omnis_Garage","Omnis_OfficeInterior","Omnis_NightclubInterior"],
+    "vehicles": ["Omnis_Sedan","Omnis_SUV","Omnis_Bus","Omnis_Truck","Omnis_Police_Car","Omnis_Ambulance","Omnis_Motorcycle"],
+    "aviation": ["Omnis_Commercial_Jet","Omnis_Private_Jet","Omnis_Helicopter"],
+    "infrastructure": ["Omnis_Road_Segment","Omnis_Sidewalk","Omnis_Street_Lamp","Omnis_Fence","Omnis_Bridge","Omnis_Airport_Terminal","Omnis_Hangar","Omnis_Runway_Segment","Omnis_Dock","Omnis_Boat"],
+    "tools": ["Omnis_Hammer","Omnis_Wrench","Omnis_Flashlight","Omnis_Toolbox"]
   },
-  "systems": [
-    "RoadNetwork",
-    "Airport",
-    "Harbor",
-    "ResidentialDistrict",
-    "BusinessDistrict",
-    "NightlifeDistrict",
-    "NatureCorridor",
-    "Traffic",
-    "Wildlife",
-    "WorldPartition",
-    "HLOD",
-    "Weather",
-    "CivilianVehiclePhysics",
-    "CivilianAircraftPhysics"
-  ],
+  "systems": ["RoadNetwork","Airport","Harbor","ResidentialDistrict","BusinessDistrict","NightlifeDistrict","NatureCorridor","Terrain","Water","Traffic","Wildlife","WorldPartition","HLOD","Weather","CivilianVehiclePhysics","CivilianAircraftPhysics"],
   "render_target": {
     "nanite": true,
     "lumen": true,
@@ -106,6 +24,5 @@
     "virtual_textures": true,
     "target": "8K-capable high-fidelity pipeline with scalable texture resolution and streaming"
   },
-  "materialization_rule": "Native .uasset/.umap output is considered real only after Unreal Engine 5.6 creates and saves it from the source assets.",
-  "restriction_note": "Restricted weapon content is not part of this repository change."
+  "materialization_rule": "Native .uasset/.umap output is real only after Unreal Engine 5.6 creates and saves it."
 }
