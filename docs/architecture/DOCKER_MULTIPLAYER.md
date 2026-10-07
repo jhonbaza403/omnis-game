@@ -13,7 +13,7 @@ Omnis separates the **authoritative gameplay plane** from the **server infrastru
 | session | Session allocation and 24-hour lease metadata | Redis |
 | world | Cycle/era revision and narrative world events | Redis AOF |
 | redis | Shared durable queue/session/world metadata | named volume |
-| omnis-dedicated-server | Real UE 5.6 headless gameplay server | packaged UE artifact |
+| omnis-dedicated-server | Real UE 5.8 headless gameplay server | packaged UE artifact |
 
 ## Omnis world model
 
@@ -40,7 +40,7 @@ Only the gateway HTTP port and the dedicated-server UDP port are published. Redi
 
 \`infra/docker/unreal-server/Dockerfile\` copies only \`Build/OmnisServer/\`. The image deliberately fails when that directory does not exist. No fake executable, fake \`.uasset\`, or fake \`.umap\` is generated.
 
-The dedicated server target and package flow are designed around a real UE 5.6 server build.
+The dedicated server target and package flow are designed around a real UE 5.8 server build.
 
 ## CI/CD
 
