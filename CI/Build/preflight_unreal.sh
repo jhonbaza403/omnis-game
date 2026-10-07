@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
 
 if [[ -z "$UE_ENGINE_ROOT" ]]; then
-  echo "UE_ENGINE_ROOT must point to Unreal Engine 5.6.1." >&2
+  echo "UE_ENGINE_ROOT must point to Unreal Engine 5.8.3." >&2
   exit 1
 fi
 
@@ -30,11 +30,11 @@ major = version.get("MajorVersion")
 minor = version.get("MinorVersion")
 patch = version.get("PatchVersion")
 assert (major, minor) == (5, 6), (
-    f"Expected UE 5.6.x, detected {major}.{minor}.{patch}"
+    f"Expected UE 5.8.x, detected {major}.{minor}.{patch}"
 )
 print(f"Unreal Engine {major}.{minor}.{patch} detected")
 PY
 
 echo "Project: $PROJECT_FILE"
 echo "Engine: $UE_ENGINE_ROOT"
-echo "=== RESULT: REAL UE 5.6 PREFLIGHT PASSED ==="
+echo "=== RESULT: REAL UE 5.8 PREFLIGHT PASSED ==="

@@ -66,4 +66,4 @@ No se usan Version URLs ni `wrangler versions upload --preview-alias` para proba
 
 ## Política
 
-No se crean UAsset/UMAP falsos, bindings ficticios ni servicios externos simulados. La materialización Unreal continúa dependiendo del runner UE 5.6 real.
+No se crean UAsset/UMAP falsos, bindings ficticios ni servicios externos simulados. La materialización Unreal continúa dependiendo del runner UE 5.8 real.

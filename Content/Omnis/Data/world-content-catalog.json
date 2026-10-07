@@ -1,6 +1,6 @@
 {
   "schema_version": 5,
-  "engine": "Unreal Engine 5.6",
+  "engine": "Unreal Engine 5.8",
   "native_materialization": {
     "map": "/Game/Omnis/Maps/Omnis_OpenWorld",
     "asset_root": "/Game/Omnis/Art"
@@ -24,5 +24,5 @@
     "virtual_textures": true,
     "target": "8K-capable high-fidelity pipeline with scalable texture resolution and streaming"
   },
-  "materialization_rule": "Native .uasset/.umap output is real only after Unreal Engine 5.6 creates and saves it."
+  "materialization_rule": "Native .uasset/.umap output is real only after Unreal Engine 5.8 creates and saves it."
 }

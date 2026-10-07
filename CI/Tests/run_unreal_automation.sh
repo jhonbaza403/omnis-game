@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
 if [[ -z "$UE_ENGINE_ROOT" ]]; then
-  echo "UE_ENGINE_ROOT must point to Unreal Engine 5.6." >&2
+  echo "UE_ENGINE_ROOT must point to Unreal Engine 5.8." >&2
   exit 1
 fi
 
@@ -28,4 +28,4 @@ grep -q "Omnis.Experience.Systems" "$LOG_FILE" || {
 test -d "$REPORT_DIR"
 test -n "$(find "$REPORT_DIR" -type f -print -quit)"
 
-echo "=== RESULT: REAL OMNIS UE5.6 AUTOMATION PASSED ==="
+echo "=== RESULT: REAL OMNIS UE5.8 AUTOMATION PASSED ==="

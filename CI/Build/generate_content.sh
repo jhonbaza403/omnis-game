@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
 BASE_SCRIPT="$ROOT/Tools/Editor/GenerateOmnisWorldContent.py"
 PREMIUM_SCRIPT="$ROOT/Tools/Editor/MaterializeOmnisPremiumWorld.py"
-: "${UE_ENGINE_ROOT:?UE_ENGINE_ROOT must point to Unreal Engine 5.6}"
+: "${UE_ENGINE_ROOT:?UE_ENGINE_ROOT must point to Unreal Engine 5.8}"
 EDITOR="$UE_ENGINE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"
 LOG_FILE="$ROOT/Saved/Logs/omnis_content_generation.log"
 MAP_FILE="$ROOT/Content/Omnis/Maps/Omnis_OpenWorld.umap"
@@ -20,5 +20,5 @@ MATS="$(find "$MAT_ROOT" -type f -name '*.uasset' | wc -l | tr -d ' ')"
 [[ "$NATIVE" -ge 63 ]] || { echo "Expected >=63 native assets; got $NATIVE." >&2; exit 1; }
 [[ "$MATS" -ge 10 ]] || { echo "Expected >=10 material assets; got $MATS." >&2; exit 1; }
 grep -q "REAL PREMIUM WORLD MATERIALIZED" "$LOG_FILE" || { echo "Generator did not certify materialization." >&2; exit 1; }
-echo "=== REAL UE5.6 PREMIUM CONTENT GENERATION PASSED ==="
+echo "=== REAL UE5.8 PREMIUM CONTENT GENERATION PASSED ==="
 echo "Map: $MAP_FILE"; echo "Native Art assets: $NATIVE"; echo "Material assets: $MATS"

@@ -14,7 +14,7 @@ default:
     - omnis-ci-linux
 
 variables:
-  OMNIS_UNREAL_IMAGE: "wukakuki/unreal-engine:dev-slim-5.6.1@sha256:7ff40023124f2e2773fc43ad904f3b1305c1157c7b58328e0c08937edeb425d9"
+  OMNIS_UNREAL_IMAGE: "wukakuki/unreal-engine:dev-slim-5.8.3@sha256:3f0886cf0d7e5bc9cea0e7ba27f417e0d0febb5ad0c371c9a89223c6112c80ef"
   UE_ENGINE_ROOT: "/home/ue4/UnrealEngine"
 
 python_validate:
@@ -112,7 +112,7 @@ unreal_pipeline:
       test -f Content/Omnis/Maps/Omnis_OpenWorld.umap
       test -d Build/OmnisServer
       test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname "OmnisServer*" -print -quit)"
-      echo "=== RESULT: OMNIS UE5.6.1 FULL PIPELINE PASSED ==="
+      echo "=== RESULT: OMNIS UE5.8.3 FULL PIPELINE PASSED ==="
     '
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
