@@ -208,12 +208,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def gateway(self):
         path = self.path.split("?", 1)[0]
+        service_authenticated = bool(
+            SERVICE_TOKEN and
+            self.headers.get("X-Omnis-Service-Token", "") == SERVICE_TOKEN
+        )
         if (
             path.startswith("/api/matchmaking")
             or path.startswith("/api/sessions")
             or (path.startswith("/api/world") and self.command != "GET")
         ):
-            if not player_id(self):
+            if not service_authenticated and not player_id(self):
                 self.send_json(401, {"error": "X-Omnis-Player-Id is required"})
                 return
         routes = (
