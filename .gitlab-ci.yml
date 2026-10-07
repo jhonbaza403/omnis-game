@@ -40,7 +40,8 @@ unreal_pipeline:
   stage: unreal
   image: "$OMNIS_UNREAL_IMAGE"
   tags:
-    - "saas-linux-medium-amd64"
+    - "saas-linux-large-amd64"
+  timeout: 3h
   needs:
     - python_tests
   allow_failure: false
