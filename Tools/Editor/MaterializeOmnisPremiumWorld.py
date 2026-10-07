@@ -52,6 +52,18 @@ def materials():
     out["Water"]=make_mat("M_Water_Premium",(0.035,0.14,0.20,1),0.16,0.30)
     return out
 
+def import_obelisk():
+    filename=ROOT+"Content/Omnis/SourceAssets/Obelisk/Omnis_Obelisk.obj"
+    if not unreal.Paths.file_exists(filename):
+        raise RuntimeError("Missing authored Obelisk source mesh: "+filename)
+    task=unreal.AssetImportTask()
+    task.set_editor_property("filename",filename)
+    task.set_editor_property("destination_path",ART+"/Obelisk")
+    task.set_editor_property("automated",True)
+    task.set_editor_property("replace_existing",True)
+    task.set_editor_property("save",True)
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+
 def spawn_premium(sub,mesh,loc,scale,label,mat,yaw=0):
     a=base.spawn_mesh(sub,mesh,loc,scale,label)
     a.static_mesh_component.set_material(0,mat)
@@ -96,6 +108,7 @@ def extra_dressing(sub,m,mat):
 def main():
     base.ensure_dirs()
     base.import_all()
+    import_obelisk()
     mats=materials()
     meshes={f:{n:base.require_mesh(f,n) for n in ns} for f,ns in base.FAMILIES.items()}
     levels=unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
