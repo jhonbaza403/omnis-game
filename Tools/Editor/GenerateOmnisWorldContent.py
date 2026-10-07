@@ -17,6 +17,9 @@ FAMILIES = {
     "Characters": ["Omnis_Wanderer","Omnis_Civilian","Omnis_PoliceOfficer","Omnis_Medic","Omnis_Pilot"]
 }
 
+def log(message):
+    unreal.log("[OMNIS CONTENT] " + message)
+
 def source_file(family, name):
     return PROJECT_ROOT + "Content/Omnis/SourceAssets/" + family + "/" + name + ".obj"
 
@@ -52,11 +55,11 @@ def require_mesh(family, name):
         raise RuntimeError("Native StaticMesh missing after import: " + path)
     return mesh
 
-def spawn_mesh(subsystem, mesh_asset, location, scale=(1,1,1), label=""):
+def spawn_mesh(subsystem, mesh_asset, location, scale=(1,1,1), label="", yaw=0):
     actor = subsystem.spawn_actor_from_class(
         unreal.StaticMeshActor,
         unreal.Vector(*location),
-        unreal.Rotator(0,0,0)
+        unreal.Rotator(0, yaw, 0)
     )
     if not actor:
         raise RuntimeError("Could not spawn StaticMeshActor")
@@ -128,8 +131,6 @@ def populate(subsystem):
         if index%3==0:
             spawn_mesh(subsystem,nature["Omnis_Palm"],(x+420,y-200,0),(1.4,1.4,1.4),"Palm_%03d"%index)
 
-    # Vehicle and aircraft meshes are materialized and previewed without being
-    # used as physics pawns until gameplay takes possession of them.
     vehicle_places=[("Omnis_SUV",-800,-500),("Omnis_Bus",100,-500),("Omnis_Truck",1000,-500),
                     ("Omnis_Police_Car",-5000,3300),("Omnis_Ambulance",2500,-2200),
                     ("Omnis_Motorcycle",3500,-500),("Omnis_Sedan",4200,-500)]
@@ -178,7 +179,7 @@ def main():
     if not levels.save_current_level():
         raise RuntimeError("Could not save level: " + MAP_PATH)
 
-    log("[OMNIS] OpenWorld materialized: " + MAP_PATH)
+    log("Persistent map created: " + MAP_PATH)
 
 if __name__ == "__main__":
     main()

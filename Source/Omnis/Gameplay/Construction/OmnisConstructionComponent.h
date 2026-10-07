@@ -15,6 +15,24 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Construction")
     AActor* ConstructForward();
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Construction")
+    bool RemoveLastPiece();
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Construction")
+    int32 GetBuiltPieceCount() const;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Construction")
     float BuildDistance = 220.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Construction")
+    float GridSize = 100.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Construction")
+    int32 MaxPieces = 128;
+
+private:
+    FVector SnapLocation(const FVector& Location) const;
+
+    UPROPERTY()
+    TArray<TObjectPtr<AActor>> BuiltPieces;
 };

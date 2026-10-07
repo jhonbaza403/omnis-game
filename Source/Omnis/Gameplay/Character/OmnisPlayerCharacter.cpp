@@ -1,20 +1,21 @@
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
+
 #include "Camera/Player/OmnisPlayerCameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
+#include "Core/Identity/OmnisAvatarSubsystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Gameplay/Exploration/OmnisExplorationComponent.h"
-#include "Gameplay/Traversal/OmnisTraversalComponent.h"
-#include "Gameplay/Interaction/OmnisInteractionComponent.h"
-#include "Gameplay/Construction/OmnisConstructionComponent.h"
-#include "Gameplay/Combat/OmnisCombatComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Gameplay/Abilities/OmnisAbilityComponent.h"
-#include "Gameplay/Inventory/OmnisInventoryComponent.h"
-#include "Gameplay/Equipment/OmnisEquipmentComponent.h"
-#include "Systems/Damage/OmnisHealthComponent.h"
 #include "Gameplay/Character/OmnisProceduralAnimationComponent.h"
+#include "Gameplay/Construction/OmnisConstructionComponent.h"
+#include "Gameplay/Equipment/OmnisEquipmentComponent.h"
+#include "Gameplay/Exploration/OmnisExplorationComponent.h"
+#include "Gameplay/Interaction/OmnisInteractionComponent.h"
+#include "Gameplay/Inventory/OmnisInventoryComponent.h"
 #include "Gameplay/Player/OmnisGameMode.h"
+#include "Gameplay/Traversal/OmnisTraversalComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Systems/Damage/OmnisHealthComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 AOmnisPlayerCharacter::AOmnisPlayerCharacter()
 {
@@ -36,16 +37,14 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     FollowCamera->SetupAttachment(CameraBoom);
     FollowCamera->bUsePawnControlRotation = false;
 
-    UStaticMeshComponent* BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
+    BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
     BodyMesh->SetupAttachment(GetCapsuleComponent());
     BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> AuthoredMesh(
-        TEXT("/Game/Omnis/Art/Characters/Omnis_Wanderer.Omnis_Wanderer")
-    );
+        TEXT("/Game/Omnis/Art/Characters/Omnis_Wanderer.Omnis_Wanderer"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> FallbackMesh(
-        TEXT("/Engine/BasicShapes/Cube.Cube")
-    );
+        TEXT("/Engine/BasicShapes/Cube.Cube"));
 
     if (AuthoredMesh.Succeeded())
     {
@@ -57,8 +56,7 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     }
 
     BodyMesh->SetRelativeScale3D(
-        AuthoredMesh.Succeeded() ? FVector(75.0f) : FVector(0.55f, 0.55f, 1.2f)
-    );
+        AuthoredMesh.Succeeded() ? FVector(75.0f) : FVector(0.55f, 0.55f, 1.2f));
     BodyMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 12.0f));
 
     Exploration = CreateDefaultSubobject<UOmnisExplorationComponent>(TEXT("Exploration"));
@@ -81,6 +79,17 @@ void AOmnisPlayerCharacter::BeginPlay()
     {
         FollowCamera->SetDistance(550.0f);
     }
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        if (UOmnisAvatarSubsystem* Avatar =
+            GameInstance->GetSubsystem<UOmnisAvatarSubsystem>())
+        {
+            Avatar->InitializeStarterProfile();
+        }
+    }
+
+    ApplyAvatarVisuals();
 
     if (Health)
     {
@@ -155,9 +164,42 @@ void AOmnisPlayerCharacter::BuildPressed()
     }
 }
 
+void AOmnisPlayerCharacter::ApplyAvatarVisuals()
+{
+    UOmnisAvatarSubsystem* Avatar = GetGameInstance()
+        ? GetGameInstance()->GetSubsystem<UOmnisAvatarSubsystem>()
+        : nullptr;
+
+    if (!Avatar || !BodyMesh)
+    {
+        return;
+    }
+
+    const FName OutfitId = Avatar->GetProfile().OutfitId;
+    const uint32 Hash = GetTypeHash(OutfitId);
+
+    const float R = 0.25f + static_cast<float>((Hash >> 0) & 0xFF) / 1020.0f;
+    const float G = 0.35f + static_cast<float>((Hash >> 8) & 0xFF) / 1020.0f;
+    const float B = 0.55f + static_cast<float>((Hash >> 16) & 0xFF) / 1020.0f;
+
+    if (UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(
+        nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial")))
+    {
+        if (UMaterialInstanceDynamic* Material =
+            UMaterialInstanceDynamic::Create(BaseMaterial, BodyMesh))
+        {
+            Material->SetVectorParameterValue(
+                TEXT("BaseColor"), FLinearColor(R, G, B, 1.0f));
+            Material->SetScalarParameterValue(TEXT("Roughness"), 0.38f);
+            BodyMesh->SetMaterial(0, Material);
+        }
+    }
+}
+
 void AOmnisPlayerCharacter::HandlePlayerDeath()
 {
-    if (AOmnisGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<AOmnisGameMode>() : nullptr)
+    if (AOmnisGameMode* GameMode =
+        GetWorld() ? GetWorld()->GetAuthGameMode<AOmnisGameMode>() : nullptr)
     {
         GameMode->NotifyPlayerDeath(GetController());
     }

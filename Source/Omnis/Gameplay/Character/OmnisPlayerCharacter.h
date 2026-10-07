@@ -16,6 +16,7 @@ class UOmnisInventoryComponent;
 class UOmnisEquipmentComponent;
 class UOmnisHealthComponent;
 class UOmnisProceduralAnimationComponent;
+class UStaticMeshComponent;
 class UInputComponent;
 
 UCLASS()
@@ -65,6 +66,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Animation")
     TObjectPtr<UOmnisProceduralAnimationComponent> ProceduralAnimation;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Avatar")
+    TObjectPtr<UStaticMeshComponent> BodyMesh;
+
 protected:
     void MoveForward(float Value);
     void MoveRight(float Value);
@@ -76,4 +80,7 @@ protected:
 
     UFUNCTION()
     void HandlePlayerDeath();
+
+private:
+    void ApplyAvatarVisuals();
 };
