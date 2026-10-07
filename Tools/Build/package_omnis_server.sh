@@ -6,7 +6,7 @@ PROJECT_FILE="$ROOT/Omnis.uproject"
 OUTPUT_DIR="$ROOT/Build/OmnisServer"
 LOG_FILE="$ROOT/Saved/Logs/omnis_ue56_server_package.log"
 
-: "\${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT to the Unreal Engine 5.6 installation on the dedicated runner}"
+: "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT to the Unreal Engine 5.6 installation on the dedicated runner}"
 [[ -d "$UE_ENGINE_ROOT/Engine" ]] || { echo "Invalid UE_ENGINE_ROOT: $UE_ENGINE_ROOT" >&2; exit 1; }
 [[ -f "$PROJECT_FILE" ]] || { echo "Omnis.uproject not found: $PROJECT_FILE" >&2; exit 1; }
 
@@ -17,7 +17,7 @@ RUN_UAT="$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUAT.sh"
 mkdir -p "$(dirname "$LOG_FILE")" "$OUTPUT_DIR"
 
 echo "=== OMNIS UE 5.6 REAL DEDICATED SERVER PACKAGE ===" | tee "$LOG_FILE"
-echo "Commit: \${CI_COMMIT_SHA:-local}" | tee -a "$LOG_FILE"
+echo "Commit: ${CI_COMMIT_SHA:-local}" | tee -a "$LOG_FILE"
 echo "UE_ENGINE_ROOT: $UE_ENGINE_ROOT" | tee -a "$LOG_FILE"
 
 "$RUN_UBT" OmnisServer Linux Development "-Project=$PROJECT_FILE" -WaitMutex 2>&1 | tee -a "$LOG_FILE"
