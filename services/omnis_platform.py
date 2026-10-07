@@ -5,7 +5,7 @@ import secrets
 import socket
 import time
 from datetime import datetime, timezone
-from http import HTTPConnection, HTTPSConnection
+from http.client import HTTPConnection, HTTPSConnection
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from http import HTTPStatus
 from urllib.parse import urlsplit
