@@ -48,9 +48,9 @@ unreal_pipeline:
   script: |
     set -euo pipefail
     bash CI/Build/preflight_unreal.sh
+    bash CI/Build/build.sh
     bash CI/Build/generate_content.sh
     bash CI/Tests/run_unreal_automation.sh
-    bash CI/Build/build.sh
     bash CI/Packaging/package.sh
     test -f Content/Omnis/Maps/Omnis_OpenWorld.umap
     test -d Build/OmnisServer

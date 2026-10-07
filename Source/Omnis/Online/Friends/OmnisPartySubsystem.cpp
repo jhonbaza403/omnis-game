@@ -76,7 +76,7 @@ bool UOmnisPartySubsystem::SetMemberReady(FName UserId, bool bReady)
 
 bool UOmnisPartySubsystem::IsBlockedFromParty(FName UserId) const
 {
-    const UGameInstance* GameInstance = GetGameInstance();
+    UGameInstance* GameInstance = GetGameInstance();
     if (!GameInstance)
     {
         return false;

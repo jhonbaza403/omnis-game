@@ -80,6 +80,7 @@ class GameplayContractsTests(unittest.TestCase):
         self.assertIn("HasAuthority()", implementation)
         self.assertIn("SetReplicates(true)", implementation)
         self.assertIn("SetReplicateMovement(true)", implementation)
+        self.assertIn("SetIsReplicatedByDefault(true)", implementation)
 
     def test_safety_contract_exists(self):
         source = (

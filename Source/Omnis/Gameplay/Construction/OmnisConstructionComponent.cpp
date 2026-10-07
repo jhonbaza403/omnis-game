@@ -9,6 +9,7 @@
 UOmnisConstructionComponent::UOmnisConstructionComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
+    SetIsReplicatedByDefault(true);
 }
 
 FVector UOmnisConstructionComponent::SnapLocation(const FVector& Location) const
