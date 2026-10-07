@@ -23,3 +23,21 @@ La dirección base queda establecida como **dark fantasy postapocalíptica**: ru
 ## Regla de ingeniería
 
 No se aceptan migraciones ficticias, duplicación de sistemas, falsos servicios externos, secretos en el repositorio ni artefactos binarios inventados para aparentar contenido.
+
+
+## Experiencia jugable
+
+La experiencia maestra está definida en Docs/OMNIS_MASTER_EXPERIENCE.md y en Content/Omnis/Data/experience-manifest.json.
+
+El vertical slice integra:
+- mundo abierto y World Partition;
+- exploración, interacción, combate y construcción autoritativa;
+- avatar y cosméticos;
+- experiencia y recompensas;
+- grupos cooperativos;
+- rating competitivo;
+- creaciones publicables;
+- controles sociales de bloqueo y reportes;
+- ciclo narrativo y Nexo.
+
+Los assets nativos UAsset y el mapa UMAP se generan exclusivamente dentro de Unreal Engine 5.6 mediante CI. No se crean binarios ficticios para aparentar materialización.

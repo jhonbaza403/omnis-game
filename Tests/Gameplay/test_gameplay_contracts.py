@@ -67,6 +67,20 @@ class GameplayContractsTests(unittest.TestCase):
         self.assertIn("RecordMatchResult", source)
         self.assertNotIn("Purchase", source)
 
+    def test_construction_is_server_authoritative(self):
+        source = (
+            ROOT
+            / "Source/Omnis/Gameplay/Construction/OmnisConstructionComponent.h"
+        ).read_text(encoding="utf-8")
+        implementation = (
+            ROOT
+            / "Source/Omnis/Gameplay/Construction/OmnisConstructionComponent.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertIn("ServerConstructForward", source)
+        self.assertIn("HasAuthority()", implementation)
+        self.assertIn("SetReplicates(true)", implementation)
+        self.assertIn("SetReplicateMovement(true)", implementation)
+
     def test_safety_contract_exists(self):
         source = (
             ROOT / "Source/Omnis/Online/Safety/OmnisSafetySubsystem.h"
