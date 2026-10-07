@@ -22,7 +22,7 @@ The visual core is implemented by AOmnisNexusVisualActor and is animated at runt
 Tools/Editor/GenerateOmnisVerticalSlice.py creates and saves:
  /Game/Omnis/Maps/Omnis_VerticalSlice.umap
 
-The script must be executed in Unreal Engine 5.6 because .umap and .uasset files are Unreal package files and cannot be validly synthesized as plain text.
+The script must be executed in Unreal Engine 5.8 because .umap and .uasset files are Unreal package files and cannot be validly synthesized as plain text.
 
 ## Test levels
 

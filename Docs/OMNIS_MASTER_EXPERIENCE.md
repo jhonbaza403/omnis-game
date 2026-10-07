@@ -19,7 +19,7 @@ EXPLORAR → JUGAR → CREAR → PERSONALIZAR → COMPARTIR → COMPETIR → PRO
 7. Competitivo: rating, divisiones, victorias/derrotas y futuras tablas de clasificación.
 8. Narrativa: decisiones, facciones, relaciones y consecuencias persistentes.
 9. El Ciclo: transición Awakening → Crisis → Collapse → Nexus → Rebirth con estado heredable.
-10. Mundo abierto: World Partition real de Unreal Engine 5.6.
+10. Mundo abierto: World Partition real de Unreal Engine 5.8.
 11. Creadores: borradores, elementos, publicación y valoración de contenido generado por usuarios.
 12. Seguridad: bloqueo, reportes, límites de contexto y permisos de interacción.
 
@@ -29,7 +29,7 @@ Core contiene identidad, progreso, ciclo, persistencia y eventos. Gameplay conti
 
 ## Definition of Done
 
-- El proyecto abre con Unreal Engine 5.6.
+- El proyecto abre con Unreal Engine 5.8.
 - La configuración apunta a Omnis_OpenWorld.
 - El materializador utiliza el template Open World real cuando Unreal está disponible.
 - Los OBJ del repositorio son importados como assets nativos por el editor.
@@ -49,4 +49,4 @@ Core contiene identidad, progreso, ciclo, persistencia y eventos. Gameplay conti
 
 ## Estado real
 
-Los assets nativos UAsset y el mapa UMAP no se deben fabricar como texto. Se generan dentro de Unreal Engine por CI mediante Tools/Editor/MaterializeOmnisPremiumWorld.py. El proyecto ya contiene las fuentes OBJ y el generador; la materialización real depende de que el runner tenga Unreal Engine 5.6 instalado y accesible mediante UE_ENGINE_ROOT.
+Los assets nativos UAsset y el mapa UMAP no se deben fabricar como texto. Se generan dentro de Unreal Engine por CI mediante Tools/Editor/MaterializeOmnisPremiumWorld.py. El proyecto ya contiene las fuentes OBJ y el generador; la materialización real depende de que el runner tenga Unreal Engine 5.8 instalado y accesible mediante UE_ENGINE_ROOT.
