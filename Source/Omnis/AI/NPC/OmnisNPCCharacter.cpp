@@ -3,6 +3,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
+#include "Gameplay/Character/OmnisProceduralAnimationComponent.h"
 #include "Core/Progression/OmnisProgressionSubsystem.h"
 
 AOmnisNPCCharacter::AOmnisNPCCharacter()
@@ -16,17 +17,31 @@ AOmnisNPCCharacter::AOmnisNPCCharacter()
     Visual->SetupAttachment(GetCapsuleComponent());
     Visual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> Cube(TEXT("/Engine/BasicShapes/Cube.Cube"));
-    if (Cube.Succeeded())
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> AuthoredMesh(
+        TEXT("/Game/Omnis/Art/Characters/Omnis_Wanderer.Omnis_Wanderer")
+    );
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> FallbackMesh(
+        TEXT("/Engine/BasicShapes/Cube.Cube")
+    );
+
+    if (AuthoredMesh.Succeeded())
     {
-        Visual->SetStaticMesh(Cube.Object);
+        Visual->SetStaticMesh(AuthoredMesh.Object);
     }
-    Visual->SetRelativeScale3D(FVector(0.45f, 0.45f, 1.05f));
+    else if (FallbackMesh.Succeeded())
+    {
+        Visual->SetStaticMesh(FallbackMesh.Object);
+    }
+
+    Visual->SetRelativeScale3D(
+        AuthoredMesh.Succeeded() ? FVector(45.0f) : FVector(0.45f, 0.45f, 1.05f)
+    );
     Visual->SetRelativeLocation(FVector(0.0f, 0.0f, 8.0f));
 
     Health = CreateDefaultSubobject<UOmnisHealthComponent>(TEXT("Health"));
     Tags.Add(TEXT("Omnis.NPC"));
     Tags.Add(TEXT("Omnis.Discoverable"));
+    ProceduralAnimation = CreateDefaultSubobject<UOmnisProceduralAnimationComponent>(TEXT("ProceduralAnimation"));
 }
 
 void AOmnisNPCCharacter::Tick(float DeltaSeconds)
