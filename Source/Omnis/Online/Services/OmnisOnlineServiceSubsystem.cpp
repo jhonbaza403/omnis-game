@@ -1,10 +1,24 @@
 #include "Online/Services/OmnisOnlineServiceSubsystem.h"
 
+#include "Dom/JsonObject.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/ConfigCacheIni.h"
 #include "HAL/PlatformMisc.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
+
+namespace
+{
+    FString SerializeObject(const TSharedRef<FJsonObject>& Object)
+    {
+        FString Output;
+        const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Output);
+        FJsonSerializer::Serialize(Object, Writer);
+        return Output;
+    }
+}
 
 void UOmnisOnlineServiceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -13,11 +27,7 @@ void UOmnisOnlineServiceSubsystem::Initialize(FSubsystemCollectionBase& Collecti
     GatewayBaseUrl = FPlatformMisc::GetEnvironmentVariable(TEXT("OMNIS_BACKEND_URL"));
     if (GatewayBaseUrl.IsEmpty() && GConfig)
     {
-        GConfig->GetString(
-            TEXT("Omnis.Online"),
-            TEXT("GatewayUrl"),
-            GatewayBaseUrl,
-            GGameIni);
+        GConfig->GetString(TEXT("Omnis.Online"), TEXT("GatewayUrl"), GatewayBaseUrl, GGameIni);
     }
 
     if (GatewayBaseUrl.IsEmpty())
@@ -31,6 +41,8 @@ void UOmnisOnlineServiceSubsystem::Initialize(FSubsystemCollectionBase& Collecti
     }
 
     PlayerId = FPlatformMisc::GetEnvironmentVariable(TEXT("OMNIS_PLAYER_ID"));
+    ServiceToken = FPlatformMisc::GetEnvironmentVariable(TEXT("OMNIS_SERVICE_TOKEN"));
+
     SetServiceAvailable(TEXT("gateway"), false);
     RefreshGatewayHealth();
 }
@@ -40,6 +52,7 @@ void UOmnisOnlineServiceSubsystem::Deinitialize()
     Services.Empty();
     GatewayBaseUrl.Empty();
     PlayerId.Empty();
+    ServiceToken.Empty();
 
     Super::Deinitialize();
 }
@@ -82,6 +95,64 @@ void UOmnisOnlineServiceSubsystem::RefreshGatewayHealth()
         });
 }
 
+void UOmnisOnlineServiceSubsystem::GetWorldCycle(FOmnisHttpCompletion Completion)
+{
+    SendRequest(TEXT("GET"), TEXT("/api/world/cycle"), TEXT(""), MoveTemp(Completion));
+}
+
+void UOmnisOnlineServiceSubsystem::AdvanceWorldCycle(
+    const FString& Era,
+    const FString& Reason,
+    FOmnisHttpCompletion Completion)
+{
+    const TSharedRef<FJsonObject> Payload = MakeShared<FJsonObject>();
+    if (!Era.IsEmpty())
+    {
+        Payload->SetStringField(TEXT("era"), Era);
+    }
+    if (!Reason.IsEmpty())
+    {
+        Payload->SetStringField(TEXT("reason"), Reason);
+    }
+
+    SendRequest(
+        TEXT("POST"),
+        TEXT("/api/world/cycle/advance"),
+        SerializeObject(Payload),
+        MoveTemp(Completion));
+}
+
+void UOmnisOnlineServiceSubsystem::RecordWorldEvent(
+    const FString& EventType,
+    const FString& EventPlayerId,
+    const FString& JsonPayload,
+    FOmnisHttpCompletion Completion)
+{
+    const TSharedRef<FJsonObject> Payload = MakeShared<FJsonObject>();
+    Payload->SetStringField(TEXT("event_type"), EventType);
+
+    if (!EventPlayerId.IsEmpty())
+    {
+        Payload->SetStringField(TEXT("player_id"), EventPlayerId);
+    }
+
+    if (!JsonPayload.IsEmpty())
+    {
+        TSharedPtr<FJsonObject> EventPayload;
+        const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonPayload);
+        if (FJsonSerializer::Deserialize(Reader, EventPayload) && EventPayload.IsValid())
+        {
+            Payload->SetObjectField(TEXT("payload"), EventPayload);
+        }
+    }
+
+    SendRequest(
+        TEXT("POST"),
+        TEXT("/api/world/events"),
+        SerializeObject(Payload),
+        MoveTemp(Completion));
+}
+
 void UOmnisOnlineServiceSubsystem::SendRequest(
     const FString& Verb,
     const FString& Path,
@@ -118,6 +189,11 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
         Request->SetHeader(TEXT("X-Omnis-Player-Id"), PlayerId);
     }
 
+    if (!ServiceToken.IsEmpty())
+    {
+        Request->SetHeader(TEXT("X-Omnis-Service-Token"), ServiceToken);
+    }
+
     Request->SetTimeout(10.0f);
 
     Request->OnProcessRequestComplete().BindLambda(
@@ -132,12 +208,8 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
             }
 
             const bool bHasResponse = Response.IsValid();
-            const int32 StatusCode = bHasResponse
-                ? Response->GetResponseCode()
-                : 0;
-            const FString ResponseBody = bHasResponse
-                ? Response->GetContentAsString()
-                : FString();
+            const int32 StatusCode = bHasResponse ? Response->GetResponseCode() : 0;
+            const FString ResponseBody = bHasResponse ? Response->GetContentAsString() : FString();
 
             if (*CompletionRef)
             {
@@ -160,11 +232,9 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
 FString UOmnisOnlineServiceSubsystem::BuildApiUrl(const FString& Path) const
 {
     FString NormalizedPath = Path;
-
     if (!NormalizedPath.StartsWith(TEXT("/")))
     {
         NormalizedPath = TEXT("/") + NormalizedPath;
     }
-
     return GatewayBaseUrl + NormalizedPath;
 }

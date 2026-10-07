@@ -33,6 +33,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Online")
     void RefreshGatewayHealth();
 
+    void GetWorldCycle(FOmnisHttpCompletion Completion);
+    void AdvanceWorldCycle(const FString& Era, const FString& Reason, FOmnisHttpCompletion Completion);
+    void RecordWorldEvent(
+        const FString& EventType,
+        const FString& EventPlayerId,
+        const FString& JsonPayload,
+        FOmnisHttpCompletion Completion);
+
     void SendRequest(
         const FString& Verb,
         const FString& Path,
@@ -50,4 +58,7 @@ private:
 
     UPROPERTY()
     FString PlayerId;
+
+    UPROPERTY()
+    FString ServiceToken;
 };
