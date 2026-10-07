@@ -61,10 +61,7 @@ void AOmnisGameMode::RestartPlayer(AController* NewPlayer)
 
 void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
 {
-    if (!PlayerController)
-    {
-        return;
-    }
+    if (!PlayerController) return;
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
@@ -72,7 +69,6 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
         {
             Cycle->EnterNexus();
         }
-
         if (UOmnisNexusSubsystem* Nexus = GameInstance->GetSubsystem<UOmnisNexusSubsystem>())
         {
             Nexus->AddPermanentUpgradePoints(1);
@@ -89,10 +85,7 @@ void AOmnisGameMode::NotifyPlayerDeath(AController* PlayerController)
 
 void AOmnisGameMode::RespawnAfterNexus(AController* PlayerController)
 {
-    if (!PlayerController)
-    {
-        return;
-    }
+    if (!PlayerController) return;
 
     if (UGameInstance* GameInstance = GetGameInstance())
     {
