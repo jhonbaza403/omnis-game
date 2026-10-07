@@ -6,6 +6,7 @@
 #include "Core/Nexus/OmnisNexusSubsystem.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 #include "World/Environment/OmnisWorldBootstrapSubsystem.h"
+#include "World/Content/OmnisWorldContentSubsystem.h"
 
 AOmnisGameMode::AOmnisGameMode()
 {
@@ -29,6 +30,11 @@ void AOmnisGameMode::BeginPlay()
     if (UOmnisWorldBootstrapSubsystem* Bootstrap = GetWorld()->GetSubsystem<UOmnisWorldBootstrapSubsystem>())
     {
         Bootstrap->BuildInitialWorld();
+    }
+
+    if (UOmnisWorldContentSubsystem* Content = GetWorld()->GetSubsystem<UOmnisWorldContentSubsystem>())
+    {
+        Content->BuildProductionWorld();
     }
 }
 

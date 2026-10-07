@@ -16,10 +16,16 @@ public:
 
     virtual void Tick(float DeltaSeconds) override;
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Wildlife")
+    void ConfigureWildlifeAsset(const FString& MeshAssetPath);
+
 protected:
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> Visual;
 
 private:
+    void ApplyConfiguredMesh();
+
     float WanderTime = 0.0f;
+    FString WildlifeMeshPath;
 };
