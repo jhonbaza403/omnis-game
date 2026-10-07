@@ -4,7 +4,6 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/ConfigCacheIni.h"
-#include "Misc/Char.h"
 #include "HAL/PlatformMisc.h"
 
 void UOmnisOnlineServiceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -33,7 +32,6 @@ void UOmnisOnlineServiceSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 
     PlayerId = FPlatformMisc::GetEnvironmentVariable(TEXT("OMNIS_PLAYER_ID"));
     SetServiceAvailable(TEXT("gateway"), false);
-
     RefreshGatewayHealth();
 }
 
@@ -99,7 +97,12 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
         return;
     }
 
-    const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    const TSharedRef<FOmnisHttpCompletion> CompletionRef =
+        MakeShared<FOmnisHttpCompletion>(MoveTemp(Completion));
+
+    const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request =
+        FHttpModule::Get().CreateRequest();
+
     Request->SetURL(BuildApiUrl(Path));
     Request->SetVerb(Verb);
     Request->SetHeader(TEXT("Accept"), TEXT("application/json"));
@@ -118,7 +121,7 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
     Request->SetTimeout(10.0f);
 
     Request->OnProcessRequestComplete().BindLambda(
-        [WeakThis = TWeakObjectPtr<UOmnisOnlineServiceSubsystem>(this), Completion = MoveTemp(Completion)](
+        [WeakThis = TWeakObjectPtr<UOmnisOnlineServiceSubsystem>(this), CompletionRef](
             FHttpRequestPtr,
             FHttpResponsePtr Response,
             bool bWasSuccessful)
@@ -136,9 +139,9 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
                 ? Response->GetContentAsString()
                 : FString();
 
-            if (Completion)
+            if (*CompletionRef)
             {
-                Completion(
+                (*CompletionRef)(
                     bWasSuccessful &&
                     bHasResponse &&
                     StatusCode >= 200 &&
@@ -148,9 +151,9 @@ void UOmnisOnlineServiceSubsystem::SendRequest(
             }
         });
 
-    if (!Request->ProcessRequest() && Completion)
+    if (!Request->ProcessRequest() && *CompletionRef)
     {
-        Completion(false, 0, TEXT(""));
+        (*CompletionRef)(false, 0, TEXT(""));
     }
 }
 

@@ -1,6 +1,7 @@
 #include "Online/Matchmaking/OmnisMatchmakingSubsystem.h"
 
 #include "Dom/JsonObject.h"
+#include "GenericPlatform/GenericPlatformHttp.h"
 #include "Online/Services/OmnisOnlineServiceSubsystem.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
@@ -42,12 +43,13 @@ void UOmnisMatchmakingSubsystem::Enqueue(FName NewPlaylistId)
 
     const TSharedRef<FJsonObject> Payload = MakeShared<FJsonObject>();
     Payload->SetStringField(TEXT("playlist"), PlaylistId.ToString());
+    const TWeakObjectPtr<UOmnisOnlineServiceSubsystem> WeakOnline(Online);
 
     Online->SendRequest(
         TEXT("POST"),
         TEXT("/api/matchmaking/enqueue"),
         SerializeJson(Payload),
-        [WeakThis = TWeakObjectPtr<UOmnisMatchmakingSubsystem>(this), Online](
+        [WeakThis = TWeakObjectPtr<UOmnisMatchmakingSubsystem>(this), WeakOnline](
             bool bSucceeded,
             int32 StatusCode,
             const FString&)
@@ -57,9 +59,12 @@ void UOmnisMatchmakingSubsystem::Enqueue(FName NewPlaylistId)
                 return;
             }
 
-            const bool bQueuedSuccessfully = bSucceeded && StatusCode == 202;
-            WeakThis->bQueued = bQueuedSuccessfully;
-            Online->SetServiceAvailable(TEXT("matchmaking"), bSucceeded);
+            WeakThis->bQueued = bSucceeded && StatusCode == 202;
+
+            if (WeakOnline.IsValid())
+            {
+                WeakOnline->SetServiceAvailable(TEXT("matchmaking"), bSucceeded);
+            }
         });
 }
 
@@ -85,11 +90,13 @@ void UOmnisMatchmakingSubsystem::Dequeue()
         TEXT("/api/matchmaking/queue?playlist=%s"),
         *EncodeQueryValue(Playlist));
 
+    const TWeakObjectPtr<UOmnisOnlineServiceSubsystem> WeakOnline(Online);
+
     Online->SendRequest(
         TEXT("DELETE"),
         Path,
         TEXT(""),
-        [WeakThis = TWeakObjectPtr<UOmnisMatchmakingSubsystem>(this), Online](
+        [WeakThis = TWeakObjectPtr<UOmnisMatchmakingSubsystem>(this), WeakOnline](
             bool bSucceeded,
             int32,
             const FString&)
@@ -101,7 +108,11 @@ void UOmnisMatchmakingSubsystem::Dequeue()
 
             WeakThis->bQueued = false;
             WeakThis->PlaylistId = NAME_None;
-            Online->SetServiceAvailable(TEXT("matchmaking"), bSucceeded);
+
+            if (WeakOnline.IsValid())
+            {
+                WeakOnline->SetServiceAvailable(TEXT("matchmaking"), bSucceeded);
+            }
         });
 }
 
@@ -126,11 +137,13 @@ void UOmnisMatchmakingSubsystem::RefreshStatus()
         TEXT("/api/matchmaking/status?playlist=%s"),
         *EncodeQueryValue(PlaylistId.ToString()));
 
+    const TWeakObjectPtr<UOmnisOnlineServiceSubsystem> WeakOnline(Online);
+
     Online->SendRequest(
         TEXT("GET"),
         Path,
         TEXT(""),
-        [WeakThis = TWeakObjectPtr<UOmnisMatchmakingSubsystem>(this), Online](
+        [WeakThis = TWeakObjectPtr<UOmnisMatchmakingSubsystem>(this), WeakOnline](
             bool bSucceeded,
             int32,
             const FString& ResponseBody)
@@ -152,7 +165,10 @@ void UOmnisMatchmakingSubsystem::RefreshStatus()
             }
 
             WeakThis->bQueued = bSucceeded && bServerQueued;
-            Online->SetServiceAvailable(TEXT("matchmaking"), bSucceeded);
+
+            if (WeakOnline.IsValid())
+            {
+                WeakOnline->SetServiceAvailable(TEXT("matchmaking"), bSucceeded);
+            }
         });
 }
-

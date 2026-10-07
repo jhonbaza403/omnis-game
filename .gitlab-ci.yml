@@ -67,7 +67,7 @@ unreal_runner_preflight:
     - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUBT.sh"
     - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUAT.sh"
     - test -f "$UE_ENGINE_ROOT/Engine/Build/Build.version"
-    - python3 -c 'import json; p=json.load(open("'$UE_ENGINE_ROOT/Engine/Build/Build.version'")); assert (p["MajorVersion"],p["MinorVersion"])==(5,6), p'
+    - python3 -c 'import json,os; p=json.load(open(os.path.join(os.environ["UE_ENGINE_ROOT"],"Engine/Build/Build.version"))); assert (p["MajorVersion"],p["MinorVersion"])==(5,6), p'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

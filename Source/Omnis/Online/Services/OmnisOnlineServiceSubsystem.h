@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "Online/HTTPTypes.h"
 #include "OmnisOnlineServiceSubsystem.generated.h"
 
 UCLASS()
