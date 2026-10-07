@@ -1,0 +1,10 @@
+{
+  "world":"Omnis: El Último Ciclo",
+  "map":"/Game/Omnis/Maps/Omnis_OpenWorld",
+  "engine":"5.6",
+  "template":"/Engine/Maps/Templates/OpenWorld",
+  "native_required":{"umap":true,"world_partition":true,"landscape":true,"data_layers":true,"hlod":true,"one_file_per_actor":true},
+  "thresholds":{"native_mesh_assets":63,"premium_material_assets":10,"static_world_dressing":250},
+  "zones":["Ruinas de Piedra Ciénaga","Nexo de las Almas Olvidadas","Refugio de los Desterrados","Distrito Central","Puerto","Aeropuerto","Montañas","Acantilados","Costa"],
+  "source_policy":{"obj_is_source":true,"fake_uasset_umap_forbidden":true}
+}
