@@ -13,6 +13,8 @@
 #include "AI/NPC/OmnisNPCCharacter.h"
 #include "World/Environment/OmnisNexusVisualActor.h"
 #include "World/Environment/OmnisVFXActor.h"
+#include "World/Environment/OmnisDynamicLightingActor.h"
+#include "World/Environment/OmnisAtmosphereFXActor.h"
 
 namespace
 {
@@ -105,42 +107,54 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
         );
     }
 
-    const FLinearColor Cyan(0.08f,0.8f,1.0f);
-    const FLinearColor Violet(0.42f,0.16f,0.95f);
-    const FLinearColor Gold(1.0f,0.55f,0.12f);
-    const FLinearColor Green(0.1f,1.0f,0.48f);
-
-    // Nexus and VFX remain dynamic even on the persistent authored map.
     if (!FindActorOfType<AOmnisNexusVisualActor>(World))
     {
-        if (AOmnisNexusVisualActor* Nexus = World->SpawnActor<AOmnisNexusVisualActor>(
+        World->SpawnActor<AOmnisNexusVisualActor>(
             AOmnisNexusVisualActor::StaticClass(),
             FVector(0,0,165),
-            FRotator::ZeroRotator))
-        {
-            Nexus->SetActorLabel(TEXT("Omnis_Runtime_Nexus"));
-        }
+            FRotator::ZeroRotator
+        );
     }
 
     if (!FindActorOfType<AOmnisVFXActor>(World))
     {
-        if (AOmnisVFXActor* VFX = World->SpawnActor<AOmnisVFXActor>(
+        World->SpawnActor<AOmnisVFXActor>(
             AOmnisVFXActor::StaticClass(),
             FVector(0,0,165),
-            FRotator::ZeroRotator))
-        {
-            VFX->SetActorLabel(TEXT("Omnis_Runtime_Nexus_VFX"));
-        }
+            FRotator::ZeroRotator
+        );
     }
 
-    const bool bPersistentWorld = World->GetName().Contains(TEXT("Omnis_OpenWorld"));
-    if (bPersistentWorld)
+    if (!FindActorOfType<AOmnisDynamicLightingActor>(World))
+    {
+        World->SpawnActor<AOmnisDynamicLightingActor>(
+            AOmnisDynamicLightingActor::StaticClass(),
+            FVector::ZeroVector,
+            FRotator::ZeroRotator
+        );
+    }
+
+    if (!FindActorOfType<AOmnisAtmosphereFXActor>(World))
+    {
+        World->SpawnActor<AOmnisAtmosphereFXActor>(
+            AOmnisAtmosphereFXActor::StaticClass(),
+            FVector::ZeroVector,
+            FRotator::ZeroRotator
+        );
+    }
+
+    if (World->GetName().Contains(TEXT("Omnis_OpenWorld")))
     {
         bWorldBuilt = true;
         return;
     }
 
     SpawnMeshActor(World,Cube,FVector(0,0,-55),FVector(35,35,0.5f),FLinearColor(0.025f,0.05f,0.08f),true);
+
+    const FLinearColor Cyan(0.08f,0.8f,1.0f);
+    const FLinearColor Violet(0.42f,0.16f,0.95f);
+    const FLinearColor Gold(1.0f,0.55f,0.12f);
+    const FLinearColor Green(0.1f,1.0f,0.48f);
 
     const TArray<FVector> Pillars = {
         FVector(800,0,150),FVector(-800,0,150),FVector(0,800,150),FVector(0,-800,150)
