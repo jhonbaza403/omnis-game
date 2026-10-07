@@ -37,7 +37,7 @@ cloudflare_validate:
   image: node:24
   script:
     - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
-    - test "$(node -p \"require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
+    - test "node -p "require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
     - npx wrangler --version
     - npm run cf:check
   rules:
@@ -53,7 +53,7 @@ cloudflare_preview:
     - test -n "$CLOUDFLARE_ACCOUNT_ID"
     - test -n "$CLOUDFLARE_API_TOKEN"
     - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
-    - test "$(node -p \"require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
+    - test "node -p "require('./node_modules/wrangler/package.json').version\")" = "4.148.0"
     - npx wrangler --version
     - PREVIEW_NAME="${CI_COMMIT_REF_SLUG:-omnis-preview}"
     - npx wrangler preview --config wrangler.jsonc --name "$PREVIEW_NAME" --message "GitLab CI ${CI_COMMIT_SHA}"
