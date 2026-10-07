@@ -11,7 +11,8 @@ stages:
   - container
 
 variables:
-  OMNIS_UNREAL_RUNNER_TAG: "unreal56-linux"
+  OMNIS_UNREAL_IMAGE: "wukakuki/unreal-engine:dev-slim-5.6.1@sha256:7ff40023124f2e2773fc43ad904f3b1305c1157c7b58328e0c08937edeb425d9"
+  UE_ENGINE_ROOT: "/home/ue4/UnrealEngine"
 
 python_validate:
   stage: validate
@@ -81,12 +82,12 @@ cloudflare_validate:
 
 unreal_runner_preflight:
   stage: unreal_runner
-  tags:
-    - "$OMNIS_UNREAL_RUNNER_TAG"
+  image: "$OMNIS_UNREAL_IMAGE"
   script:
     - test -n "$UE_ENGINE_ROOT"
     - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUBT.sh"
     - test -x "$UE_ENGINE_ROOT/Engine/Build/BatchFiles/RunUAT.sh"
+    - test -x "$UE_ENGINE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"
     - test -f "$UE_ENGINE_ROOT/Engine/Build/Build.version"
     - python3 -c 'import json,os; p=json.load(open(os.path.join(os.environ["UE_ENGINE_ROOT"],"Engine/Build/Build.version"))); assert (p["MajorVersion"],p["MinorVersion"])==(5,6), p'
   rules:
@@ -97,9 +98,8 @@ unreal_runner_preflight:
   allow_failure: false
 
 unreal_content:
+  image: "$OMNIS_UNREAL_IMAGE"
   stage: unreal_validate
-  tags:
-    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - python_tests
     - unreal_runner_preflight
@@ -120,9 +120,8 @@ unreal_content:
       - Saved/Logs/omnis_content_generation.log
 
 unreal_automation:
+  image: "$OMNIS_UNREAL_IMAGE"
   stage: unreal_validate
-  tags:
-    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - unreal_content
   script:
@@ -140,9 +139,8 @@ unreal_automation:
       - Saved/Logs/omnis_unreal_automation.log
 
 unreal_build:
+  image: "$OMNIS_UNREAL_IMAGE"
   stage: unreal
-  tags:
-    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - unreal_content
   script:
@@ -160,9 +158,8 @@ unreal_build:
       - Saved/Logs/omnis_ue56_build.log
 
 unreal_server_package:
+  image: "$OMNIS_UNREAL_IMAGE"
   stage: package
-  tags:
-    - "$OMNIS_UNREAL_RUNNER_TAG"
   needs:
     - unreal_build
   script:
