@@ -1,4 +1,5 @@
 stages:
+  - runner_preflight
   - validate
   - test
   - cloudflare
@@ -71,15 +72,22 @@ unreal_pipeline:
   allow_failure: false
   script: |
     set -euo pipefail
-    bash CI/Build/preflight_unreal.sh
-    bash CI/Build/build.sh
-    bash CI/Build/generate_content.sh
-    bash CI/Tests/run_unreal_automation.sh
-    bash CI/Packaging/package.sh
-    test -f Content/Omnis/Maps/Omnis_OpenWorld.umap
-    test -d Build/OmnisServer
-    test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname 'OmnisServer*' -print -quit)"
-    echo "=== RESULT: OMNIS UE5.6.1 FULL PIPELINE PASSED ==="
+    test "$(id -u)" = "0"
+    test -d /home/ue4/UnrealEngine
+    chown -R 1000:1000 "$CI_PROJECT_DIR"
+    su -p -s /bin/bash ue4 -c '
+      set -euo pipefail
+      cd "$CI_PROJECT_DIR"
+      bash CI/Build/preflight_unreal.sh
+      bash CI/Build/build.sh
+      bash CI/Build/generate_content.sh
+      bash CI/Tests/run_unreal_automation.sh
+      bash CI/Packaging/package.sh
+      test -f Content/Omnis/Maps/Omnis_OpenWorld.umap
+      test -d Build/OmnisServer
+      test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname "OmnisServer*" -print -quit)"
+      echo "=== RESULT: OMNIS UE5.6.1 FULL PIPELINE PASSED ==="
+    '
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
