@@ -9,7 +9,6 @@ public static class OmnisMaterialization
     const string SourceRoot = "Content/Omnis/SourceAssets";
     const string UnityRoot = "Assets/Omnis/SourceAssets";
     const string ScenePath = "Assets/Omnis/Scenes/Omnis_Nexus_Prototype.unity";
-
     [MenuItem("Omnis/Materialize/Import Verified Source Assets")]
     public static void ImportVerifiedSourceAssets()
     {
@@ -34,44 +33,52 @@ public static class OmnisMaterialization
         ImportVerifiedSourceAssets();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         CreateLight();
-        CreateCamera();
+        var player = AddImportedModel("Omnis_Civilian", new Vector3(0, 0, -8));
+        if (player != null) SetupPlayer(player);
         AddImportedModel("Omnis_Obelisk", new Vector3(0, 0, 8));
         AddImportedModel("Omnis_Road_Segment", new Vector3(0, 0, 0));
         AddImportedModel("Omnis_Tree", new Vector3(7, 0, 8));
         AddImportedModel("Omnis_House", new Vector3(-7, 0, 8));
         EditorSceneManager.SaveScene(scene, ScenePath);
-        Debug.Log("Omnis: first real source-asset scene saved to " + ScenePath);
+        Debug.Log("Omnis: first playable source-asset scene saved to " + ScenePath);
     }
 
-    static void CreateCamera()
+    static void SetupPlayer(GameObject player)
     {
-        var go = new GameObject("Main Camera");
-        go.tag = "MainCamera";
-        go.AddComponent<Camera>();
-        go.transform.position = new Vector3(0, 4, -12);
-        go.transform.rotation = Quaternion.Euler(15, 0, 0);
+        player.name = "OmnisPlayer";
+        var controller = player.GetComponent<CharacterController>();
+        if (controller == null) controller = player.AddComponent<CharacterController>();
+        controller.height = 1.8f; controller.radius = 0.35f; controller.center = new Vector3(0, 0.9f, 0);
+        var movement = player.GetComponent<OmnisPlayerController>();
+        if (movement == null) movement = player.AddComponent<OmnisPlayerController>();
+        var cameraObject = new GameObject("Player Camera");
+        var camera = cameraObject.AddComponent<Camera>();
+        camera.tag = "MainCamera";
+        cameraObject.transform.SetParent(player.transform);
+        cameraObject.transform.localPosition = new Vector3(0, 2.2f, -5.5f);
+        cameraObject.transform.localRotation = Quaternion.Euler(12, 0, 0);
+        movement.cameraPivot = cameraObject.transform;
     }
 
     static void CreateLight()
     {
         var go = new GameObject("Key Light");
         var light = go.AddComponent<Light>();
-        light.type = LightType.Directional;
-        light.intensity = 1.2f;
+        light.type = LightType.Directional; light.intensity = 1.2f;
         go.transform.rotation = Quaternion.Euler(45, -30, 0);
     }
 
-    static void AddImportedModel(string modelName, Vector3 position)
+    static GameObject AddImportedModel(string modelName, Vector3 position)
     {
         string[] guids = AssetDatabase.FindAssets(modelName + " t:Model", new[] { UnityRoot });
-        if (guids.Length == 0) { Debug.LogWarning("Omnis: model not found: " + modelName); return; }
+        if (guids.Length == 0) { Debug.LogWarning("Omnis: model not found: " + modelName); return null; }
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-        if (prefab == null) { Debug.LogWarning("Omnis: unable to load: " + path); return; }
+        if (prefab == null) { Debug.LogWarning("Omnis: unable to load: " + path); return null; }
         var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
-        if (instance == null) return;
-        instance.name = modelName;
-        instance.transform.position = position;
+        if (instance == null) return null;
+        instance.name = modelName; instance.transform.position = position;
+        return instance;
     }
 
     static bool FilesEqual(string a, string b)
@@ -79,8 +86,7 @@ public static class OmnisMaterialization
         var ai = new FileInfo(a); var bi = new FileInfo(b);
         if (ai.Length != bi.Length) return false;
         using var af = File.OpenRead(a); using var bf = File.OpenRead(b);
-        int x, y;
-        do { x = af.ReadByte(); y = bf.ReadByte(); if (x != y) return false; } while (x != -1);
+        int x, y; do { x = af.ReadByte(); y = bf.ReadByte(); if (x != y) return false; } while (x != -1);
         return true;
     }
 }

@@ -1,7 +1,11 @@
 # Omnis scenes
 
-Use **Omnis > Materialize > Import Verified Source Assets** to import the original source files into Unity.
+The materialization tool creates `Omnis_Nexus_Prototype.unity` from the original imported source assets.
 
-Then use **Omnis > Materialize > Create First Playable Scene** to compose the first real scene from the imported Obelisk, Road Segment, Tree, and House models.
+The first scene uses the real Civilian, Obelisk, Road Segment, Tree, and House models. The Civilian is configured as a simple playable controller using Unity's CharacterController. This is gameplay scaffolding, not a replacement for the final character system.
 
-Unity generates the native `.meta` files during import. Unreal `.uasset` and `.umap` files are never renamed or converted by this workflow.
+Run:
+- **Omnis > Materialize > Import Verified Source Assets**
+- **Omnis > Materialize > Create First Playable Scene**
+
+Unity generates the native `.meta` files during import.
