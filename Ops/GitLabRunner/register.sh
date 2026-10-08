@@ -19,7 +19,7 @@ docker compose run --rm gitlab-runner register \
   --executor "docker" \
   --docker-image "ubuntu:24.04" \
   --docker-pull-policy "if-not-present" \
-  --description "omnis-ue56-self-hosted" \
+  --description "omnis-ue58-self-hosted" \
   --tag-list "omnis-ci-linux" \
   --run-untagged="false" \
   --locked="true" \

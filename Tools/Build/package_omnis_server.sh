@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
 OUTPUT_DIR="$ROOT/Build/OmnisServer"
-LOG_FILE="$ROOT/Saved/Logs/omnis_ue56_server_package.log"
+LOG_FILE="$ROOT/Saved/Logs/omnis_ue58_server_package.log"
 
 : "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT to the Unreal Engine 5.8 installation on the dedicated runner}"
 [[ -d "$UE_ENGINE_ROOT/Engine" ]] || { echo "Invalid UE_ENGINE_ROOT: $UE_ENGINE_ROOT" >&2; exit 1; }

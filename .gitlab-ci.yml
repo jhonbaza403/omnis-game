@@ -127,9 +127,9 @@ unreal_pipeline:
       - Saved/Logs/omnis_content_generation.log
       - Saved/Logs/omnis_unreal_automation.log
       - Saved/Automation/
-      - Saved/Logs/omnis_ue56_build.log
+      - Saved/Logs/omnis_ue58_build.log
       - Build/OmnisServer/
-      - Saved/Logs/omnis_ue56_server_package.log
+      - Saved/Logs/omnis_ue58_server_package.log
 
 docker_services:
   stage: docker_services

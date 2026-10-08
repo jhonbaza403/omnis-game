@@ -29,7 +29,7 @@ version = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 major = version.get("MajorVersion")
 minor = version.get("MinorVersion")
 patch = version.get("PatchVersion")
-assert (major, minor) == (5, 6), (
+assert (major, minor) == (5, 8), (
     f"Expected UE 5.8.x, detected {major}.{minor}.{patch}"
 )
 print(f"Unreal Engine {major}.{minor}.{patch} detected")

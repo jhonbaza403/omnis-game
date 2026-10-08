@@ -24,7 +24,7 @@ El job es **manual** y depende de `python_tests`. Si no existe un runner con el 
 4. Ejecuta **UBT + compilación + enlace** del target `OmnisEditor Linux Development`.
 5. Ejecuta **UBT + compilación + enlace** del target `Omnis Linux Development`.
 6. Comprueba que existan binarios/módulos de Omnis bajo `Binaries/`.
-7. Conserva `Saved/Logs/omnis_ue56_build.log` como artefacto del job.
+7. Conserva `Saved/Logs/omnis_ue58_build.log` como artefacto del job.
 
 Epic documenta que UHT forma parte del flujo de compilación de Unreal y que UBT invoca UHT antes de compilar el código generado; los targets de proyecto se definen mediante `.Target.cs` y los módulos mediante `.Build.cs`.
 https://dev.epicgames.com/documentation/unreal-engine/unreal-header-tool-for-unreal-engine
