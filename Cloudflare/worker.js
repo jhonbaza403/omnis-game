@@ -271,7 +271,7 @@ async function handleCallback(request, env) {
   return new Response(null, {
     status: 303,
     headers: {
-      location: "/oauth/status",
+      location: "/runner",
       "cache-control": "no-store",
       "set-cookie": [
         deleteCookie(OAUTH_STATE_COOKIE),
@@ -290,6 +290,58 @@ async function oauthStatus(env) {
     connected: Boolean(credential),
     scopes: scopes(env),
     redirect_uri: env.GITLAB_OAUTH_REDIRECT_URI
+  });
+}
+
+function runnerPage(request) {
+  const cookies = cookieMap(request);
+  if (cookies[OAUTH_CONNECTED_COOKIE] !== "1") {
+    return html("Omnis Runner", "<h1>GitLab authorization required</h1><p>Authorize GitLab before provisioning the runner.</p><p><a href=\"/oauth/start\">Authorize GitLab</a></p>", 401);
+  }
+
+  return new Response(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Omnis Runner Control</title>
+</head>
+<body>
+<main style="font-family:system-ui,sans-serif;max-width:820px;margin:8vh auto;padding:24px">
+<h1>Omnis Runner Control</h1>
+<p>Project runner: <strong>omnis-ue58-linux</strong></p>
+<p>Tag: <strong>omnis-ci-linux</strong></p>
+<p>Target: Unreal Engine 5.8.3 / Docker / Linux x86_64</p>
+<button id="provision" style="padding:12px 18px">Create project runner</button>
+<pre id="output" style="white-space:pre-wrap;background:#111;color:#eee;padding:16px;margin-top:20px;border-radius:8px"></pre>
+<script>
+const button=document.getElementById("provision");
+const output=document.getElementById("output");
+button.addEventListener("click",async()=>{
+  button.disabled=true;
+  output.textContent="Creating runner...";
+  try{
+    const response=await fetch("/runner/provision",{method:"POST",headers:{"Origin":location.origin}});
+    const data=await response.json();
+    output.textContent=JSON.stringify(data,null,2);
+  }catch(error){
+    output.textContent=String(error);
+  }finally{
+    button.disabled=false;
+  }
+});
+</script>
+</main>
+</body>
+</html>`, {
+    status: 200,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+      "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "no-referrer"
+    }
   });
 }
 
@@ -454,6 +506,10 @@ export default {
           return json({ service: "omnis-gitlab-oauth", enabled: false, environment });
         }
         return await oauthStatus(env);
+      }
+
+      if (oauthEnabled(env) && url.pathname === "/runner" && request.method === "GET") {
+        return runnerPage(request);
       }
 
       if (oauthEnabled(env) && url.pathname === "/runner/provision" && request.method === "POST") {
