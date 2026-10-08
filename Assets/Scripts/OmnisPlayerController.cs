@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Omnis
 {
@@ -20,15 +21,23 @@ namespace Omnis
 
         private void Update()
         {
-            Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
-            input = Vector3.ClampMagnitude(input, 1f);
+            Vector2 rawInput = Vector2.zero;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) rawInput.x -= 1f;
+                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) rawInput.x += 1f;
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) rawInput.y -= 1f;
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) rawInput.y += 1f;
+            }
+
+            Vector2 input = Vector2.ClampMagnitude(rawInput, 1f);
             Vector3 cameraForward = playerCamera != null ? playerCamera.transform.forward : Vector3.forward;
             Vector3 cameraRight = playerCamera != null ? playerCamera.transform.right : Vector3.right;
             cameraForward.y = 0f;
             cameraRight.y = 0f;
             cameraForward.Normalize();
             cameraRight.Normalize();
-            Vector3 direction = cameraForward * input.z + cameraRight * input.x;
+            Vector3 direction = cameraForward * input.y + cameraRight * input.x;
 
             if (direction.sqrMagnitude > 0.001f)
             {
