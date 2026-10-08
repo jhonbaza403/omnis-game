@@ -7,6 +7,9 @@ const OAUTH_STATE_COOKIE = "omnis_oauth_state";
 const OAUTH_CONNECTED_COOKIE = "omnis_oauth_connected";
 const TOKEN_KV_KEY = "gitlab:oauth:credential";
 const META_KV_KEY = "gitlab:oauth:metadata";
+const RUNNER_CREDENTIAL_KV_KEY = "gitlab:runner:credential";
+const RUNNER_META_KV_KEY = "gitlab:runner:metadata";
+const OMNIS_PROJECT_ID = "87302401";
 
 function json(data, status = 200, extra = {}) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -290,6 +293,129 @@ async function oauthStatus(env) {
   });
 }
 
+async function provisionProjectRunner(request, env) {
+  requireConfig(env);
+
+  if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  const origin = request.headers.get("origin");
+  const requestOrigin = new URL(request.url).origin;
+  if (origin !== requestOrigin) {
+    return json({ error: "Origin check failed" }, 403);
+  }
+
+  const cookies = cookieMap(request);
+  if (cookies[OAUTH_CONNECTED_COOKIE] !== "1") {
+    return json({ error: "GitLab OAuth session required" }, 401);
+  }
+
+  const existing = await env.OMNIS_OAUTH_KV.get(RUNNER_CREDENTIAL_KV_KEY);
+  if (existing) {
+    const meta = await env.OMNIS_OAUTH_KV.get(RUNNER_META_KV_KEY, "json");
+    return json({
+      service: "omnis-gitlab-runner",
+      status: "already_provisioned",
+      runner: meta ?? null
+    });
+  }
+
+  const credential = await getCredential(env);
+  if (!credential) {
+    return json({ error: "GitLab OAuth is not connected" }, 401);
+  }
+
+  const form = new URLSearchParams({
+    runner_type: "project_type",
+    project_id: OMNIS_PROJECT_ID,
+    description: "omnis-ue58-linux",
+    tag_list: "omnis-ci-linux",
+    run_untagged: "false",
+    locked: "true",
+    access_level: "not_protected",
+    paused: "false",
+    maintenance_note: "Omnis UE 5.8.3 Linux Docker runner"
+  });
+
+  const response = await fetch(`${GITLAB_API_BASE}/user/runners`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${credential.access_token}`,
+      "content-type": "application/x-www-form-urlencoded",
+      accept: "application/json"
+    },
+    body: form
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload?.token || !payload?.id) {
+    return json({
+      error: "GitLab runner provisioning failed",
+      upstream_status: response.status
+    }, 502);
+  }
+
+  await env.OMNIS_OAUTH_KV.put(
+    RUNNER_CREDENTIAL_KV_KEY,
+    await encryptJson(env, { id: payload.id, token: payload.token })
+  );
+  await env.OMNIS_OAUTH_KV.put(
+    RUNNER_META_KV_KEY,
+    JSON.stringify({
+      id: payload.id,
+      description: "omnis-ue58-linux",
+      tags: ["omnis-ci-linux"],
+      project_id: Number(OMNIS_PROJECT_ID),
+      created_at: new Date().toISOString()
+    })
+  );
+
+  return json({
+    service: "omnis-gitlab-runner",
+    status: "provisioned",
+    runner: {
+      id: payload.id,
+      description: "omnis-ue58-linux",
+      tags: ["omnis-ci-linux"],
+      project_id: Number(OMNIS_PROJECT_ID)
+    },
+    registration_token: payload.token,
+    warning: "The runner authentication token is returned only in this response. Store it securely and never commit it."
+  });
+}
+
+async function runnerStatus(env) {
+  requireConfig(env);
+  const credential = await getCredential(env);
+  if (!credential) return json({ service: "omnis-gitlab-runner", connected: false }, 401);
+
+  const response = await fetch(
+    `${GITLAB_API_BASE}/projects/${OMNIS_PROJECT_ID}/runners?type=project_type`,
+    {
+      headers: {
+        authorization: `Bearer ${credential.access_token}`,
+        accept: "application/json"
+      }
+    }
+  );
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) return json({ error: "GitLab runner status failed", upstream_status: response.status }, 502);
+
+  return json({
+    service: "omnis-gitlab-runner",
+    connected: true,
+    project_id: Number(OMNIS_PROJECT_ID),
+    runners: Array.isArray(payload)
+      ? payload.map((runner) => ({
+          id: runner.id,
+          description: runner.description,
+          status: runner.status,
+          paused: runner.paused,
+          online: runner.status === "online",
+          tags: runner.tag_list ?? []
+        }))
+      : []
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -328,6 +454,14 @@ export default {
           return json({ service: "omnis-gitlab-oauth", enabled: false, environment });
         }
         return await oauthStatus(env);
+      }
+
+      if (oauthEnabled(env) && url.pathname === "/runner/provision" && request.method === "POST") {
+        return await provisionProjectRunner(request, env);
+      }
+
+      if (oauthEnabled(env) && url.pathname === "/runner/status" && request.method === "GET") {
+        return await runnerStatus(env);
       }
 
       if (url.pathname === "/") {
