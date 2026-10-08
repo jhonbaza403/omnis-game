@@ -39,7 +39,7 @@ Requisitos del host para el pipeline Unreal:
 - Docker Engine instalado.
 - Conectividad de salida a `gitlab.com`, Docker Hub y el Container Registry.
 
-El runner se registra con el token de autenticación de proyecto `glrt-...` que GitLab entrega al crear el project runner. GitLab documenta el flujo actual basado en runner authentication tokens; los registration tokens antiguos están obsoletos. citeturn823219search0turn823219search1
+El runner se registra con el token de autenticación de proyecto `glrt-...` que GitLab entrega al crear el project runner. GitLab documenta el flujo actual basado en runner authentication tokens; los registration tokens antiguos están obsoletos.
 
 
 ## Instalación en el host Linux
@@ -50,5 +50,5 @@ Después de crear el project runner desde **Omnis Runner Control**, exporta el t
 
 `bash Ops/GitLabRunner/bootstrap_host.sh`
 
-El script valida CPU/RAM/disco, comprueba Docker y registra el runner con el executor Docker. GitLab documenta que los runner authentication tokens empiezan por `glrt-` y que el registro moderno se realiza con `--token`. citeturn675857search0turn675857search6
+El script valida CPU/RAM/disco, comprueba Docker y registra el runner con el executor Docker. GitLab documenta que los runner authentication tokens empiezan por `glrt-` y que el registro moderno se realiza con `--token`.
 
