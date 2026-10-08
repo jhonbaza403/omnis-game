@@ -54,6 +54,17 @@ coverage/
 *.aab
 *.app
 # Keep Unity source assets and their .meta files tracked.
+!Assets/**/*.obj
+!Assets/**/*.dll
+!Assets/**/*.fbx
+!Assets/**/*.blend
+!Assets/**/*.glb
+!Assets/**/*.gltf
+!Assets/**/*.dae
+!Assets/**/*.3ds
+!Assets/**/*.max
+!Assets/**/*.ma
+!Assets/**/*.mb
 
 # Tooling / OS
 .DS_Store
