@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -17,26 +18,22 @@ namespace Omnis.Editor
         public static void Build()
         {
             EnsureFolder("Assets/Prefabs/ImportedFromUnreal");
-
             var old = GameObject.Find(Root);
             if (old != null) Object.DestroyImmediate(old);
 
             var root = new GameObject(Root);
-
             PlaceModel(House, root.transform, new Vector3(24f, 0f, 24f), Quaternion.identity, "REAL_House");
             PlaceModel(Civilian, root.transform, new Vector3(4f, 0f, 10f), Quaternion.Euler(0f, 180f, 0f), "REAL_Civilian");
             PlaceModel(Tree, root.transform, new Vector3(-18f, 0f, 16f), Quaternion.identity, "REAL_Tree_A");
             PlaceModel(Tree, root.transform, new Vector3(-26f, 0f, 10f), Quaternion.Euler(0f, 42f, 0f), "REAL_Tree_B");
 
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(NexusTexture);
-            if (texture != null)
-                BuildNexusTextureMaterial(texture);
+            if (texture != null) BuildNexusTextureMaterial(texture);
 
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-
             Debug.Log("[Omnis] Real Unreal-exported assets composed into the active Unity scene.");
         }
 
@@ -77,8 +74,7 @@ namespace Omnis.Editor
             for (int i = 1; i < parts.Length; i++)
             {
                 var next = current + "/" + parts[i];
-                if (!AssetDatabase.IsValidFolder(next))
-                    AssetDatabase.CreateFolder(current, parts[i]);
+                if (!AssetDatabase.IsValidFolder(next)) AssetDatabase.CreateFolder(current, parts[i]);
                 current = next;
             }
         }
