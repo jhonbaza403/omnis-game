@@ -1,1 +1,278 @@
+stages:
+  - runner_preflight
+  - validate
+  - test
+  - cloudflare
+  - unreal
+  - docker_services
+  - server_smoke
+  - client_smoke
+  - container
+  - container_smoke
 
+default:
+  tags:
+    - omnis-ci-linux
+
+variables:
+  OMNIS_UNREAL_IMAGE: "wukakuki/unreal-engine:dev-slim-5.8.3@sha256:3f0886cf0d7e5bc9cea0e7ba27f417e0d0febb5ad0c371c9a89223c6112c80ef"
+  UE_ENGINE_ROOT: "/home/ue4/UnrealEngine"
+
+python_validate:
+  stage: validate
+  image: python:3.12
+  script:
+    - bash CI/Validation/validate.sh
+    - python -m py_compile Tools/Editor/GenerateOmnisVerticalSlice.py Tools/Editor/GenerateOmnisWorldContent.py Tools/Editor/MaterializeOmnisPremiumWorld.py CI/Validation/validate_content_sources.py
+    - python -m py_compile services/omnis_platform.py
+    - python CI/Validation/validate_content_sources.py
+
+python_tests:
+  stage: test
+  image: python:3.12
+  script:
+    - bash CI/Tests/test.sh
+
+cloudflare_validate:
+  stage: cloudflare
+  image: node:24
+  script:
+    - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+    - test "$(node -p "require('./node_modules/wrangler/package.json').version")" = "4.148.0"
+    - npx wrangler --version
+    - npm run cf:check
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+cloudflare_preview:
+  stage: cloudflare
+  image: node:24
+  needs:
+    - python_tests
+  script:
+    - test -n "$CLOUDFLARE_ACCOUNT_ID"
+    - test -n "$CLOUDFLARE_API_TOKEN"
+    - npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+    - test "$(node -p "require('./node_modules/wrangler/package.json').version")" = "4.148.0"
+    - npx wrangler --version
+    - PREVIEW_NAME="${CI_COMMIT_REF_SLUG:-omnis-preview}"
+    - npx wrangler preview --config wrangler.jsonc --name "$PREVIEW_NAME" --message "GitLab CI ${CI_COMMIT_SHA}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CLOUDFLARE_ACCOUNT_ID && $CLOUDFLARE_API_TOKEN'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CLOUDFLARE_ACCOUNT_ID && $CLOUDFLARE_API_TOKEN'
+  allow_failure: false
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - .wrangler/
+
+runner_preflight:
+  stage: runner_preflight
+  image: docker:27.4.1
+  script:
+    - docker info
+    - |
+      CPU="$(nproc)"
+      MEM_KB="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+      DISK_KB="$(df -Pk "$CI_PROJECT_DIR" | awk 'NR==2 {print $4}')"
+      echo "CPU=${CPU}"
+      echo "MEM_KB=${MEM_KB}"
+      echo "FREE_DISK_KB=${DISK_KB}"
+      test "$CPU" -ge 8
+      test "$MEM_KB" -ge 24000000
+      test "$DISK_KB" -ge 80000000
+      echo "=== RESULT: OMNIS SELF-HOSTED RUNNER CAPACITY PASSED ==="
+
+unreal_pipeline:
+  stage: unreal
+  image:
+    name: "$OMNIS_UNREAL_IMAGE"
+    docker:
+      platform: linux/amd64
+      user: "0"
+  timeout: 3h
+  interruptible: true
+  needs:
+    - python_tests
+  allow_failure: false
+  script: |
+    set -euo pipefail
+    test "$(id -u)" = "0"
+    test -d /home/ue4/UnrealEngine
+    chown -R 1000:1000 "$CI_PROJECT_DIR"
+    su -p -s /bin/bash ue4 -c '
+      set -euo pipefail
+      cd "$CI_PROJECT_DIR"
+      bash CI/Build/preflight_unreal.sh
+      bash CI/Build/build.sh
+      bash CI/Build/generate_content.sh
+      bash CI/Tests/run_unreal_automation.sh
+      bash CI/Packaging/package.sh
+      python3 Tools/Validation/validate_materialized_content.py
+      test -f Content/Omnis/Maps/Omnis_OpenWorld.umap
+      test -d Build/OmnisServer
+      test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname "OmnisServer*" -print -quit)"
+      echo "=== RESULT: OMNIS UE5.8.3 FULL PIPELINE PASSED ==="
+    '
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - Content/Omnis/Maps/*.umap
+      - Content/Omnis/Art/**/*.uasset
+      - Content/Omnis/Materials/**/*.uasset
+      - Saved/Logs/omnis_content_generation.log
+      - Saved/Logs/omnis_unreal_automation.log
+      - Saved/Automation/
+      - Saved/Logs/omnis_ue58_build.log
+      - Build/OmnisServer/
+      - Saved/Logs/omnis_ue58_server_package.log
+
+client_smoke:
+  stage: client_smoke
+  image: ubuntu:24.04
+  needs:
+    - job: unreal_pipeline
+      artifacts: true
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libstdc++6 libgcc-s1 libx11-6 libxrandr2 libxi6 libxcursor1 libxinerama1 libnss3 libfontconfig1 libfreetype6
+    - bash CI/Tests/smoke_client.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - Saved/Logs/omnis_client_smoke.log
+
+docker_services:
+  stage: docker_services
+  image: docker:27.4.1
+  services:
+    - name: docker:27.4.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - export OMNIS_SERVICE_TOKEN=ci-test-token
+    - docker compose -f infra/docker/compose.yaml config --quiet
+    - docker build --pull -f infra/docker/platform.Dockerfile -t "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" .
+    - docker compose -f infra/docker/compose.yaml up -d --build redis matchmaking session world gateway
+    - |
+      for i in $(seq 1 30); do
+        if docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)" >/dev/null 2>&1; then
+          echo "gateway is healthy"
+          break
+        fi
+        if [ "$i" -eq 30 ]; then
+          echo "gateway did not become ready"
+          exit 1
+        fi
+        sleep 2
+      done
+    - trap 'docker compose -f infra/docker/compose.yaml down -v' EXIT
+    - docker compose -f infra/docker/compose.yaml ps
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/world/cycle')); assert d.get('era','').startswith('Ruinas de Piedra')"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/matchmaking/enqueue', data=b'{\"playlist\":\"open-world\"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 202"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/sessions', data=b'{\"playlist\":\"open-world\",\"players\":[\"ci-player\"]}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/events', data=b'{\"event_type\":\"ci_world_probe\",\"player_id\":\"ci-player\",\"payload\":{\"source\":\"gitlab-ci\"}}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 201"
+    - docker compose -f infra/docker/compose.yaml exec -T gateway python -c "import urllib.request; p=urllib.request.Request('http://127.0.0.1:8080/api/world/cycle/advance', data=b'{\"reason\":\"ci_probe\"}', method='POST', headers={'Content-Type':'application/json','X-Omnis-Player-Id':'ci-player'}); r=urllib.request.urlopen(p); assert r.status == 200"
+    - for service in gateway matchmaking session world; do docker tag "$CI_REGISTRY_IMAGE/platform:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; docker push "$CI_REGISTRY_IMAGE/$service:$CI_COMMIT_SHA"; done
+  after_script:
+    - export OMNIS_SERVICE_TOKEN=ci-test-token
+    - docker compose -f infra/docker/compose.yaml ps -a || true
+    - docker compose -f infra/docker/compose.yaml logs --no-color || true
+    - docker compose -f infra/docker/compose.yaml down -v || true
+
+dedicated_server_smoke:
+  stage: server_smoke
+  image: ubuntu:24.04
+  needs:
+    - job: unreal_pipeline
+      artifacts: true
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libstdc++6 libgcc-s1 libx11-6 libxrandr2 libxi6 libxcursor1 libxinerama1 libnss3 libfontconfig1 libfreetype6
+    - bash CI/Tests/smoke_dedicated_server.sh
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - Saved/Logs/omnis_dedicated_server_smoke.log
+
+container_server_image:
+  stage: container
+  image: docker:27.4.1
+  services:
+    - name: docker:27.4.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+  needs:
+    - job: unreal_pipeline
+      artifacts: true
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - test -d Build/OmnisServer
+    - test -n "$(find Build/OmnisServer -maxdepth 5 -type f -perm -u+x -iname 'OmnisServer*' -print -quit)"
+    - docker build --pull -f infra/docker/unreal-server/Dockerfile -t "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA" .
+    - docker image inspect "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: false
+
+container_deploy_smoke:
+  stage: container_smoke
+  image: docker:27.4.1
+  services:
+    - name: docker:27.4.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+  needs:
+    - job: container_server_image
+      artifacts: false
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+    - docker run -d --name omnis-server-smoke -p 17777:7777/udp "$CI_REGISTRY_IMAGE:server-$CI_COMMIT_SHA"
+    - |
+      for i in $(seq 1 45); do
+        if docker logs omnis-server-smoke 2>&1 | grep -Eq 'GameNetDriver|LogNetVersion|NetDriver'; then
+          echo "=== RESULT: packaged OmnisServer starts inside Docker ==="
+          docker logs omnis-server-smoke | tail -n 120
+          exit 0
+        fi
+        if ! docker inspect -f '{{.State.Running}}' omnis-server-smoke 2>/dev/null | grep -q true; then
+          echo "OmnisServer container exited before network startup" >&2
+          docker logs omnis-server-smoke >&2 || true
+          exit 1
+        fi
+        sleep 1
+      done
+      echo "OmnisServer container did not reach network startup" >&2
+      docker logs omnis-server-smoke >&2 || true
+      exit 1
+  after_script:
+    - docker rm -f omnis-server-smoke >/dev/null 2>&1 || true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: false
