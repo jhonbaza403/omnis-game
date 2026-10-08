@@ -1,3 +1,4 @@
+# Omnis / Unreal Engine generated
 Binaries/
 DerivedDataCache/
 Intermediate/
@@ -7,7 +8,11 @@ Saved/
 .idea/
 *.suo
 *.user
+*.userosscache
+*.sdf
 *.VC.db
+*.VC.opendb
+*.opensdf
 *.pdb
 *.obj
 *.lib
@@ -19,14 +24,44 @@ Saved/
 *.ue4stats
 *.prof
 Content/*/Autosaves/
-!Content/Omnis/SourceAssets/**/*.obj
-!Content/Omnis/SourceAssets/**/*.mtl
 TestResults/
 TestOutput/
 Coverage/
 coverage/
+
+# Unity generated data
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]ser[Ss]ettings/
+*.csproj
+*.unityproj
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.apk
+*.aab
+*.app
+# Keep Unity source assets and their .meta files tracked.
+
+# Tooling / OS
+.DS_Store
+Thumbs.db
+desktop.ini
 node_modules/
 __pycache__/
+*.pyc
 .venv/
 .env
 .env.*
@@ -37,4 +72,3 @@ __pycache__/
 *.pfx
 credentials.json
 service-account.json
-secrets.json
