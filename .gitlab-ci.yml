@@ -51,14 +51,8 @@ unity_build_linux:
   script:
     - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI variable is required." >&2; exit 1)
     - mkdir -p "$HOME/.local/share/unity3d/Unity"
-    - |
-      LICENSE_PATH="$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
-      if [ -f "$UNITY_LICENSE" ]; then
-        cp "$UNITY_LICENSE" "$LICENSE_PATH"
-      else
-        printf '%s' "$UNITY_LICENSE" > "$LICENSE_PATH"
-      fi
-      test -s "$LICENSE_PATH"
+    - if [ -f "$UNITY_LICENSE" ]; then cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; else printf '%s' "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; fi
+    - test -s "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
     - unity-editor -batchmode -nographics -quit -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.BuildLinux -logFile -
   artifacts:
     when: always
