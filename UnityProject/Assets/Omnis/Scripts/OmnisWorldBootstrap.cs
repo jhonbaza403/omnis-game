@@ -305,19 +305,24 @@ namespace Omnis
             for (int side = -1; side <= 1; side += 2)
             {
                 GameObject pillar = MakePrimitive("Fractured Column", PrimitiveType.Cylinder,
-                    new Vector3(side * size, size * 1.05f, 0f), new Vector3(size * 0.18f, size * 1.05f, size * 0.18f),
+                    Vector3.zero, new Vector3(size * 0.18f, size * 1.05f, size * 0.18f),
                     materials["stoneLight"], ruin);
+                pillar.transform.localPosition = new Vector3(side * size, size * 1.05f, 0f);
                 pillar.transform.rotation = Quaternion.Euler(0f, 0f, side * (float)random.NextDouble() * 7f);
-                MakePrimitive("Column Capital", PrimitiveType.Cube,
-                    new Vector3(side * size, size * 2.13f, 0f), new Vector3(size * 0.45f, size * 0.2f, size * 0.45f),
+                GameObject capital = MakePrimitive("Column Capital", PrimitiveType.Cube,
+                    Vector3.zero, new Vector3(size * 0.45f, size * 0.2f, size * 0.45f),
                     materials["gold"], ruin);
+                capital.transform.localPosition = new Vector3(side * size, size * 2.13f, 0f);
             }
-            MakePrimitive("Broken Lintel", PrimitiveType.Cube, new Vector3(0f, size * 2.12f, 0f),
+            GameObject lintel = MakePrimitive("Broken Lintel", PrimitiveType.Cube, Vector3.zero,
                 new Vector3(size * 2.45f, size * 0.23f, size * 0.36f), materials["stone"], ruin);
-            MakePrimitive("Ruin Plinth", PrimitiveType.Cube, new Vector3(0f, 0.12f, 0f),
+            lintel.transform.localPosition = new Vector3(0f, size * 2.12f, 0f);
+            GameObject plinth = MakePrimitive("Ruin Plinth", PrimitiveType.Cube, Vector3.zero,
                 new Vector3(size * 3.0f, 0.3f, size * 1.2f), materials["stone"], ruin);
-            MakePrimitive("Rift Inscription", PrimitiveType.Cube, new Vector3(0f, size * 0.8f, size * 0.23f),
+            plinth.transform.localPosition = new Vector3(0f, 0.12f, 0f);
+            GameObject inscription = MakePrimitive("Rift Inscription", PrimitiveType.Cube, Vector3.zero,
                 new Vector3(size * 0.55f, size * 0.6f, 0.08f), materials["violet"], ruin, false);
+            inscription.transform.localPosition = new Vector3(0f, size * 0.8f, size * 0.23f);
         }
 
         private void BuildNature()

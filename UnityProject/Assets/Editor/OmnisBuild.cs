@@ -83,9 +83,7 @@ namespace Omnis.Editor
 
         private static void BuildPlayer(BuildTarget target, string targetDirectoryName, string executableName)
         {
-            OmnisGraphicsSetup.EnsureConfigured();
-            OmnisSceneBootstrap.CreateMainScene();
-            AssetDatabase.Refresh();
+            ValidateProject();
 
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName
                 ?? throw new InvalidOperationException("Unable to resolve Unity project root.");

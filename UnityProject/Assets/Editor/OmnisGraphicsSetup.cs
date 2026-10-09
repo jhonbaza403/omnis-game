@@ -57,10 +57,7 @@ namespace Omnis.Editor
             pipeline.renderScale = 1f;
             pipeline.msaaSampleCount = 4;
             pipeline.shadowDistance = 155f;
-            pipeline.supportsMainLightShadows = true;
-            pipeline.supportsSoftShadows = true;
-            pipeline.supportsAdditionalLightShadows = true;
-            pipeline.mainLightShadowmapResolution = 4096;
+            ConfigureSerializedPipelineSettings(pipeline);
             pipeline.maxAdditionalLightsCount = 6;
             pipeline.supportsCameraDepthTexture = true;
             pipeline.supportsCameraOpaqueTexture = true;
@@ -89,11 +86,34 @@ namespace Omnis.Editor
             PlayerSettings.defaultScreenWidth = 3840;
             PlayerSettings.defaultScreenHeight = 2160;
             PlayerSettings.defaultIsNativeResolution = false;
+            PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
             PlayerSettings.runInBackground = true;
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[Omnis] URP 17 Forward+ created/applied. Standalone default: 3840x2160; runtime performance must still be measured on target hardware.");
+        }
+
+        private static void ConfigureSerializedPipelineSettings(UniversalRenderPipelineAsset pipeline)
+        {
+            // URP keeps some shadow flags read-only because they affect shader stripping.
+            // Set persistent Editor defaults through SerializedObject instead.
+            SerializedObject serialized = new SerializedObject(pipeline);
+            SetBoolean(serialized, "m_MainLightShadowsSupported", true);
+            SetBoolean(serialized, "m_AdditionalLightShadowsSupported", true);
+            SetBoolean(serialized, "m_SoftShadowsSupported", true);
+
+            SerializedProperty resolution = serialized.FindProperty("m_MainLightShadowmapResolution");
+            if (resolution != null) resolution.intValue = 4096;
+            SerializedProperty additionalResolution = serialized.FindProperty("m_AdditionalLightsShadowmapResolution");
+            if (additionalResolution != null) additionalResolution.intValue = 1024;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetBoolean(SerializedObject serialized, string propertyName, bool value)
+        {
+            SerializedProperty property = serialized.FindProperty(propertyName);
+            if (property != null) property.boolValue = value;
         }
 
         private static void EnsureFolder(string folderPath)
