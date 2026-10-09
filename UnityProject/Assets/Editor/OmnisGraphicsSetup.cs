@@ -1,0 +1,109 @@
+using System;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+namespace Omnis.Editor
+{
+    /// <summary>Idempotently creates and applies the checked-in Unity 6.3 / URP 17 high-quality baseline.</summary>
+    [InitializeOnLoad]
+    public static class OmnisGraphicsSetup
+    {
+        public const string PipelinePath = "Assets/Omnis/Settings/Omnis_URP_4K.asset";
+        public const string RendererPath = "Assets/Omnis/Settings/Omnis_ForwardPlus_Renderer.asset";
+
+        static OmnisGraphicsSetup()
+        {
+            EditorApplication.delayCall += () =>
+            {
+                try
+                {
+                    EnsureConfigured();
+                    if (!System.IO.File.Exists(System.IO.Path.Combine(Application.dataPath, "Scenes", "OmnisMain.unity")))
+                        OmnisSceneBootstrap.CreateMainScene();
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogWarning("[Omnis] Automatic graphics setup is deferred until Unity packages finish resolving: " + exception.Message);
+                }
+            };
+        }
+
+        [MenuItem("Omnis/Graphics/Configure 4K URP Quality")]
+        public static void EnsureConfigured()
+        {
+            EnsureFolder("Assets/Omnis/Settings");
+
+            UniversalRendererData rendererData = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(RendererPath);
+            if (rendererData == null)
+            {
+                rendererData = ScriptableObject.CreateInstance<UniversalRendererData>();
+                rendererData.name = "Omnis Forward Plus Renderer";
+                rendererData.renderingMode = RenderingMode.ForwardPlus;
+                AssetDatabase.CreateAsset(rendererData, RendererPath);
+            }
+
+            UniversalRenderPipelineAsset pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PipelinePath);
+            if (pipeline == null)
+            {
+                pipeline = UniversalRenderPipelineAsset.Create(rendererData);
+                pipeline.name = "Omnis URP 4K";
+                AssetDatabase.CreateAsset(pipeline, PipelinePath);
+            }
+
+            // Use public pipeline settings; lower graphics tiers can be added after performance profiling.
+            pipeline.supportsHDR = true;
+            pipeline.renderScale = 1f;
+            pipeline.msaaSampleCount = 4;
+            pipeline.shadowDistance = 155f;
+            pipeline.supportsMainLightShadows = true;
+            pipeline.supportsSoftShadows = true;
+            pipeline.supportsAdditionalLightShadows = true;
+            pipeline.mainLightShadowmapResolution = 4096;
+            pipeline.maxAdditionalLightsCount = 6;
+            pipeline.supportsCameraDepthTexture = true;
+            pipeline.supportsCameraOpaqueTexture = true;
+
+            rendererData.renderingMode = RenderingMode.ForwardPlus;
+            EditorUtility.SetDirty(rendererData);
+            EditorUtility.SetDirty(pipeline);
+
+            GraphicsSettings.defaultRenderPipeline = pipeline;
+            QualitySettings.renderPipeline = pipeline;
+            QualitySettings.shadows = ShadowQuality.All;
+            QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
+            QualitySettings.shadowDistance = 155f;
+            QualitySettings.antiAliasing = 4;
+            QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+            QualitySettings.lodBias = 2f;
+            QualitySettings.maximumLODLevel = 0;
+            QualitySettings.pixelLightCount = 8;
+            QualitySettings.realtimeReflectionProbes = true;
+            QualitySettings.streamingMipmapsActive = true;
+            QualitySettings.vSyncCount = 1;
+
+            PlayerSettings.companyName = "Omnis Game Studio";
+            PlayerSettings.productName = "Omnis: El Último Ciclo";
+            PlayerSettings.colorSpace = ColorSpace.Linear;
+            PlayerSettings.defaultScreenWidth = 3840;
+            PlayerSettings.defaultScreenHeight = 2160;
+            PlayerSettings.defaultIsNativeResolution = false;
+            PlayerSettings.runInBackground = true;
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[Omnis] URP 17 Forward+ created/applied. Standalone default: 3840x2160; runtime performance must still be measured on target hardware.");
+        }
+
+        private static void EnsureFolder(string folderPath)
+        {
+            if (AssetDatabase.IsValidFolder(folderPath)) return;
+            string parent = System.IO.Path.GetDirectoryName(folderPath)?.Replace('\\', '/');
+            string name = System.IO.Path.GetFileName(folderPath);
+            if (string.IsNullOrEmpty(parent)) throw new InvalidOperationException("Invalid Unity asset folder: " + folderPath);
+            EnsureFolder(parent);
+            if (!AssetDatabase.IsValidFolder(folderPath)) AssetDatabase.CreateFolder(parent, name);
+        }
+    }
+}
