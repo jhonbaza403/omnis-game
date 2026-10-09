@@ -35,22 +35,21 @@ unity_project_validate:
     - test -f "$UNITY_PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
     - grep -q '^m_EditorVersion: ' "$UNITY_PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
     - test -f "$UNITY_PROJECT_PATH/Packages/manifest.json"
-    - test -d "$UNITY_PROJECT_PATH/Assets"
-    - echo "Unity project structure validated; gameplay migration is tracked separately."
+    - test -f "$UNITY_PROJECT_PATH/Assets/Omnis/Scripts/OmnisPlayerController.cs"
+    - test -f "$UNITY_PROJECT_PATH/Assets/Editor/OmnisSceneBootstrap.cs"
+    - echo "Unity migration source structure validated."
   rules:
     - changes:
         - UnityProject/**/*
         - CI/Unity/**/*
 
-# The job appears only after the real migrated main scene exists.
 unity_build_linux:
   stage: build
-  image: "unityci/editor:6000.3.0f1-base-3"
+  image: "unityci/editor:ubuntu-6000.3.0f1-linux-il2cpp-3"
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
     - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI variable is required." >&2; exit 1)
-    - test -f "$UNITY_PROJECT_PATH/Assets/Scenes/OmnisMain.unity" || (echo "Gameplay migration incomplete: OmnisMain.unity is not present." >&2; exit 1)
     - mkdir -p "$HOME/.local/share/unity3d/Unity"
     - printf '%s' "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
     - unity-editor -batchmode -nographics -quit -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.BuildLinux -logFile -
@@ -59,10 +58,10 @@ unity_build_linux:
     expire_in: 14 days
     paths:
       - UnityProject/Builds/Linux/
+      - UnityProject/Assets/Scenes/OmnisMain.unity
+      - UnityProject/Assets/Omnis/Materials/
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      exists:
-        - UnityProject/Assets/Scenes/OmnisMain.unity
       changes:
         - UnityProject/**/*
         - CI/Unity/**/*
