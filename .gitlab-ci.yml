@@ -1,10 +1,19 @@
-# The Docker image that will be used to build your app
-image: Node.js LT
+# GitLab Pages para el portal estático de Omnis
+image: node:22-alpine
+
+stages:
+  - deploy
+
 create-pages:
+  stage: deploy
+  script:
+    - test -f public/index.html
+    - echo "Validación de GitLab Pages completada."
+    - ls -la public
   pages:
-    # The folder that contains the files to be exposed at the Page URL
     publish: public
+  artifacts:
+    paths:
+      - public
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
