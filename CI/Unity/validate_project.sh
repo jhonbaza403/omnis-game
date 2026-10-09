@@ -1,15 +1,38 @@
 #!/usr/bin/env sh
 set -eu
 
-PROJECT_PATH="${UNITY_PROJECT_PATH:-UnityProject}"
+PROJECT_PATH="\${UNITY_PROJECT_PATH:-UnityProject}"
+VERSION_FILE="$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
+MANIFEST="$PROJECT_PATH/Packages/manifest.json"
+SCENE="$PROJECT_PATH/Assets/Scenes/OmnisMain.unity"
+SCENE_META="$SCENE.meta"
+BUILD_SETTINGS="$PROJECT_PATH/ProjectSettings/EditorBuildSettings.asset"
+GRAPHICS_SETUP="$PROJECT_PATH/Assets/Editor/OmnisGraphicsSetup.cs"
+BUILD_SCRIPT="$PROJECT_PATH/Assets/Editor/OmnisBuild.cs"
 
-test -f "$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
-grep -q '^m_EditorVersion: ' "$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
-test -f "$PROJECT_PATH/Packages/manifest.json"
-test -d "$PROJECT_PATH/Assets"
+test -f "$VERSION_FILE"
+grep -q '^m_EditorVersion: 6000.3.0f1' "$VERSION_FILE"
+test -f "$MANIFEST"
+grep -q '"com.unity.inputsystem"' "$MANIFEST"
+grep -q '"com.unity.render-pipelines.universal": "17.3.0"' "$MANIFEST"
 
-if [ ! -f "$PROJECT_PATH/Assets/Scenes/OmnisMain.unity" ]; then
-  echo "Unity scaffold is valid; gameplay migration is incomplete (main scene absent)."
-else
-  echo "Unity main scene exists. The build job can be enabled after license setup."
-fi
+test -f "$SCENE"
+test -f "$SCENE_META"
+grep -q 'guid: c5d70f8a9b62469db342a95e7f0c81a4' "$SCENE_META"
+grep -q 'guid: b7a4c2d18f6e4a2c9b30d5e7a1f4c608' "$SCENE"
+test -f "$BUILD_SETTINGS"
+grep -q 'Assets/Scenes/OmnisMain.unity' "$BUILD_SETTINGS"
+
+test -f "$PROJECT_PATH/Assets/Omnis/Scripts/OmnisPlayerController.cs"
+test -f "$PROJECT_PATH/Assets/Omnis/Scripts/OmnisGameState.cs"
+test -f "$PROJECT_PATH/Assets/Omnis/Scripts/OmnisInteractable.cs"
+test -f "$PROJECT_PATH/Assets/Omnis/Scripts/OmnisSentinel.cs"
+test -f "$PROJECT_PATH/Assets/Omnis/Scripts/OmnisWorldBootstrap.cs"
+test -f "$GRAPHICS_SETUP"
+grep -q '3840' "$GRAPHICS_SETUP"
+grep -q '2160' "$GRAPHICS_SETUP"
+grep -q 'BuildWindows' "$BUILD_SCRIPT"
+grep -q 'BuildLinux' "$BUILD_SCRIPT"
+
+echo "Unity source validation passed: scene, stable GUIDs, URP manifest, gameplay systems, and Windows/Linux build entry points are present."
+echo "This filesystem check does not replace a Unity Editor compile or a real player launch."

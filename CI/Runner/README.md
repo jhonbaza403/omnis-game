@@ -73,3 +73,20 @@ A real success requires:
 ## Why this avoids the quota block
 
 GitLab-hosted instance runners consume included compute minutes. The custom runner uses the project's own machine and its Docker engine, so the runner compute is not billed as GitLab-hosted instance-runner time. It still consumes the machine's CPU, memory, disk, and network. See the [GitLab compute-minutes documentation](https://docs.gitlab.com/ci/pipelines/compute_minutes/) and [Docker executor documentation](https://docs.gitlab.com/runner/executors/docker/).
+
+
+## 5. Optional native Windows release runner
+
+The Linux runner produces the Linux player only. For a native Windows build, register a separate protected project runner on a Windows machine in the project Settings → CI/CD → Runners.
+
+Configure:
+- Description and exact tag: omnis-windows
+- Run untagged jobs: off
+- Protected: on
+- Executor: shell, using PowerShell
+- Install Unity Editor 6000.3.0f1 including Windows Build Support
+- Register the runner and wait until it shows Online
+
+Set the protected CI/CD variable UNITY_LICENSE to type File containing the actual valid Unity .ulf licence file. Do not commit the licence. If Unity is installed somewhere other than the default, set the protected variable UNITY_EDITOR_PATH to the full Unity.exe path.
+
+When the runner is online, run the manual unity_build_windows job in the main branch pipeline. It should produce UnityProject/Builds/Windows/Omnis.exe and a release manifest. A job waiting for the runner is not a successful build.
