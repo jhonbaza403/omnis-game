@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-PROJECT_PATH="\${UNITY_PROJECT_PATH:-UnityProject}"
+PROJECT_PATH="${UNITY_PROJECT_PATH:-UnityProject}"
 VERSION_FILE="$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
 MANIFEST="$PROJECT_PATH/Packages/manifest.json"
 SCENE="$PROJECT_PATH/Assets/Scenes/OmnisMain.unity"
