@@ -12,6 +12,7 @@ namespace Omnis
     public sealed class OmnisWorldBootstrap : MonoBehaviour
     {
         private readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
+        private readonly List<UnityEngine.Object> generatedRuntimeAssets = new List<UnityEngine.Object>();
         private Transform worldRoot;
         private System.Random random;
 
@@ -36,6 +37,9 @@ namespace Omnis
 
             CreateMaterials();
             ConfigureAtmosphere();
+            GameObject audioObject = new GameObject("Omnis Audio Director");
+            audioObject.transform.SetParent(worldRoot, false);
+            audioObject.AddComponent<OmnisAudioDirector>();
             BuildGroundAndPath();
             BuildNexus();
             BuildRuins();
@@ -71,6 +75,7 @@ namespace Omnis
                 name = materialName,
                 enableInstancing = true
             };
+            generatedRuntimeAssets.Add(material);
 
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
             if (material.HasProperty("_Color")) material.SetColor("_Color", color);
@@ -97,7 +102,17 @@ namespace Omnis
             RenderSettings.fogColor = new Color(0.035f, 0.055f, 0.11f);
             RenderSettings.fogStartDistance = 35f;
             RenderSettings.fogEndDistance = 180f;
-            RenderSettings.skybox = null;
+            Shader skyShader = Shader.Find("Skybox/Procedural");
+            if (skyShader != null)
+            {
+                Material sky = new Material(skyShader) { name = "Omnis Procedural Twilight Sky" };
+                if (sky.HasProperty("_SkyTint")) sky.SetColor("_SkyTint", new Color(0.32f, 0.39f, 0.68f));
+                if (sky.HasProperty("_GroundColor")) sky.SetColor("_GroundColor", new Color(0.035f, 0.045f, 0.09f));
+                if (sky.HasProperty("_AtmosphereThickness")) sky.SetFloat("_AtmosphereThickness", 1.15f);
+                if (sky.HasProperty("_Exposure")) sky.SetFloat("_Exposure", 0.72f);
+                RenderSettings.skybox = sky;
+                generatedRuntimeAssets.Add(sky);
+            }
 
             GameObject lightObject = new GameObject("Nexus Key Light");
             lightObject.transform.SetParent(worldRoot, false);
@@ -119,6 +134,7 @@ namespace Omnis
             volume.priority = 1f;
             VolumeProfile profile = ScriptableObject.CreateInstance<VolumeProfile>();
             profile.name = "Omnis Runtime Volume";
+            generatedRuntimeAssets.Add(profile);
             Bloom bloom = profile.Add<Bloom>(true);
             bloom.threshold.overrideState = true;
             bloom.threshold.value = 0.88f;
@@ -230,6 +246,7 @@ namespace Omnis
             }
             texture.SetPixels(pixels);
             texture.Apply(true, true);
+            generatedRuntimeAssets.Add(texture);
             return texture;
         }
 
@@ -431,6 +448,7 @@ namespace Omnis
             mesh.triangles = triangles;
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
+            generatedRuntimeAssets.Add(mesh);
             return mesh;
         }
 
@@ -524,9 +542,21 @@ namespace Omnis
             if (particleShader != null)
             {
                 Material particleMaterial = new Material(particleShader) { name = "Aether Mote Material" };
+                generatedRuntimeAssets.Add(particleMaterial);
                 renderer.sharedMaterial = particleMaterial;
             }
             system.Play();
+        }
+
+        private void OnDestroy()
+        {
+            if (generatedRuntimeAssets == null) return;
+            foreach (UnityEngine.Object generated in generatedRuntimeAssets)
+            {
+                if (generated != null) Destroy(generated);
+            }
+            generatedRuntimeAssets.Clear();
+            materials.Clear();
         }
 
         private GameObject MakePrimitive(string objectName, PrimitiveType type, Vector3 position,

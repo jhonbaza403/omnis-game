@@ -29,11 +29,11 @@ namespace Omnis
             get
             {
                 OmnisGameState state = OmnisGameState.Instance;
-                if (state == null) return $"E · Interactuar: {displayName}";
-                if (state.WasInteractionCompleted(interactionId)) return $"{displayName} · ya integrado";
+                if (state == null) return "E · Interactuar: " + displayName;
+                if (state.WasInteractionCompleted(interactionId)) return displayName + " · ya integrado";
                 if (entersNexus && state.RelicsCollected < requiredRelics)
-                    return $"{displayName} · faltan {requiredRelics - state.RelicsCollected} fragmentos";
-                return $"E · Interactuar: {displayName}";
+                    return displayName + " · faltan " + (requiredRelics - state.RelicsCollected) + " fragmentos";
+                return "E · Interactuar: " + displayName;
             }
         }
 
@@ -48,14 +48,16 @@ namespace Omnis
             switch (result)
             {
                 case OmnisInteractionResult.Completed:
+                    if (OmnisAudioDirector.Instance != null)
+                        OmnisAudioDirector.Instance.PlayCue(entersNexus ? OmnisAudioCue.Nexus : OmnisAudioCue.Relic);
                     player.SetStatusMessage(entersNexus
                         ? "¡NEXO ACTIVADO! Pulsa R para iniciar el siguiente ciclo."
-                        : $"{displayName} recuperado: +{experienceReward} XP");
-                    Debug.Log($"[Omnis] Interaction completed: {interactionId}; cycle={state.CycleIndex}; XP={state.Experience}");
+                        : displayName + " recuperado: +" + experienceReward + " XP");
+                    Debug.Log("[Omnis] Interaction completed: " + interactionId + "; cycle=" + state.CycleIndex + "; XP=" + state.Experience);
                     break;
 
                 case OmnisInteractionResult.MissingRelics:
-                    player.SetStatusMessage($"El Nexo requiere {requiredRelics} fragmentos. Encontrados: {state.RelicsCollected}/3.");
+                    player.SetStatusMessage("El Nexo requiere " + requiredRelics + " fragmentos. Encontrados: " + state.RelicsCollected + "/3.");
                     break;
 
                 case OmnisInteractionResult.NexusAlreadyActive:

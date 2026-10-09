@@ -41,9 +41,9 @@ namespace Omnis
         private bool skipMouseAttackThisFrame;
 
         public OmnisInteractable FocusedInteractable => focusedInteractable;
-        public bool IsPaused => isPaused;
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
+        public bool IsPaused => isPaused;
         public string StatusMessage => Time.unscaledTime <= statusMessageUntil ? statusMessage : string.Empty;
 
         private void Awake()
@@ -52,6 +52,7 @@ namespace Omnis
             if (playerCamera == null) playerCamera = Camera.main;
             currentHealth = maxHealth;
             spawnPosition = transform.position;
+            Time.timeScale = 1f;
         }
 
         public void ConfigureCamera(Transform pivot, Camera camera)
@@ -62,7 +63,11 @@ namespace Omnis
 
         private void Start()
         {
-            if (Mouse.current != null) Cursor.lockState = CursorLockMode.Locked;
+            if (Mouse.current != null)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
 
         private void Update()
@@ -121,6 +126,7 @@ namespace Omnis
             if (amount <= 0 || Time.time < nextDamageTime || currentHealth <= 0) return;
             nextDamageTime = Time.time + 0.65f;
             currentHealth = Mathf.Max(0, currentHealth - amount);
+            OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.PlayerDamage);
 
             if (currentHealth <= 0)
             {
@@ -133,7 +139,7 @@ namespace Omnis
             }
             else
             {
-                SetStatusMessage($"Impacto recibido · integridad {currentHealth}/{maxHealth}", 1.5f);
+                SetStatusMessage("Impacto recibido · integridad " + currentHealth + "/" + maxHealth, 1.5f);
             }
         }
 
@@ -265,6 +271,7 @@ namespace Omnis
             }
 
             state.BeginRebirth();
+            Time.timeScale = 1f;
             if (!string.IsNullOrEmpty(SceneManager.GetActiveScene().name))
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }

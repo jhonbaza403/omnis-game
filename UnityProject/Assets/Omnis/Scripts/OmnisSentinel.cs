@@ -34,7 +34,7 @@ namespace Omnis
 
         private void Update()
         {
-            if (defeated) return;
+            if (defeated || (OmnisGameState.Instance != null && FindObjectOfType<OmnisPlayerController>()?.IsPaused == true)) return;
             if (target == null) FindTarget();
             if (target == null) return;
 
@@ -64,11 +64,16 @@ namespace Omnis
         {
             if (defeated || amount <= 0) return;
             health = Mathf.Max(0, health - amount);
-            if (health > 0) return;
+            if (health > 0)
+            {
+                OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.SentinelHit);
+                return;
+            }
 
             defeated = true;
             Collider ownCollider = GetComponent<Collider>();
             if (ownCollider != null) ownCollider.enabled = false;
+            OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.SentinelDefeated);
             OmnisGameState.Instance?.RegisterSentinelDefeated(sentinelId);
             Destroy(gameObject, 0.25f);
         }
