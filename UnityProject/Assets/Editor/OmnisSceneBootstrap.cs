@@ -15,7 +15,8 @@ namespace Omnis.Editor
 
         public static void CreateMainScene()
         {
-            if (File.Exists(ScenePath))
+            string sceneAbsolutePath = Path.Combine(Application.dataPath, "Scenes", "OmnisMain.unity");
+            if (File.Exists(sceneAbsolutePath))
             {
                 Scene existing = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -23,8 +24,8 @@ namespace Omnis.Editor
                 return;
             }
 
-            Directory.CreateDirectory("Assets/Scenes");
-            Directory.CreateDirectory(MaterialsPath);
+            Directory.CreateDirectory(Path.Combine(Application.dataPath, "Scenes"));
+            Directory.CreateDirectory(Path.Combine(Application.dataPath, "Omnis", "Materials"));
             AssetDatabase.Refresh();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "OmnisMain";
