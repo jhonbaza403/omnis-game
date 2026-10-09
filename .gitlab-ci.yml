@@ -3,6 +3,13 @@ stages:
   - build
   - deploy
 
+# Route all jobs through the project-owned Linux Docker runner. This avoids
+# GitLab-hosted instance-runner compute-minute quotas. Create the runner with
+# the matching tag and protect it because the project is public.
+default:
+  tags:
+    - omnis-linux-docker
+
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -37,11 +44,13 @@ unity_project_validate:
     - test -f "$UNITY_PROJECT_PATH/Packages/manifest.json"
     - test -f "$UNITY_PROJECT_PATH/Assets/Omnis/Scripts/OmnisPlayerController.cs"
     - test -f "$UNITY_PROJECT_PATH/Assets/Editor/OmnisSceneBootstrap.cs"
-    - echo "Unity migration source structure validated."
+    - echo "Unity project source structure validated."
   rules:
     - changes:
         - UnityProject/**/*
         - CI/Unity/**/*
+        - CI/Runner/**/*
+        - .gitlab-ci.yml
 
 unity_build_linux:
   stage: build
@@ -49,7 +58,7 @@ unity_build_linux:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
-    - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI variable is required." >&2; exit 1)
+    - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI/CD file variable is required." >&2; exit 1)
     - mkdir -p "$HOME/.local/share/unity3d/Unity"
     - 'if [ -f "$UNITY_LICENSE" ]; then cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; else printf "%s" "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; fi'
     - test -s "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
@@ -66,6 +75,8 @@ unity_build_linux:
       changes:
         - UnityProject/**/*
         - CI/Unity/**/*
+        - CI/Runner/**/*
+        - .gitlab-ci.yml
 
 cloudflare_validate:
   stage: validate
@@ -84,8 +95,8 @@ cloudflare_preview:
   stage: deploy
   image: node:24-alpine
   script:
-    - test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID CI variable is required." >&2; exit 1)
-    - test -n "$CLOUDFLARE_API_TOKEN" || (echo "CLOUDFLARE_API_TOKEN CI variable is required." >&2; exit 1)
+    - test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID CI/CD variable is required." >&2; exit 1)
+    - test -n "$CLOUDFLARE_API_TOKEN" || (echo "CLOUDFLARE_API_TOKEN CI/CD variable is required." >&2; exit 1)
     - npm install --no-audit --no-fund
     - npm run cf:preview
   rules:
@@ -100,8 +111,8 @@ cloudflare_deploy_production:
   environment:
     name: production
   script:
-    - test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID CI variable is required." >&2; exit 1)
-    - test -n "$CLOUDFLARE_API_TOKEN" || (echo "CLOUDFLARE_API_TOKEN CI variable is required." >&2; exit 1)
+    - test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID CI/CD variable is required." >&2; exit 1)
+    - test -n "$CLOUDFLARE_API_TOKEN" || (echo "CLOUDFLARE_API_TOKEN CI/CD variable is required." >&2; exit 1)
     - npm install --no-audit --no-fund
     - npm run cf:deploy
   rules:
