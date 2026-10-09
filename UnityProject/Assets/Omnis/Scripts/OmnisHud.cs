@@ -11,6 +11,8 @@ namespace Omnis
         private GUIStyle smallStyle;
         private GUIStyle promptStyle;
         private GUIStyle statusStyle;
+        private GUIStyle pauseTitleStyle;
+        private GUIStyle pauseButtonStyle;
         private Texture2D panelTexture;
         private Texture2D healthTexture;
         private Texture2D healthBackgroundTexture;
@@ -28,6 +30,24 @@ namespace Omnis
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
             float width = Screen.width / scale;
             float height = Screen.height / scale;
+
+            if (player.IsPaused)
+            {
+                GUI.DrawTexture(new Rect(0f, 0f, width, height), panelTexture);
+                GUI.Label(new Rect(width * 0.5f - 180f, height * 0.31f, 360f, 54f), "OMNIS  /  PAUSA", pauseTitleStyle);
+                GUI.Label(new Rect(width * 0.5f - 230f, height * 0.31f + 56f, 460f, 38f),
+                    "El ciclo espera tu regreso.", promptStyle);
+                float buttonX = width * 0.5f - 120f;
+                float buttonY = height * 0.47f;
+                if (GUI.Button(new Rect(buttonX, buttonY, 240f, 48f), "CONTINUAR", pauseButtonStyle))
+                    player.ResumeGame();
+                if (GUI.Button(new Rect(buttonX, buttonY + 62f, 240f, 48f), "REINICIAR ESCENA", pauseButtonStyle))
+                    player.RestartGame();
+                if (GUI.Button(new Rect(buttonX, buttonY + 124f, 240f, 48f), "SALIR DEL JUEGO", pauseButtonStyle))
+                    player.ExitGame();
+                GUI.matrix = previous;
+                return;
+            }
 
             GUI.color = Color.white;
             GUI.DrawTexture(new Rect(22f, 22f, 500f, 162f), panelTexture);
@@ -121,6 +141,16 @@ namespace Omnis
             {
                 fontSize = 16, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold,
                 wordWrap = true, normal = { textColor = new Color(0.53f, 1f, 0.88f) }
+            };
+            pauseTitleStyle = new GUIStyle(titleStyle)
+            {
+                fontSize = 34, alignment = TextAnchor.MiddleCenter
+            };
+            pauseButtonStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 17, fontStyle = FontStyle.Bold,
+                normal = { textColor = new Color(0.42f, 1f, 0.89f) },
+                hover = { textColor = Color.white }
             };
         }
 

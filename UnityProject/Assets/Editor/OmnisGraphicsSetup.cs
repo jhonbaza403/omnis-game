@@ -82,6 +82,11 @@ namespace Omnis.Editor
 
             PlayerSettings.companyName = "Omnis Game Studio";
             PlayerSettings.productName = "Omnis: El Último Ciclo";
+#pragma warning disable CS0618
+            // Unity 6.3 stores Active Input Handling as a named PlayerSettings property.
+            // Value 2 keeps both legacy and Input System backends enabled; the game uses Input System.
+            PlayerSettings.SetPropertyInt("activeInputHandler", 2, BuildTargetGroup.Unknown);
+#pragma warning restore CS0618
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.defaultScreenWidth = 3840;
             PlayerSettings.defaultScreenHeight = 2160;

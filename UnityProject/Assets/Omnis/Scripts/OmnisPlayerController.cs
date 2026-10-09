@@ -37,8 +37,11 @@ namespace Omnis
         private OmnisInteractable focusedInteractable;
         private string statusMessage = "Explora el Nexo. Reúne tres fragmentos.";
         private float statusMessageUntil;
+        private bool isPaused;
+        private bool skipMouseAttackThisFrame;
 
         public OmnisInteractable FocusedInteractable => focusedInteractable;
+        public bool IsPaused => isPaused;
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
         public string StatusMessage => Time.unscaledTime <= statusMessageUntil ? statusMessage : string.Empty;
@@ -64,11 +67,47 @@ namespace Omnis
 
         private void Update()
         {
+            skipMouseAttackThisFrame = false;
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                SetPaused(!isPaused);
+                return;
+            }
+            if (isPaused) return;
+
             ReadLook();
             ReadMovement();
             ReadInteraction();
             ReadCombat();
             ReadCycleControl();
+        }
+
+        public void ResumeGame() => SetPaused(false);
+
+        public void RestartGame()
+        {
+            Time.timeScale = 1f;
+            isPaused = false;
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+
+        public void ExitGame()
+        {
+            Time.timeScale = 1f;
+            isPaused = false;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        private void SetPaused(bool paused)
+        {
+            isPaused = paused;
+            Time.timeScale = paused ? 0f : 1f;
+            Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = paused;
         }
 
         public void SetStatusMessage(string message, float seconds = 4.5f)
@@ -100,17 +139,15 @@ namespace Omnis
 
         private void ReadLook()
         {
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            {
-                Cursor.lockState = CursorLockMode.None;
-                return;
-            }
-
             if (Mouse.current == null) return;
             if (Cursor.lockState != CursorLockMode.Locked)
             {
                 if (Mouse.current.leftButton.wasPressedThisFrame)
+                {
                     Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                    skipMouseAttackThisFrame = true;
+                }
                 return;
             }
 
@@ -149,7 +186,9 @@ namespace Omnis
             focusedInteractable = null;
             if (playerCamera == null) return;
 
-            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+            // Start above the CharacterController to avoid the camera ray hitting the player's own collider.
+            Vector3 rayOrigin = transform.position + Vector3.up * 1.4f;
+            Ray ray = new Ray(rayOrigin, playerCamera.transform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance,
                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
             {
@@ -167,7 +206,8 @@ namespace Omnis
         {
             if (Keyboard.current == null || Time.time < nextAttackTime) return;
             bool keyboardAttack = Keyboard.current.fKey.wasPressedThisFrame;
-            bool mouseAttack = Mouse.current != null &&
+            bool mouseAttack = !skipMouseAttackThisFrame &&
+                               Mouse.current != null &&
                                Cursor.lockState == CursorLockMode.Locked &&
                                Mouse.current.leftButton.wasPressedThisFrame;
             if (!keyboardAttack && !mouseAttack) return;
@@ -200,6 +240,17 @@ namespace Omnis
             else if (keyboardAttack)
             {
                 SetStatusMessage("No hay un centinela al alcance.", 1.2f);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (isPaused)
+            {
+                Time.timeScale = 1f;
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+                isPaused = false;
             }
         }
 
