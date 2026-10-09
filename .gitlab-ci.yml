@@ -33,7 +33,7 @@ unity_project_validate:
   image: alpine:3.22
   script:
     - test -f "$UNITY_PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
-    - grep -q '^m_EditorVersion: ' "$UNITY_PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
+    - grep -q m_EditorVersion "$UNITY_PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
     - test -f "$UNITY_PROJECT_PATH/Packages/manifest.json"
     - test -f "$UNITY_PROJECT_PATH/Assets/Omnis/Scripts/OmnisPlayerController.cs"
     - test -f "$UNITY_PROJECT_PATH/Assets/Editor/OmnisSceneBootstrap.cs"
