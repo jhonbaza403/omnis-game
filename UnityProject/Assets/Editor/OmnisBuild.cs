@@ -7,31 +7,35 @@ using UnityEngine;
 namespace Omnis.Editor
 {
     /// <summary>
-    /// Explicit build entry point for CI. It refuses to produce a build until
-    /// a real Omnis main scene has been migrated into the Unity project.
+    /// CI build entry point. Refuses to produce a build until the real Omnis
+    /// main scene has been migrated into this Unity project.
     /// </summary>
     public static class OmnisBuild
     {
         public static void BuildLinux()
         {
             const string mainScene = "Assets/Scenes/OmnisMain.unity";
-            if (!File.Exists(mainScene))
+            if (!File.Exists(Path.Combine(Application.dataPath, "Scenes", "OmnisMain.unity")))
             {
                 throw new InvalidOperationException(
                     "Omnis migration incomplete: Assets/Scenes/OmnisMain.unity is missing. " +
                     "Do not generate a placeholder scene to make CI appear successful.");
             }
 
+            var projectRoot = Directory.GetParent(Application.dataPath)?.FullName
+                ?? throw new InvalidOperationException("Unable to resolve Unity project root.");
+            var outputDirectory = Path.Combine(projectRoot, "Builds", "Linux");
+            Directory.CreateDirectory(outputDirectory);
+
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene(mainScene, true)
             };
 
-            Directory.CreateDirectory("Builds/Linux");
             var options = new BuildPlayerOptions
             {
                 scenes = new[] { mainScene },
-                locationPathName = "Builds/Linux/Omnis.x86_64",
+                locationPathName = Path.Combine(outputDirectory, "Omnis.x86_64"),
                 target = BuildTarget.StandaloneLinux64,
                 options = BuildOptions.StrictMode
             };
