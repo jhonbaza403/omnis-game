@@ -425,6 +425,8 @@ namespace Omnis
                 position + Vector3.down * 0.68f, new Vector3(1.6f, 0.045f, 1.6f), material, worldRoot, false);
             relic.AddComponent<OmnisAmbientMotion>();
             CreatePointLight(label + " Light", position + Vector3.up * 0.2f, material.color, 2.1f, 7f);
+            if (OmnisGameState.Instance != null && OmnisGameState.Instance.WasInteractionCompleted(id))
+                relic.SetActive(false);
         }
 
         private Mesh CreateCrystalMesh()
@@ -454,6 +456,9 @@ namespace Omnis
 
         private void CreateSentinel(string id, Vector3 position)
         {
+            if (OmnisGameState.Instance != null && OmnisGameState.Instance.WasSentinelDefeated(id))
+                return;
+
             GameObject enemy = MakePrimitive(id, PrimitiveType.Sphere, position,
                 new Vector3(1.25f, 1.5f, 1.25f), materials["enemy"], worldRoot);
             enemy.AddComponent<OmnisSentinel>().Configure(id, 100);
@@ -550,7 +555,7 @@ namespace Omnis
 
         private void OnDestroy()
         {
-            if (generatedRuntimeAssets == null) return;
+            if (worldRoot != null) Destroy(worldRoot.gameObject);
             foreach (UnityEngine.Object generated in generatedRuntimeAssets)
             {
                 if (generated != null) Destroy(generated);

@@ -50,6 +50,12 @@ namespace Omnis
             return PlayerPrefs.GetInt(InteractionKey(CycleIndex, interactionId), 0) == 1;
         }
 
+        public bool WasSentinelDefeated(string sentinelId)
+        {
+            if (string.IsNullOrWhiteSpace(sentinelId)) return false;
+            return PlayerPrefs.GetInt("Omnis.Cycle." + CycleIndex + ".Sentinel." + sentinelId, 0) == 1;
+        }
+
         public OmnisInteractionResult TryCompleteInteraction(string interactionId, int reward, int requiredRelics, bool entersNexus)
         {
             if (string.IsNullOrWhiteSpace(interactionId)) return OmnisInteractionResult.AlreadyCompleted;
