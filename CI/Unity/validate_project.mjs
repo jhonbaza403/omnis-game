@@ -39,7 +39,7 @@ for (const [label, token] of [
 const scene = read("Assets/Scenes/OmnisPrototype.unity");
 if (!scene.includes("Omnis Runtime Bootstrap")) errors.push("Prototype scene does not contain the expected bootstrap object.");
 const meta = read("Assets/Scripts/OmnisBootstrap.cs.meta");
-const guid = (meta.match(/^guid:\\s*([a-f0-9]+)$/m) || [])[1];
+const guid = meta.split(/\\r?\\n/).find(line => line.startsWith("guid:"))?.slice("guid:".length).trim();
 if (!guid || !scene.includes(guid)) errors.push("Prototype scene bootstrap script GUID does not match its .meta file.");
 const premium = read("Assets/Scripts/OmnisPremiumWorld.cs");
 for (const [label, token] of [
