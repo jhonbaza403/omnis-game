@@ -35,6 +35,9 @@ namespace Omnis.Editor
         [MenuItem("Omnis/Build/Build Windows 64-bit")]
         public static void BuildWindows() => BuildPlayer(BuildTarget.StandaloneWindows64, "Windows", "Omnis.exe");
 
+        [MenuItem("Omnis/Build/Build WebGL (Browser)")]
+        public static void BuildWebGL() => BuildPlayer(BuildTarget.WebGL, "WebGL", "index.html");
+
         [MenuItem("Omnis/Build/Validate Release Configuration")]
         public static void ValidateProject()
         {
@@ -87,14 +90,21 @@ namespace Omnis.Editor
 
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName
                 ?? throw new InvalidOperationException("Unable to resolve Unity project root.");
-            string outputDirectory = Path.Combine(projectRoot, "Builds", targetDirectoryName);
-            Directory.CreateDirectory(outputDirectory);
 
+            // WebGL output is published with the static portal, so the browser game
+            // and its index.html are deployed together from the repository's public/ directory.
+            string outputDirectory = target == BuildTarget.WebGL
+                ? Path.GetFullPath(Path.Combine(projectRoot, "..", "public", "game"))
+                : Path.Combine(projectRoot, "Builds", targetDirectoryName);
+
+            Directory.CreateDirectory(outputDirectory);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(MainScene, true) };
             BuildPlayerOptions options = new BuildPlayerOptions
             {
                 scenes = new[] { MainScene },
-                locationPathName = Path.Combine(outputDirectory, executableName),
+                locationPathName = target == BuildTarget.WebGL
+                    ? outputDirectory
+                    : Path.Combine(outputDirectory, executableName),
                 target = target,
                 options = BuildOptions.StrictMode
             };
@@ -113,7 +123,7 @@ namespace Omnis.Editor
                 unityEditorVersion = Application.unityVersion,
                 target = target.ToString(),
                 createdUtc = DateTime.UtcNow.ToString("O"),
-                resolution = "3840x2160",
+                resolution = target == BuildTarget.WebGL ? "Responsive browser canvas" : "3840x2160",
                 renderPipeline = "URP 17 / Forward+",
                 buildResult = summary.result.ToString(),
                 buildSizeBytes = summary.totalSize,

@@ -73,6 +73,60 @@ unity_build_linux:
         - CI/Packaging/**/*
         - .gitlab-ci.yml
 
+unity_build_webgl:
+  stage: build
+  image: "unityci/editor:ubuntu-6000.3.0f1-webgl-3"
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  script:
+    - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI/CD file variable is required." >&2; exit 1)
+    - mkdir -p "$HOME/.local/share/unity3d/Unity"
+    - 'if [ -f "$UNITY_LICENSE" ]; then cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; else printf "%s" "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; fi'
+    - test -s "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
+    - unity-editor -batchmode -nographics -quit -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.BuildWebGL -logFile -
+    - test -s public/game/index.html
+    - test -d public/game/Build
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - public/game/
+  rules:
+    - changes:
+        - UnityProject/**/*
+        - CI/Unity/**/*
+        - CI/Runner/**/*
+        - CI/Packaging/**/*
+        - public/index.html
+        - .gitlab-ci.yml
+
+# Netlify deploy is intentionally manual and only runs on main.
+# Configure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID as protected CI/CD variables first.
+netlify_deploy_production:
+  stage: deploy
+  image: node:24-alpine
+  needs:
+    - job: unity_build_webgl
+      artifacts: true
+  script:
+    - test -n "$NETLIFY_AUTH_TOKEN" || (echo "NETLIFY_AUTH_TOKEN CI/CD variable is required." >&2; exit 1)
+    - test -n "$NETLIFY_SITE_ID" || (echo "NETLIFY_SITE_ID CI/CD variable is required." >&2; exit 1)
+    - test -s public/index.html
+    - test -s public/game/index.html
+    - npx --yes netlify-cli@latest deploy --prod --dir public --site "$NETLIFY_SITE_ID"
+  environment:
+    name: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - UnityProject/**/*
+        - CI/Unity/**/*
+        - CI/Runner/**/*
+        - CI/Packaging/**/*
+        - public/index.html
+        - .gitlab-ci.yml
+      when: manual
+
 # Manual Windows release: requires a separate registered Windows shell runner.
 unity_build_windows:
   stage: build
