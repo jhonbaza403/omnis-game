@@ -98,7 +98,7 @@ unity_build_windows:
       }
       Copy-Item -LiteralPath $env:UNITY_LICENSE -Destination (Join-Path $licenseDirectory "Unity_lic.ulf") -Force
       $logPath = Join-Path $env:CI_PROJECT_DIR "unity-windows-build.log"
-      & $editor -batchmode -nographics -quit -projectPath (Join-Path $env:CI_PROJECT_DIR $env:UNITY_PROJECT_PATH) -executeMethod Omnis.Editor.OmnisBuild.BuildWindows -logFile $logPath
+      & $editor -batchmode -nographics -quit -projectPath "$env:CI_PROJECT_DIR/$env:UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.BuildWindows -logFile $logPath
       if ($LASTEXITCODE -ne 0) { throw "Unity Windows build failed with exit code $LASTEXITCODE. See unity-windows-build.log." }
   artifacts:
     when: always
@@ -157,3 +157,38 @@ cloudflare_deploy_production:
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CLOUDFLARE_API_TOKEN'
       when: manual
+
+elemental_regions_validate:
+  stage: validate
+  image: node:24-alpine
+  script:
+    - node CI/World/validate_elemental_regions.mjs
+  rules:
+    - changes:
+        - Content/Omnis/Data/elemental-regions-v1.json
+        - CI/World/validate_elemental_regions.mjs
+        - Docs/ELEMENTAL_REGIONS_MATERIALIZATION_PLAN.md
+        - .gitlab-ci.yml
+
+visual_quality_profile_validate:
+  stage: validate
+  image: node:24-alpine
+  script:
+    - node CI/World/validate_visual_quality_profile.mjs
+  rules:
+    - changes:
+        - Content/Omnis/Data/visual-quality-profile.json
+        - CI/World/validate_visual_quality_profile.mjs
+        - Docs/VISUAL_QUALITY_AND_UI.md
+        - .gitlab-ci.yml
+
+vertical_slice_contract_validate:
+  stage: validate
+  image: node:24-alpine
+  script:
+    - node CI/World/validate_vertical_slice.mjs
+  rules:
+    - changes:
+        - Content/Omnis/Data/vertical-slice-valle-despertar.json
+        - CI/World/validate_vertical_slice.mjs
+        - .gitlab-ci.yml

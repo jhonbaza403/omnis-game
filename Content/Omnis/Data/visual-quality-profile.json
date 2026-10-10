@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "project": "Omnis: El Último Ciclo",
+  "visual_direction": {
+    "style": "photorealistic cinematic dark fantasy grounded in contemporary real-world materials, anatomy, lighting and ecology",
+    "avoid": [
+      "comic-book rendering",
+      "cel-shading",
+      "plastic skin",
+      "oversaturated fantasy props",
+      "repetitive procedural scenery",
+      "unmotivated bloom",
+      "camera-shake that harms readability"
+    ],
+    "references_as_principles": [
+      "physically based material response",
+      "credible human proportions and facial expression",
+      "natural ecological variation",
+      "cinematic composition with gameplay readability"
+    ],
+    "originality": "Create original characters, silhouettes, environments, icons and interface; do not copy protected assets or signature designs from other games."
+  },
+  "rendering": {
+    "engine": "Unreal Engine 5.8",
+    "target_resolution": {
+      "width": 3840,
+      "height": 2160,
+      "label": "4K UHD"
+    },
+    "scalable_resolution": true,
+    "features": {
+      "nanite": "Enable for compatible high-detail static environment meshes; verify per asset and platform.",
+      "lumen": "Use dynamic global illumination and reflections where supported; provide scalable fallbacks.",
+      "virtual_shadow_maps": "Enable where supported and profile memory/performance.",
+      "virtual_textures": "Use for suitable large texture sets; validate streaming and memory.",
+      "temporal_upscaling": "Support engine temporal upscaling and platform-native upscalers where available.",
+      "hdr": "Optional and display-dependent; preserve SDR tone mapping."
+    },
+    "quality_tiers": [
+      "cinematic",
+      "ultra",
+      "high",
+      "balanced",
+      "performance"
+    ],
+    "performance_targets": {
+      "high_end_pc": "Target stable 60 FPS at 4K on a declared reference GPU/CPU after profiling; not a universal guarantee.",
+      "console": "Define per-platform resolution, frame-rate and memory budgets after hardware selection.",
+      "minimum_pc": "Scalable settings, resolution scaling, texture streaming and a playable frame-rate target to be benchmarked."
+    },
+    "acceptance_requires": [
+      "recorded hardware and driver versions",
+      "repeatable benchmark route",
+      "GPU/CPU frame-time captures",
+      "VRAM and system-memory measurements",
+      "no blocking shader compilation during the benchmark"
+    ]
+  },
+  "characters": {
+    "anatomy": "Believable proportions, weight distribution, facial anatomy and non-uniform skin response.",
+    "materials": [
+      "skin with subtle roughness variation",
+      "physically based cloth",
+      "worn leather",
+      "forged and weathered metal",
+      "mud, dust, moisture and damage layers"
+    ],
+    "animation": [
+      "motion-matched or equivalent responsive locomotion",
+      "foot placement on uneven ground",
+      "anticipation and recovery in combat",
+      "weapon weight and hit reaction",
+      "facial and body emotion"
+    ],
+    "customization": "Readable silhouettes, layered equipment, dye channels and accessibility-friendly previews.",
+    "rule": "No final-quality claim until skeletal meshes, rigs, animation sets, LODs and in-game lighting are tested."
+  },
+  "nature": {
+    "systems": [
+      "terrain and geological strata",
+      "species-appropriate vegetation",
+      "wind response",
+      "seasonal and weather variation",
+      "water surface and shoreline transitions",
+      "ambient wildlife with believable movement",
+      "footprints and material-dependent effects where supported"
+    ],
+    "composition": "Use authored landmarks and ecological logic; avoid uniform tree rings and visibly repeated assets.",
+    "optimization": [
+      "Nanite or LODs as appropriate",
+      "HLOD",
+      "instance foliage",
+      "streaming cells",
+      "collision budgets",
+      "vegetation density scalability"
+    ]
+  },
+  "interface": {
+    "target": "4K-ready, legible, controller- and mouse-friendly game UI",
+    "principles": [
+      "responsive layout rather than fixed 4K coordinates",
+      "safe areas and 16:9 composition",
+      "scalable typography and iconography",
+      "strong text/background contrast",
+      "hierarchy for objective, health, abilities and interaction",
+      "consistent focus states and navigation",
+      "remappable controls",
+      "subtitles, text scaling and color-accessibility options",
+      "motion reduction and camera-shake controls"
+    ],
+    "visual_language": "premium restrained cinematic interface with material depth and restrained animation; gameplay information always takes priority",
+    "requirements": [
+      "test at 3840x2160, 2560x1440, 1920x1080 and 1280x720",
+      "test ultrawide and windowed modes",
+      "test keyboard/mouse and gamepad",
+      "verify localization expansion",
+      "verify UI scaling at 100%, 125%, 150% and 200% where platform permits"
+    ]
+  },
+  "quality_gates": {
+    "asset_status_values": [
+      "planned",
+      "source-authored",
+      "imported-in-editor",
+      "integrated-in-level",
+      "runtime-tested",
+      "performance-verified"
+    ],
+    "rule": "Never mark an asset, map, character, animation, interface or performance target complete without the matching evidence.",
+    "first_vertical_slice": [
+      "one controllable hero with a rigged production-intent mesh",
+      "one walkable region with authored terrain and vegetation",
+      "one enemy archetype and one boss encounter",
+      "responsive HUD and pause/settings menus",
+      "save/load smoke test",
+      "repeatable benchmark route"
+    ]
+  }
+}

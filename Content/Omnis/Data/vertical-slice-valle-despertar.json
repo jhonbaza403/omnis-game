@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "id": "vertical-slice-valle-despertar-v1",
+  "status": "design-only-not-playable-verified",
+  "engine": "Unreal Engine 5.8",
+  "map_asset": "/Game/Omnis/Maps/ValleDespertar_VerticalSlice",
+  "region_id": "vida",
+  "region_name": "Valle del Despertar",
+  "objective": "Prove the complete moment-to-moment loop and visual quality in one small, measurable region before scaling to all 1,608 planned subregions.",
+  "player_spawn": {
+    "id": "spawn-valle-001",
+    "must_be_safe": true,
+    "required_components": [
+      "production-intent skeletal character",
+      "camera and input mapping",
+      "HUD health and abilities",
+      "save checkpoint"
+    ]
+  },
+  "points_of_interest": [
+    {
+      "id": "poi-raices",
+      "name": "Raíces del Primer Alba",
+      "purpose": "Tutorial de exploración, traversal y lectura ambiental",
+      "required_interactions": [
+        "inspect ancient roots",
+        "collect a readable world clue"
+      ],
+      "environment": [
+        "layered soil and exposed roots",
+        "species-appropriate grass and shrubs",
+        "wind response and grounded contact shadows"
+      ]
+    },
+    {
+      "id": "poi-nexo",
+      "name": "Nexo Herido",
+      "purpose": "Puzle elemental y recuperación del lugar",
+      "required_interactions": [
+        "activate three energy anchors",
+        "show feedback for valid and invalid states"
+      ],
+      "environment": [
+        "original monumental stonework",
+        "physically based weathering",
+        "emissive runes kept restrained and readable"
+      ]
+    },
+    {
+      "id": "poi-claro",
+      "name": "Claro de los Ecos",
+      "purpose": "Combate de aprendizaje y acceso al jefe",
+      "required_interactions": [
+        "combat encounter",
+        "loot or quest reward",
+        "checkpoint before boss"
+      ],
+      "environment": [
+        "broken terrain and rocks",
+        "vegetation density variation",
+        "clear combat sightlines"
+      ]
+    }
+  ],
+  "combat": {
+    "enemy_archetypes": [
+      {
+        "id": "root-stalker",
+        "role": "melee-pressure",
+        "readable_windup": true,
+        "telegraphed_attacks": 2
+      },
+      {
+        "id": "echo-archer",
+        "role": "ranged-control",
+        "readable_projectiles": true,
+        "telegraphed_attacks": 2
+      },
+      {
+        "id": "blight-keeper",
+        "role": "elite-zone-denial",
+        "element": "venom-corrupted-life",
+        "telegraphed_attacks": 3
+      }
+    ],
+    "boss": {
+      "id": "corazon-que-recuerda",
+      "name": "El Corazón que Recuerda",
+      "phases": [
+        {
+          "id": 1,
+          "name": "Raíz Despierta",
+          "mechanics": [
+            "slow area sweep",
+            "clear recovery window"
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Memoria Rota",
+          "mechanics": [
+            "arena hazards with visible telegraphs",
+            "add pressure without unavoidable damage"
+          ]
+        },
+        {
+          "id": 3,
+          "name": "Renacimiento",
+          "mechanics": [
+            "elemental counterplay",
+            "short decisive vulnerability window"
+          ]
+        }
+      ],
+      "requirements": [
+        "server-authoritative damage if online",
+        "telegraph readability",
+        "accessible difficulty options",
+        "restart and checkpoint behavior tested"
+      ]
+    }
+  },
+  "mission": {
+    "id": "restore-first-nexus",
+    "steps": [
+      "reach-the-valley",
+      "inspect-the-roots",
+      "activate-three-anchors",
+      "defeat-the-keeper",
+      "confront-the-heart",
+      "restore-the-nexus"
+    ],
+    "completion_persisted": true,
+    "objective_updates_visible": true
+  },
+  "rewards": {
+    "xp": true,
+    "cosmetic_unlock": true,
+    "gameplay_power_purchase_advantage": false
+  },
+  "save_load": {
+    "must_save": [
+      "mission_step",
+      "anchor_states",
+      "boss_completion",
+      "reward_claimed",
+      "checkpoint_id"
+    ],
+    "must_test": [
+      "save before boss",
+      "load during unfinished mission",
+      "load after boss reward",
+      "prevent duplicate reward claims"
+    ]
+  },
+  "visual_acceptance": {
+    "target_resolution": "3840x2160",
+    "must_capture": [
+      "wide establishing shot",
+      "hero close-up in natural light",
+      "vegetation and ground material close-up",
+      "combat readability frame",
+      "boss silhouette and arena"
+    ],
+    "must_verify": [
+      "rigged character not placeholder geometry",
+      "material response in direct and indirect light",
+      "vegetation variation without obvious tiling",
+      "correct foot contact and shadows",
+      "HUD legible at 4K and 1080p",
+      "measured frame-time on named reference hardware"
+    ]
+  },
+  "performance": {
+    "target_fps_on_reference_hardware": 60,
+    "requires_hardware_record": true,
+    "requires_frame_time_capture": true,
+    "requires_memory_capture": true
+  },
+  "definition_of_done": [
+    "map exists as a real saved .umap",
+    "all referenced .uasset assets resolve",
+    "player can complete the loop without editor-only actions",
+    "save/load smoke test passes",
+    "visual captures and performance measurements are attached",
+    "automated checks pass and an Unreal Editor/runtime test is recorded"
+  ],
+  "non_claims": [
+    "This JSON is a design contract, not a playable level.",
+    "No map or asset is considered materialized until Unreal Engine creates and saves it.",
+    "No 4K or frame-rate claim is valid without runtime evidence."
+  ]
+}
