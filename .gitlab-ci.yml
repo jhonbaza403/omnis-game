@@ -169,3 +169,15 @@ elemental_regions_validate:
         - CI/World/validate_elemental_regions.mjs
         - Docs/ELEMENTAL_REGIONS_MATERIALIZATION_PLAN.md
         - .gitlab-ci.yml
+
+visual_quality_profile_validate:
+  stage: validate
+  image: node:24-alpine
+  script:
+    - node CI/World/validate_visual_quality_profile.mjs
+  rules:
+    - changes:
+        - Content/Omnis/Data/visual-quality-profile.json
+        - CI/World/validate_visual_quality_profile.mjs
+        - Docs/VISUAL_QUALITY_AND_UI.md
+        - .gitlab-ci.yml
