@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Omnis
 {
@@ -21,7 +22,7 @@ namespace Omnis
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.R) && player != null)
+            if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame && player != null)
             {
                 player.GetComponent<OmnisPlayerController>()?.ResetToStart();
                 collected = 0;
@@ -32,9 +33,8 @@ namespace Omnis
 
         private void BuildWorld()
         {
+            // PremiumWorldRuntime creates the terrain, city, vegetation and Nexus plaza.
             CreateLighting();
-            CreateGround();
-            CreateNexus();
             CreatePlayer();
             CreateCamera();
             BuildCollectibles();
@@ -207,13 +207,33 @@ namespace Omnis
     public sealed class CameraFollow : MonoBehaviour
     {
         public Transform Target { get; set; }
-        private readonly Vector3 offset = new(0f, 9f, -13f);
+        [SerializeField] private float distance = 13f;
+        [SerializeField] private float sensitivity = 0.12f;
+        private float yaw;
+        private float pitch = 24f;
 
         private void LateUpdate()
         {
             if (Target == null) return;
-            transform.position = Vector3.Lerp(transform.position, Target.position + offset, 6f * Time.deltaTime);
-            transform.LookAt(Target.position + Vector3.up * 0.8f);
+
+            if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+            {
+                Vector2 delta = Mouse.current.delta.ReadValue();
+                yaw += delta.x * sensitivity;
+                pitch = Mathf.Clamp(pitch - delta.y * sensitivity, 8f, 55f);
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+            }
+
+            Quaternion orbit = Quaternion.Euler(pitch, yaw, 0f);
+            Vector3 desired = Target.position + orbit * new Vector3(0f, 0f, -distance);
+            transform.position = Vector3.Lerp(transform.position, desired, 8f * Time.deltaTime);
+            transform.LookAt(Target.position + Vector3.up * 1.1f);
         }
+
+        private void OnDisable() => Cursor.lockState = CursorLockMode.None;
     }
 }
