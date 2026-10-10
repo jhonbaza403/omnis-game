@@ -1,0 +1,19 @@
+{
+  "name": "Omnis.PlayModeTests",
+  "rootNamespace": "Omnis.Tests",
+  "references": [
+    "Omnis.Runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

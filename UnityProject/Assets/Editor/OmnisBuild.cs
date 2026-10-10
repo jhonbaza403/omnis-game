@@ -72,6 +72,8 @@ namespace Omnis.Editor
             RequireAsset("Assets/Omnis/Scripts/OmnisSentinel.cs");
             RequireAsset("Assets/Omnis/Scripts/OmnisWorldBootstrap.cs");
 
+            // This reports missing production art without blocking a playable prototype build.
+            OmnisArtAssetAudit.RunAudit();
             Debug.Log("OMNIS UNITY RELEASE VALIDATION PASSED: scene imports, runtime bootstrap is present, and URP is active.");
         }
 

@@ -46,6 +46,34 @@ unity_project_validate:
         - CI/Packaging/**/*
         - .gitlab-ci.yml
 
+# Real Unity PlayMode smoke tests: scene boot, player/HUD, relic collection, Nexus activation and combat.
+unity_playmode_smoke:
+  stage: validate
+  image: "unityci/editor:ubuntu-6000.3.0f1-linux-il2cpp-3"
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  script:
+    - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI/CD file variable is required." >&2; exit 1)
+    - mkdir -p "$HOME/.local/share/unity3d/Unity" "$CI_PROJECT_DIR/UnityProject/TestResults"
+    - 'if [ -f "$UNITY_LICENSE" ]; then cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; else printf "%s" "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; fi'
+    - test -s "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
+    - 'set +e; unity-editor -batchmode -nographics -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -runTests -testPlatform PlayMode -testResults "$CI_PROJECT_DIR/UnityProject/TestResults/playmode-results.xml" -logFile "$CI_PROJECT_DIR/unity-playmode.log"; result=$?; set -e; cat "$CI_PROJECT_DIR/unity-playmode.log"; test "$result" -eq 0'
+    - test -s "$CI_PROJECT_DIR/UnityProject/TestResults/playmode-results.xml"
+    - '! grep -E ''result="Failed"|result="Inconclusive"'' "$CI_PROJECT_DIR/UnityProject/TestResults/playmode-results.xml"'
+  artifacts:
+    when: always
+    expire_in: 14 days
+    reports:
+      junit: UnityProject/TestResults/playmode-results.xml
+    paths:
+      - UnityProject/TestResults/playmode-results.xml
+      - unity-playmode.log
+  rules:
+    - changes:
+        - UnityProject/**/*
+        - CI/Unity/**/*
+        - .gitlab-ci.yml
+
 unity_build_linux:
   stage: build
   image: "unityci/editor:ubuntu-6000.3.0f1-linux-il2cpp-3"
@@ -64,6 +92,7 @@ unity_build_linux:
       - UnityProject/Builds/Linux/
       - UnityProject/Assets/Scenes/OmnisMain.unity
       - UnityProject/Builds/Linux/omnis-release-manifest.json
+      - UnityProject/TestResults/omnis-art-readiness.json
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
