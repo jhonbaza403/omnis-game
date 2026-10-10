@@ -116,9 +116,15 @@ netlify_deploy_production:
     - npx --yes netlify-cli@latest deploy --prod --dir public --site "$NETLIFY_SITE_ID"
   environment:
     name: production
-    url: https://app.netlify.com/
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - UnityProject/**/*
+        - CI/Unity/**/*
+        - CI/Runner/**/*
+        - CI/Packaging/**/*
+        - public/index.html
+        - .gitlab-ci.yml
       when: manual
 
 # Manual Windows release: requires a separate registered Windows shell runner.
