@@ -195,12 +195,52 @@ namespace Omnis
 
         private void OnGUI()
         {
-            GUIStyle title = new GUIStyle(GUI.skin.label) { fontSize = 28, fontStyle = FontStyle.Bold };
-            GUIStyle body = new GUIStyle(GUI.skin.label) { fontSize = 18 };
-            GUI.Box(new Rect(20, 20, 600, 135), GUIContent.none);
-            GUI.Label(new Rect(40, 34, 540, 40), "OMNIS — EL ÚLTIMO CICLO", title);
-            GUI.Label(new Rect(40, 78, 540, 30), "WASD / flechas: explorar    R: reiniciar", body);
-            GUI.Label(new Rect(40, 108, 540, 30), status, body);
+            // Layout is authored at 1080p and scales cleanly up to 4K without tiny text.
+            float scale = Mathf.Clamp(Mathf.Min(Screen.width / 1920f, Screen.height / 1080f), 0.75f, 2f);
+            Matrix4x4 previousMatrix = GUI.matrix;
+            Color previousColor = GUI.color;
+            GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one * scale);
+
+            GUIStyle panel = new GUIStyle(GUI.skin.box)
+            {
+                alignment = TextAnchor.UpperLeft,
+                padding = new RectOffset(20, 20, 14, 14)
+            };
+            GUIStyle title = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 28,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = new Color(0.45f, 0.91f, 1f) }
+            };
+            GUIStyle body = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 18,
+                wordWrap = true,
+                normal = { textColor = new Color(0.93f, 0.96f, 1f) }
+            };
+            GUIStyle objective = new GUIStyle(body)
+            {
+                fontSize = 20,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleRight
+            };
+
+            GUI.color = new Color(0.025f, 0.045f, 0.075f, 0.94f);
+            GUI.Box(new Rect(24, 24, 650, 170), GUIContent.none, panel);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(46, 38, 600, 42), "OMNIS  /  EL ÚLTIMO CICLO", title);
+            GUI.Label(new Rect(46, 86, 600, 28), "WASD o flechas: moverse   •   Mayús: correr   •   Espacio: saltar", body);
+            GUI.Label(new Rect(46, 118, 600, 28), "Mantén clic derecho y mueve el ratón: cámara   •   R: reiniciar", body);
+            GUI.Label(new Rect(46, 150, 600, 28), status, body);
+
+            GUI.color = new Color(0.025f, 0.045f, 0.075f, 0.94f);
+            GUI.Box(new Rect(1420, 24, 470, 106), GUIContent.none, panel);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(1440, 40, 430, 32), "OBJETIVO DEL CICLO", title);
+            GUI.Label(new Rect(1440, 78, 430, 30), $"Fragmentos: {Mathf.Min(collected, Target)} / {Target}", objective);
+
+            GUI.matrix = previousMatrix;
+            GUI.color = previousColor;
         }
     }
 
