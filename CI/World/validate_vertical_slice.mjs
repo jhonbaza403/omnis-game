@@ -1,0 +1,15 @@
+import { readFileSync } from "node:fs";
+import assert from "node:assert/strict";
+const slice = JSON.parse(readFileSync("Content/Omnis/Data/vertical-slice-valle-despertar.json", "utf8"));
+assert.equal(slice.schema_version, 1);
+assert.equal(slice.status, "design-only-not-playable-verified");
+assert.equal(slice.engine, "Unreal Engine 5.8");
+assert.equal(slice.points_of_interest.length, 3);
+assert.equal(slice.combat.enemy_archetypes.length, 3);
+assert.equal(slice.combat.boss.phases.length, 3);
+assert.equal(slice.mission.steps.length, 6);
+assert.ok(slice.save_load.must_test.length >= 4);
+assert.ok(slice.visual_acceptance.must_capture.some((item) => item.includes("4K")));
+assert.ok(slice.definition_of_done.some((item) => item.includes("real saved .umap")));
+assert.ok(slice.non_claims.some((item) => item.includes("not a playable level")));
+console.log("PASS: Valle del Despertar vertical-slice contract and explicit playable/visual acceptance gates.");
