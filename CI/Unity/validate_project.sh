@@ -39,6 +39,8 @@ grep -q 'activeInputHandler' "$GRAPHICS_SETUP"
 test -f "$PROJECT_PATH/Assets/Omnis/Scripts/Omnis.Runtime.asmdef"
 test -f "$PROJECT_PATH/Assets/Tests/PlayMode/Omnis.PlayModeTests.asmdef"
 test -f "$PROJECT_PATH/Assets/Tests/PlayMode/OmnisPlayableSliceSmokeTests.cs"
+test -f "$PROJECT_PATH/Assets/Editor/OmnisArtAssetAudit.cs"
+test -f "$PROJECT_PATH/Assets/Omnis/Art/README.md"
 
 echo "Unity source validation passed: scene, stable GUIDs, URP manifest, gameplay systems, and Windows/Linux build entry points are present."
 echo "This filesystem check does not replace a Unity Editor compile or a real player launch."
