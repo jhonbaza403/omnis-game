@@ -92,6 +92,7 @@ unity_build_linux:
       - UnityProject/Builds/Linux/
       - UnityProject/Assets/Scenes/OmnisMain.unity
       - UnityProject/Builds/Linux/omnis-release-manifest.json
+      - UnityProject/TestResults/omnis-art-readiness.json
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
