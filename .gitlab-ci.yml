@@ -181,3 +181,14 @@ visual_quality_profile_validate:
         - CI/World/validate_visual_quality_profile.mjs
         - Docs/VISUAL_QUALITY_AND_UI.md
         - .gitlab-ci.yml
+
+vertical_slice_contract_validate:
+  stage: validate
+  image: node:24-alpine
+  script:
+    - node CI/World/validate_vertical_slice.mjs
+  rules:
+    - changes:
+        - Content/Omnis/Data/vertical-slice-valle-despertar.json
+        - CI/World/validate_vertical_slice.mjs
+        - .gitlab-ci.yml
