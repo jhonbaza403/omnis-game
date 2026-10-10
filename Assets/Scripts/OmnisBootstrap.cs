@@ -196,7 +196,7 @@ namespace Omnis
         private void OnGUI()
         {
             // Layout is authored at 1080p and scales cleanly up to 4K without tiny text.
-            float scale = Mathf.Clamp(Mathf.Min(Screen.width / 1920f, Screen.height / 1080f), 0.75f, 2f);
+            float scale = Mathf.Clamp(Mathf.Min(Screen.width / 1920f, Screen.height / 1080f), 0.55f, 2f);
             Matrix4x4 previousMatrix = GUI.matrix;
             Color previousColor = GUI.color;
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one * scale);
