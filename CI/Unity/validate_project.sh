@@ -52,5 +52,5 @@ grep -q 'BuildWindows' "$BUILD_SCRIPT"
 grep -q 'BuildLinux' "$BUILD_SCRIPT"
 grep -q 'activeInputHandler' "$GRAPHICS_SETUP"
 
-echo "Unity 7 Alpha source validation passed: Editor version $VERSION, scene, stable GUIDs, URP dependency, gameplay systems, and build entry points are present."
-echo "This filesystem check does not replace a Unity Editor compile or a real player launch."
+echo "Unity project structure checks passed for Editor $VERSION (scene, GUIDs, gameplay sources and build entry points found)."
+echo "IMPORTANT: this does not verify package compatibility or C# compilation. Unity Editor import, PlayMode tests, build and launch are mandatory gates."

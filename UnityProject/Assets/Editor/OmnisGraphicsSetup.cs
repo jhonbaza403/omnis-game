@@ -6,7 +6,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace Omnis.Editor
 {
-    /// <summary>Idempotently creates and applies the checked-in Unity 6.3 / URP 17 high-quality baseline.</summary>
+    /// <summary>Idempotently creates and applies Omnis' high-quality URP baseline.</summary>
     [InitializeOnLoad]
     public static class OmnisGraphicsSetup
     {
@@ -83,7 +83,6 @@ namespace Omnis.Editor
             PlayerSettings.companyName = "Omnis Game Studio";
             PlayerSettings.productName = "Omnis: El Último Ciclo";
 #pragma warning disable CS0618
-            // Unity 6.3 stores Active Input Handling as a named PlayerSettings property.
             // Value 2 keeps both legacy and Input System backends enabled; the game uses Input System.
             PlayerSettings.SetPropertyInt("activeInputHandler", 2, BuildTargetGroup.Unknown);
 #pragma warning restore CS0618
@@ -96,7 +95,7 @@ namespace Omnis.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[Omnis] URP 17 Forward+ created/applied. Standalone default: 3840x2160; runtime performance must still be measured on target hardware.");
+            Debug.Log($"[Omnis] URP Forward+ configured in Unity {Application.unityVersion}. Standalone default: 3840x2160; runtime performance must still be measured on target hardware.");
         }
 
         private static void ConfigureSerializedPipelineSettings(UniversalRenderPipelineAsset pipeline)

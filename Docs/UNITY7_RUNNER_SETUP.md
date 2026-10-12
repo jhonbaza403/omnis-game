@@ -9,6 +9,12 @@ Unity identifies this as an Alpha release and recommends backing up projects bef
 Official release page: https://unity.com/releases/editor/alpha
 Official Unity 7 manual: https://docs.unity.com/en-us/engine/7000.0/manual
 
+## Package compatibility — unresolved gate
+
+The current manifest still pins `com.unity.render-pipelines.universal` to `17.3.0`, a version associated with Unity 6.3. That is **not proof of compatibility with Unity 7 Alpha**. The Editor's Package Manager must resolve a Unity-7-compatible URP version before this migration can be considered complete. Do not replace it with a guessed version. The Editor import/compile job must record the actual package-resolution result, and the graphics setup must compile against the resolved API.
+
+The Input System dependency is pinned to `1.20.1`; verify it against the exact Alpha Editor's package model during import as well. The structural validation script intentionally does not claim package compatibility or C# compilation.
+
 ## Required runner
 
 A repository commit cannot install or register a runner on a physical host. A project/group administrator must install the matching Unity 7 Alpha Editor and register a Linux Shell runner with this tag:
@@ -23,11 +29,11 @@ Configure `UNITY_LICENSE` as a protected File variable containing a valid Unity 
 
 Lightweight validation, Pages and Node/Cloudflare jobs use `omnis-linux-docker`. Unity Editor import, PlayMode and Linux build jobs use the dedicated `omnis-unity7` runner. The optional Windows build remains isolated on `omnis-windows` and must have Editor `7000.0.0a8` plus Windows Build Support installed.
 
-## Compatibility and acceptance gates
+## Acceptance gates
 
-1. Static project validation passes.
-2. Unity 7 Alpha Editor imports the project without compile errors.
-3. Package Manager resolves the existing URP, Input System and Test Framework dependencies; package compatibility must be confirmed by the Editor, not assumed.
+1. Static project structure checks pass.
+2. Package Manager resolves Unity-7-compatible URP, Input System and Test Framework dependencies.
+3. Unity 7 Alpha Editor imports the project without compile errors.
 4. PlayMode tests pass and publish results.
 5. Linux player build succeeds and the artifact launches.
 6. Manual gameplay smoke test verifies movement, camera, interactions, combat, enemy defeat, relic/Nexo progression, save/load and HUD.

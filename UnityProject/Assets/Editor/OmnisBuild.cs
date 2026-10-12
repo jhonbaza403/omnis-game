@@ -72,7 +72,7 @@ namespace Omnis.Editor
             RequireAsset("Assets/Omnis/Scripts/OmnisSentinel.cs");
             RequireAsset("Assets/Omnis/Scripts/OmnisWorldBootstrap.cs");
 
-            Debug.Log("OMNIS UNITY RELEASE VALIDATION PASSED: scene imports, runtime bootstrap is present, and URP is active.");
+            Debug.Log($"OMNIS UNITY RELEASE VALIDATION PASSED: scene imports, runtime bootstrap is present, and URP is active in Unity {Application.unityVersion}.");
         }
 
         private static void RequireAsset(string path)
@@ -114,7 +114,7 @@ namespace Omnis.Editor
                 target = target.ToString(),
                 createdUtc = DateTime.UtcNow.ToString("O"),
                 resolution = "3840x2160",
-                renderPipeline = "URP 17 / Forward+",
+                renderPipeline = "Universal Render Pipeline / Forward+",
                 buildResult = summary.result.ToString(),
                 buildSizeBytes = summary.totalSize,
                 errors = summary.totalErrors,
