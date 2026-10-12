@@ -3,11 +3,8 @@ stages:
   - build
   - deploy
 
-# Linux jobs use the project-owned Docker runner to avoid shared-runner minute quotas.
-default:
-  tags:
-    - omnis-linux-docker
-
+# Lightweight Node/Alpine jobs use eligible shared runners.
+# Only Unity Editor jobs require the dedicated Unity 7 runner.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -16,7 +13,7 @@ workflow:
 variables:
   NODE_ENV: "production"
   UNITY_PROJECT_PATH: "UnityProject"
-  UNITY_VERSION: "6000.3.0f1"
+  UNITY_VERSION: "7000.0.0a7"
 
 create-pages:
   stage: deploy
@@ -46,17 +43,63 @@ unity_project_validate:
         - CI/Packaging/**/*
         - .gitlab-ci.yml
 
+unity_editor_validate:
+  stage: validate
+  tags:
+    - omnis-unity7
+  script:
+    - |
+      set -eu
+      EDITOR="${UNITY_EDITOR_PATH:-unity-editor}"
+      if [ -x "$EDITOR" ]; then
+        :
+      elif command -v "$EDITOR" >/dev/null 2>&1; then
+        EDITOR="$(command -v "$EDITOR")"
+      else
+        echo "Unity Editor not found. Install Unity ${UNITY_VERSION} and set UNITY_EDITOR_PATH." >&2
+        exit 1
+      fi
+      test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI/CD variable is required." >&2; exit 1)
+      mkdir -p "$HOME/.local/share/unity3d/Unity"
+      if [ -f "$UNITY_LICENSE" ]; then
+        cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
+      else
+        printf "%s" "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
+      fi
+      "$EDITOR" -batchmode -nographics -quit -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.ValidateProject -logFile -
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - UnityProject/**/*
+        - CI/Unity/**/*
+        - .gitlab-ci.yml
+
 unity_build_linux:
   stage: build
-  image: "unityci/editor:ubuntu-6000.3.0f1-linux-il2cpp-3"
+  tags:
+    - omnis-unity7
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
-    - test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI/CD file variable is required." >&2; exit 1)
-    - mkdir -p "$HOME/.local/share/unity3d/Unity"
-    - 'if [ -f "$UNITY_LICENSE" ]; then cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; else printf "%s" "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"; fi'
-    - test -s "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
-    - unity-editor -batchmode -nographics -quit -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.BuildLinux -logFile -
+    - |
+      set -eu
+      EDITOR="${UNITY_EDITOR_PATH:-unity-editor}"
+      if [ -x "$EDITOR" ]; then
+        :
+      elif command -v "$EDITOR" >/dev/null 2>&1; then
+        EDITOR="$(command -v "$EDITOR")"
+      else
+        echo "Unity Editor not found. Install Unity ${UNITY_VERSION} and set UNITY_EDITOR_PATH." >&2
+        exit 1
+      fi
+      test -n "$UNITY_LICENSE" || (echo "UNITY_LICENSE CI/CD variable is required." >&2; exit 1)
+      mkdir -p "$HOME/.local/share/unity3d/Unity"
+      if [ -f "$UNITY_LICENSE" ]; then
+        cp "$UNITY_LICENSE" "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
+      else
+        printf "%s" "$UNITY_LICENSE" > "$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
+      fi
+      "$EDITOR" -batchmode -nographics -quit -projectPath "$CI_PROJECT_DIR/$UNITY_PROJECT_PATH" -executeMethod Omnis.Editor.OmnisBuild.BuildLinux -logFile -
   artifacts:
     when: always
     expire_in: 14 days
@@ -73,7 +116,6 @@ unity_build_linux:
         - CI/Packaging/**/*
         - .gitlab-ci.yml
 
-# Manual Windows release: requires a separate registered Windows shell runner.
 unity_build_windows:
   stage: build
   tags:
@@ -83,10 +125,10 @@ unity_build_windows:
       $ErrorActionPreference = "Stop"
       $editor = $env:UNITY_EDITOR_PATH
       if ([string]::IsNullOrWhiteSpace($editor)) {
-        $editor = "C:\Program Files\Unity\Hub\Editor\6000.3.0f1\Editor\Unity.exe"
+        $editor = "C:\Program Files\Unity\Hub\Editor\7000.0.0a7\Editor\Unity.exe"
       }
       if (!(Test-Path -LiteralPath $editor)) {
-        throw "Unity Editor not found. Install Unity 6000.3.0f1 with Windows Build Support or set UNITY_EDITOR_PATH."
+        throw "Unity Editor 7000.0.0a7 not found. Install Unity with Windows Build Support or set UNITY_EDITOR_PATH."
       }
       if ([string]::IsNullOrWhiteSpace($env:UNITY_LICENSE)) {
         throw "UNITY_LICENSE must be configured as a protected File CI/CD variable."

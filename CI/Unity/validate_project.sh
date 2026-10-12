@@ -2,6 +2,7 @@
 set -eu
 
 PROJECT_PATH="${UNITY_PROJECT_PATH:-UnityProject}"
+VERSION="${UNITY_VERSION:-7000.0.0a7}"
 VERSION_FILE="$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
 MANIFEST="$PROJECT_PATH/Packages/manifest.json"
 SCENE="$PROJECT_PATH/Assets/Scenes/OmnisMain.unity"
@@ -11,7 +12,7 @@ GRAPHICS_SETUP="$PROJECT_PATH/Assets/Editor/OmnisGraphicsSetup.cs"
 BUILD_SCRIPT="$PROJECT_PATH/Assets/Editor/OmnisBuild.cs"
 
 test -f "$VERSION_FILE"
-grep -q '^m_EditorVersion: 6000.3.0f1' "$VERSION_FILE"
+grep -q "^m_EditorVersion: $VERSION" "$VERSION_FILE"
 test -f "$MANIFEST"
 grep -q '"com.unity.inputsystem"' "$MANIFEST"
 grep -q '"com.unity.render-pipelines.universal": "17.3.0"' "$MANIFEST"
@@ -36,5 +37,5 @@ grep -q 'BuildWindows' "$BUILD_SCRIPT"
 grep -q 'BuildLinux' "$BUILD_SCRIPT"
 grep -q 'activeInputHandler' "$GRAPHICS_SETUP"
 
-echo "Unity source validation passed: scene, stable GUIDs, URP manifest, gameplay systems, and Windows/Linux build entry points are present."
+echo "Unity source validation passed: Editor version $VERSION, scene, stable GUIDs, URP manifest, gameplay systems, and build entry points are present."
 echo "This filesystem check does not replace a Unity Editor compile or a real player launch."
