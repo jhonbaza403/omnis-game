@@ -44,6 +44,7 @@ namespace Omnis
             BuildNexus();
             BuildRuins();
             BuildNature();
+            BuildOpenWorldExpansion();
             BuildRelicsAndSentinels();
             BuildPlayer();
             BuildAmbientParticles();
@@ -175,24 +176,25 @@ namespace Omnis
         private void BuildGroundAndPath()
         {
             GameObject ground = MakePrimitive("Aether Basin", PrimitiveType.Plane,
-                new Vector3(0f, -0.22f, 5f), new Vector3(14f, 1f, 14f), materials["ground"], worldRoot);
+                new Vector3(0f, -0.22f, 5f), new Vector3(60f, 1f, 60f), materials["ground"], worldRoot);
             Texture2D soil = CreateProceduralTexture();
             Material groundMaterial = materials["ground"];
             if (groundMaterial.HasProperty("_BaseMap")) groundMaterial.SetTexture("_BaseMap", soil);
             if (groundMaterial.HasProperty("_MainTex")) groundMaterial.SetTexture("_MainTex", soil);
-            if (groundMaterial.HasProperty("_BaseMap")) groundMaterial.SetTextureScale("_BaseMap", new Vector2(48f, 48f));
+            if (groundMaterial.HasProperty("_BaseMap")) groundMaterial.SetTextureScale("_BaseMap", new Vector2(220f, 220f));
             if (groundMaterial.HasProperty("_MainTex")) groundMaterial.SetTextureScale("_MainTex", new Vector2(48f, 48f));
 
-            // Broken basalt shoreline gives the scene a large-scale silhouette in the distance.
-            for (int i = 0; i < 44; i++)
+            // Distant mountain silhouettes frame the horizon without enclosing the playable frontier.
+            for (int i = 0; i < 64; i++)
             {
-                float angle = i * Mathf.PI * 2f / 44f;
-                float radius = 54f + (float)random.NextDouble() * 9f;
-                Vector3 p = new Vector3(Mathf.Cos(angle) * radius, -0.2f, Mathf.Sin(angle) * radius + 5f);
-                GameObject cliff = MakePrimitive("Basalt Shoreline", PrimitiveType.Cube, p,
-                    new Vector3(4f + (float)random.NextDouble() * 4f, 2.4f + (float)random.NextDouble() * 5f, 4f + (float)random.NextDouble() * 4f),
-                    i % 3 == 0 ? materials["stoneLight"] : materials["stone"], worldRoot);
-                cliff.transform.rotation = Quaternion.Euler(0f, (float)random.NextDouble() * 360f, (float)random.NextDouble() * 10f - 5f);
+                float angle = i * Mathf.PI * 2f / 64f;
+                float radius = 228f + (float)random.NextDouble() * 26f;
+                Vector3 p = new Vector3(Mathf.Cos(angle) * radius, 2f, Mathf.Sin(angle) * radius + 5f);
+                GameObject ridge = MakePrimitive("Far Horizon Basalt Ridge", PrimitiveType.Sphere, p,
+                    new Vector3(18f + (float)random.NextDouble() * 24f, 22f + (float)random.NextDouble() * 38f, 18f + (float)random.NextDouble() * 24f),
+                    i % 4 == 0 ? materials["stoneLight"] : materials["stone"], worldRoot, false);
+                ridge.transform.rotation = Quaternion.Euler((float)random.NextDouble() * 12f,
+                    (float)random.NextDouble() * 360f, (float)random.NextDouble() * 12f);
             }
 
             // Segmented rune causeway leading from spawn to the central platform.
@@ -372,6 +374,170 @@ namespace Omnis
                 MakePrimitive("Aether Pool", PrimitiveType.Cylinder, new Vector3((i % 2 == 0 ? -1f : 1f) * 36f, -0.01f, z),
                     new Vector3(5.5f, 0.06f, 8f), materials["water"], worldRoot);
             }
+        }
+
+        // First bounded open-world slice: long trails, a settlement, crossings and distant landmarks.
+        private void BuildOpenWorldExpansion()
+        {
+            BuildTrail(new Vector3(0f, 0.02f, 20f), new Vector3(105f, 0.02f, 88f), 46, 2.8f, "Verdant Trail");
+            BuildTrail(new Vector3(-5f, 0.02f, 20f), new Vector3(-118f, 0.02f, 104f), 52, 3.1f, "Shattered Ridge Trail");
+            BuildTrail(new Vector3(0f, 0.02f, -12f), new Vector3(88f, 0.02f, -112f), 45, 2.6f, "Aether Marsh Trail");
+
+            for (int i = 0; i < 18; i++)
+            {
+                float z = -48f + i * 9f;
+                float x = 58f + Mathf.Sin(i * 0.42f) * 13f;
+                GameObject water = MakePrimitive("Aether River Segment", PrimitiveType.Cube,
+                    new Vector3(x, -0.075f, z), new Vector3(13f, 0.08f, 10f), materials["water"], worldRoot, false);
+                water.transform.rotation = Quaternion.Euler(0f, Mathf.Sin(i * 0.42f) * 18f, 0f);
+            }
+            BuildBridge(new Vector3(64f, 0.1f, 25f), 18f, "Old Pilgrim Bridge");
+            BuildBridge(new Vector3(66f, 0.1f, -42f), 18f, "Mosslight Crossing");
+
+            MakePrimitive("Wayfarer Village Plaza", PrimitiveType.Cylinder, new Vector3(112f, 0.025f, 88f),
+                new Vector3(24f, 0.16f, 24f), materials["stoneLight"], worldRoot);
+            for (int i = 0; i < 8; i++)
+            {
+                float a = i * Mathf.PI * 2f / 8f;
+                BuildVillageHouse(new Vector3(112f + Mathf.Cos(a) * 20f, 0f, 88f + Mathf.Sin(a) * 20f), i);
+            }
+            MakePrimitive("Village Beacon Pedestal", PrimitiveType.Cylinder, new Vector3(112f, 0.45f, 88f),
+                new Vector3(2.8f, 0.8f, 2.8f), materials["gold"], worldRoot);
+            GameObject beacon = MakePrimitive("Wayfarer Beacon", PrimitiveType.Sphere, new Vector3(112f, 2.1f, 88f),
+                Vector3.one * 1.1f, materials["cyan"], worldRoot, false);
+            beacon.AddComponent<OmnisAmbientMotion>();
+            CreatePointLight("Wayfarer Beacon Light", new Vector3(112f, 2.2f, 88f), new Color(0.12f, 0.8f, 1f), 3f, 18f);
+
+            BuildElderTree(new Vector3(-118f, 0f, 104f), 13f);
+            BuildWatchtower(new Vector3(-158f, 0f, 124f));
+            BuildMarshMonolith(new Vector3(88f, 0f, -112f));
+
+            // Stable seeded placement keeps the same world landmarks across launches.
+            for (int i = 0; i < 190; i++)
+            {
+                float x = -205f + (float)random.NextDouble() * 410f;
+                float z = -195f + (float)random.NextDouble() * 390f;
+                if (Mathf.Abs(x) < 18f && z > -24f && z < 30f) continue;
+                if (Vector2.Distance(new Vector2(x, z), new Vector2(112f, 88f)) < 33f) continue;
+                if (Vector2.Distance(new Vector2(x, z), new Vector2(-118f, 104f)) < 22f) continue;
+                if (Mathf.Abs(x - 62f) < 18f && z > -55f && z < 120f) continue;
+                BuildTree(new Vector3(x, 0f, z), 2.1f + (float)random.NextDouble() * 4.8f);
+            }
+            for (int i = 0; i < 150; i++)
+            {
+                float x = -215f + (float)random.NextDouble() * 430f;
+                float z = -205f + (float)random.NextDouble() * 410f;
+                if (Mathf.Abs(x) < 14f && z > -20f && z < 25f) continue;
+                float s = 0.8f + (float)random.NextDouble() * 3.4f;
+                GameObject rock = MakePrimitive("Frontier Weathered Stone", PrimitiveType.Sphere,
+                    new Vector3(x, s * 0.25f, z), new Vector3(s * 1.4f, s * 0.7f, s),
+                    i % 6 == 0 ? materials["stoneLight"] : materials["stone"], worldRoot, false);
+                rock.transform.rotation = Quaternion.Euler((float)random.NextDouble() * 20f,
+                    (float)random.NextDouble() * 360f, (float)random.NextDouble() * 20f);
+            }
+            BuildSkySpire(new Vector3(176f, 0f, -158f));
+        }
+
+        private void BuildTrail(Vector3 start, Vector3 end, int segments, float width, string trailName)
+        {
+            float yaw = Mathf.Atan2(end.x - start.x, end.z - start.z) * Mathf.Rad2Deg;
+            for (int i = 0; i < segments; i++)
+            {
+                float t = (i + 0.5f) / segments;
+                Vector3 point = Vector3.Lerp(start, end, t);
+                point.x += Mathf.Sin(t * Mathf.PI * 4f) * 1.7f;
+                Material m = i % 7 == 0 ? materials["cyan"] : (i % 2 == 0 ? materials["stoneLight"] : materials["stone"]);
+                GameObject slab = MakePrimitive(trailName + " Rune Slab", PrimitiveType.Cube, point,
+                    new Vector3(width, 0.16f, Vector3.Distance(start, end) / segments * 0.92f), m, worldRoot);
+                slab.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            }
+        }
+
+        private void BuildBridge(Vector3 center, float length, string bridgeName)
+        {
+            GameObject deck = MakePrimitive(bridgeName + " Deck", PrimitiveType.Cube, center,
+                new Vector3(5.5f, 0.55f, length), materials["stoneLight"], worldRoot);
+            deck.transform.rotation = Quaternion.Euler(0f, -12f, 0f);
+            for (int side = -1; side <= 1; side += 2)
+                for (int i = 0; i < 7; i++)
+                {
+                    Vector3 post = center + new Vector3(side * 2.45f, 0.95f, -length * 0.43f + i * length * 0.143f);
+                    MakePrimitive(bridgeName + " Rail Post", PrimitiveType.Cylinder, post,
+                        new Vector3(0.22f, 0.7f, 0.22f), materials["gold"], worldRoot);
+                }
+        }
+
+        private void BuildVillageHouse(Vector3 center, int variant)
+        {
+            float width = 5.5f + (variant % 3) * 0.8f;
+            Material wall = variant % 2 == 0 ? materials["stoneLight"] : materials["stone"];
+            MakePrimitive("Wayfarer House Walls", PrimitiveType.Cube, center + Vector3.up * 1.7f,
+                new Vector3(width, 3.4f, width * 0.82f), wall, worldRoot);
+            GameObject roof = MakePrimitive("Wayfarer House Roof", PrimitiveType.Cube, center + Vector3.up * 3.75f,
+                new Vector3(width * 1.22f, 0.75f, width), materials["trunk"], worldRoot);
+            roof.transform.rotation = Quaternion.Euler(0f, variant * 22.5f, 8f * (variant % 3 - 1));
+            MakePrimitive("Wayfarer House Door", PrimitiveType.Cube, center + new Vector3(0f, 0.95f, -width * 0.415f),
+                new Vector3(1.05f, 1.9f, 0.12f), materials["gold"], worldRoot, false);
+            MakePrimitive("Wayfarer House Window", PrimitiveType.Cube, center + new Vector3(width * 0.28f, 2.05f, -width * 0.43f),
+                new Vector3(0.72f, 0.72f, 0.13f), materials["cyan"], worldRoot, false);
+        }
+
+        private void BuildElderTree(Vector3 center, float size)
+        {
+            MakePrimitive("Elder Tree Trunk", PrimitiveType.Cylinder, center + Vector3.up * size * 0.78f,
+                new Vector3(size * 0.32f, size * 0.82f, size * 0.32f), materials["trunk"], worldRoot);
+            for (int i = 0; i < 6; i++)
+            {
+                float a = i * Mathf.PI / 3f;
+                Vector3 limb = center + new Vector3(Mathf.Cos(a) * size * 0.45f, size * 1.18f, Mathf.Sin(a) * size * 0.45f);
+                GameObject branch = MakePrimitive("Elder Tree Ancient Limb", PrimitiveType.Cylinder, limb,
+                    new Vector3(size * 0.11f, size * 0.72f, size * 0.11f), materials["trunk"], worldRoot, false);
+                branch.transform.rotation = Quaternion.Euler(Mathf.Sin(a) * 30f, 0f, Mathf.Cos(a) * 30f);
+                GameObject canopy = MakePrimitive("Elder Tree Crown", PrimitiveType.Sphere,
+                    center + new Vector3(Mathf.Cos(a) * size * 0.42f, size * 2.05f, Mathf.Sin(a) * size * 0.42f),
+                    new Vector3(size * 0.88f, size * 0.72f, size * 0.88f), materials["leaf"], worldRoot, false);
+                canopy.AddComponent<OmnisAmbientMotion>();
+            }
+            CreatePointLight("Elder Tree Heartlight", center + Vector3.up * size * 1.75f, new Color(0.15f, 0.9f, 0.58f), 2.4f, 22f);
+        }
+
+        private void BuildWatchtower(Vector3 center)
+        {
+            MakePrimitive("Broken Watchtower Base", PrimitiveType.Cylinder, center + Vector3.up * 0.35f,
+                new Vector3(8f, 0.7f, 8f), materials["stone"], worldRoot);
+            MakePrimitive("Broken Watchtower Shaft", PrimitiveType.Cylinder, center + Vector3.up * 7f,
+                new Vector3(3.4f, 7f, 3.4f), materials["stoneLight"], worldRoot);
+            MakePrimitive("Broken Watchtower Crown", PrimitiveType.Cube, center + Vector3.up * 13.5f,
+                new Vector3(8f, 1f, 8f), materials["gold"], worldRoot);
+            GameObject flame = MakePrimitive("Watchtower Rift Beacon", PrimitiveType.Sphere,
+                center + Vector3.up * 15f, Vector3.one * 1.5f, materials["violet"], worldRoot, false);
+            flame.AddComponent<OmnisAmbientMotion>();
+            CreatePointLight("Watchtower Beacon Light", center + Vector3.up * 15f, new Color(0.48f, 0.12f, 1f), 3.5f, 28f);
+        }
+
+        private void BuildMarshMonolith(Vector3 center)
+        {
+            MakePrimitive("Marsh Monolith Pedestal", PrimitiveType.Cylinder, center + Vector3.up * 0.25f,
+                new Vector3(7f, 0.5f, 7f), materials["stone"], worldRoot);
+            GameObject monolith = MakePrimitive("Marsh Rift Monolith", PrimitiveType.Cube,
+                center + Vector3.up * 6f, new Vector3(2.4f, 12f, 2.4f), materials["violet"], worldRoot, false);
+            monolith.transform.rotation = Quaternion.Euler(0f, 23f, 4f);
+            CreatePointLight("Marsh Monolith Glow", center + Vector3.up * 5f, new Color(0.5f, 0.12f, 1f), 2.6f, 20f);
+        }
+
+        private void BuildSkySpire(Vector3 center)
+        {
+            MakePrimitive("Far Sky Spire Base", PrimitiveType.Cylinder, center + Vector3.up * 0.5f,
+                new Vector3(14f, 1f, 14f), materials["stone"], worldRoot, false);
+            for (int i = 0; i < 7; i++)
+            {
+                float y = 5f + i * 5f;
+                GameObject segment = MakePrimitive("Far Sky Spire Segment", PrimitiveType.Cube,
+                    center + Vector3.up * y, new Vector3(3.2f - i * 0.25f, 4.5f, 3.2f - i * 0.25f),
+                    i % 2 == 0 ? materials["cyan"] : materials["stoneLight"], worldRoot, false);
+                segment.transform.rotation = Quaternion.Euler(0f, i * 13f, i % 2 == 0 ? 4f : -4f);
+            }
+            CreatePointLight("Far Sky Spire Beacon", center + Vector3.up * 37f, new Color(0.12f, 0.8f, 1f), 2.4f, 32f);
         }
 
         private void BuildTree(Vector3 position, float size)
