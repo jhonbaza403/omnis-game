@@ -37,6 +37,9 @@ namespace Omnis
 
             CreateMaterials();
             ConfigureAtmosphere();
+            GameObject simulationObject = new GameObject("Omnis World Simulation");
+            simulationObject.transform.SetParent(worldRoot, false);
+            simulationObject.AddComponent<OmnisWorldSimulation>();
             GameObject audioObject = new GameObject("Omnis Audio Director");
             audioObject.transform.SetParent(worldRoot, false);
             audioObject.AddComponent<OmnisAudioDirector>();

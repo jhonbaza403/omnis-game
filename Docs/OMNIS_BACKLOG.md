@@ -1,6 +1,8 @@
 # Omnis — backlog priorizado y materialización
 
 ## P0 — Bloqueantes
+- [ ] Cambiar Unity 7 Alpha a Unity 6.3 LTS y validar la compatibilidad real de los paquetes.
+- [ ] Ejecutar en Editor el ciclo día/noche y estados de atmósfera; el código no acredita por sí solo el resultado visual.
 - [ ] Confirmar la versión exacta de Unity 7 instalada en el runner y si los paquetes del proyecto la soportan; resolver incompatibilidades de manifiesto.
 - [ ] Confirmar runners activos `omnis-linux-docker` y `omnis-unity7`; validar ejecutores y permisos.
 - [ ] Configurar `UNITY_LICENSE` como variable File protegida; no guardar licencia ni tokens en Git.
@@ -9,6 +11,10 @@
 - [ ] Integrar en `main` solo tras gates verdes y revisión de la MR.
 
 ## P1 — Vertical slice
+- [x] Añadir controlador inicial de ciclo día/noche y variaciones de atmósfera; pendiente de ejecutar y ajustar en Unity.
+- [ ] Añadir contrato de investigación con pistas, elección y consecuencia persistente.
+- [ ] Añadir recolección/recetas y dos construcciones de travesía.
+- [ ] Añadir señales de exploración opcionales, encuentro oculto y recompensa no lineal.
 - [x] Ampliar la escena a una primera frontera abierta con caminos largos, aldea, río/cruces y puntos de orientación; falta validar dentro del Editor.
 - [ ] Reemplazar la generación de prototipo por terreno/biomas artísticos, colisiones revisadas y vegetación instanciada/optimizada.
 - [ ] Verificar input, controlador, cámara, colisión, animación y reinicio.
