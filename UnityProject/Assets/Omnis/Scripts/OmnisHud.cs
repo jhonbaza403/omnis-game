@@ -53,7 +53,7 @@ namespace Omnis
             }
 
             GUI.color = Color.white;
-            GUI.DrawTexture(new Rect(22f, 22f, 500f, 162f), panelTexture);
+            GUI.DrawTexture(new Rect(22f, 22f, 500f, 205f), panelTexture);
             GUI.Label(new Rect(42f, 34f, 455f, 38f), "OMNIS  /  EL ÚLTIMO CICLO", titleStyle);
             GUI.Label(new Rect(42f, 78f, 450f, 26f),
                 $"CICLO {state.CycleIndex:00}   ·   {PhaseLabel(state.Phase)}", bodyStyle);
@@ -92,7 +92,7 @@ namespace Omnis
             float controlsY = height - 56f;
             GUI.DrawTexture(new Rect(22f, controlsY - 14f, Mathf.Min(width - 44f, 940f), 43f), panelTexture);
             GUI.Label(new Rect(38f, controlsY - 5f, Mathf.Min(width - 76f, 910f), 26f),
-                "WASD MOVER   ·   RATÓN MIRAR   ·   ESPACIO SALTAR   ·   SHIFT CORRER   ·   E INTERACTUAR   ·   F / CLIC PULSO   ·   ESC CURSOR",
+                "WASD MOVER   ·   RATÓN MIRAR   ·   ESPACIO SALTAR   ·   SHIFT CORRER   ·   E INTERACTUAR   ·   F / CLIC ATACAR   ·   CTRL EVADIR   ·   Q PULSO   ·   ESC CURSOR",
                 smallStyle);
 
             if (player.FocusedInteractable != null)
