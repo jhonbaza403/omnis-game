@@ -84,6 +84,10 @@ namespace Omnis.Tests
             Assert.IsFalse(combat.TryBeginRiftStep(Vector3.right), "A second dodge must respect cooldown.");
             yield return new WaitForSeconds(0.22f);
             Assert.IsFalse(combat.IsInvulnerable);
+
+            player.TakeDamage(20);
+            Assert.AreEqual(before - 20, player.CurrentHealth,
+                "A blocked hit during Rift-step must not consume the next legitimate hit's damage cooldown.");
         }
     }
 }

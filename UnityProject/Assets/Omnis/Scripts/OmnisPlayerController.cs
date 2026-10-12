@@ -124,9 +124,10 @@ namespace Omnis
         public void TakeDamage(int amount)
         {
             if (amount <= 0 || Time.time < nextDamageTime || currentHealth <= 0) return;
-            nextDamageTime = Time.time + 0.65f;
             OmnisResonanceCombat resonanceCombat = GetComponent<OmnisResonanceCombat>();
+            // A hit fully negated by Rift-step must not consume the post-hit damage cooldown.
             if (resonanceCombat != null && resonanceCombat.IsInvulnerable) return;
+            nextDamageTime = Time.time + 0.65f;
             currentHealth = Mathf.Max(0, currentHealth - amount);
             OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.PlayerDamage);
 
