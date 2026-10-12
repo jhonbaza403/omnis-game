@@ -2,7 +2,7 @@
 set -eu
 
 PROJECT_PATH="${UNITY_PROJECT_PATH:-UnityProject}"
-VERSION="${UNITY_VERSION:-6000.3.0f1}"
+VERSION="${UNITY_VERSION:-7000.0.0a8}"
 VERSION_FILE="$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
 MANIFEST="$PROJECT_PATH/Packages/manifest.json"
 SCENE="$PROJECT_PATH/Assets/Scenes/OmnisMain.unity"
@@ -52,5 +52,5 @@ grep -q 'BuildWindows' "$BUILD_SCRIPT"
 grep -q 'BuildLinux' "$BUILD_SCRIPT"
 grep -q 'activeInputHandler' "$GRAPHICS_SETUP"
 
-echo "Unity source validation passed: Editor version $VERSION, scene, stable GUIDs, URP manifest, gameplay systems, and build entry points are present."
+echo "Unity 7 Alpha source validation passed: Editor version $VERSION, scene, stable GUIDs, URP manifest, gameplay systems, and build entry points are present."
 echo "This filesystem check does not replace a Unity Editor compile or a real player launch."

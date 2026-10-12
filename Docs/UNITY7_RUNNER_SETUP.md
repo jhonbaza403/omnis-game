@@ -1,30 +1,36 @@
-# Unity 6.3 LTS workspace and GitLab runner contract
+# Unity 7 Alpha workspace and GitLab runner contract
 
-## Workspace
+## Experimental engine pin
 
-The canonical Unity project is in `UnityProject/`. The intended Editor version is Unity 6.3 LTS `6000.3.0f1`, pinned in `ProjectSettings/ProjectVersion.txt` and CI's `UNITY_VERSION`. Use the matching Editor and Linux Build Support module for reproducible builds.
+The canonical Unity project is in `UnityProject/`. This branch intentionally targets Unity 7.0 Alpha `7000.0.0a8`, pinned in `ProjectSettings/ProjectVersion.txt` and CI's `UNITY_VERSION`.
+
+Unity identifies this as an Alpha release and recommends backing up projects before opening them in an Alpha Editor. Keep this migration on the feature branch. Do not merge it to `main` until package resolution, Editor import, PlayMode tests, builds, and launch checks pass. Unity 6 LTS remains the safer production baseline.
+
+Official release page: https://unity.com/releases/editor/alpha
+Official Unity 7 manual: https://docs.unity.com/en-us/engine/7000.0/manual
 
 ## Required runner
 
-A repository commit cannot install or register a runner on a physical host. A project/group administrator must register and maintain a Linux Shell runner with this tag:
+A repository commit cannot install or register a runner on a physical host. A project/group administrator must install the matching Unity 7 Alpha Editor and register a Linux Shell runner with this tag:
 
-- `omnis-unity63`
+- `omnis-unity7alpha`
 
-Install Unity Editor `6000.3.0f1` on that host and make the Editor executable available as `unity-editor`, or set the CI/CD variable `UNITY_EDITOR_PATH` to its absolute path. The runner must execute shell jobs and access the project checkout. Do not commit runner authentication tokens.
+Install Editor `7000.0.0a8` and Linux Build Support on that host. Make the Editor executable available as `unity-editor`, or set CI/CD variable `UNITY_EDITOR_PATH` to its absolute path. Do not commit runner authentication tokens.
 
 ## CI/CD variables
 
 Configure `UNITY_LICENSE` as a protected File variable containing a valid Unity license file. Protect the default branch and ensure the runner can run protected jobs. Never paste license contents into issues or commits.
 
-Lightweight validation, Pages and Node/Cloudflare jobs use the project-owned Docker runner tagged `omnis-linux-docker`. Unity Editor import, PlayMode and Linux build jobs use a separate Linux Shell runner tagged `omnis-unity63`. The optional Windows build remains isolated on a Windows runner tagged `omnis-windows`. If one physical host is used for multiple roles, register distinct runner configurations with the appropriate executor and tag.
+Lightweight validation, Pages and Node/Cloudflare jobs use `omnis-linux-docker`. Unity Editor import, PlayMode and Linux build jobs use the dedicated `omnis-unity7alpha` runner. The optional Windows build remains isolated on `omnis-windows` and must have Editor `7000.0.0a8` plus Windows Build Support installed.
 
-## Acceptance gates
+## Compatibility and acceptance gates
 
 1. Static project validation passes.
-2. Unity Editor imports the project without compile errors.
-3. PlayMode tests pass and publish results.
-4. Linux player build succeeds and the artifact launches.
-5. A manual gameplay smoke test verifies movement, camera, interactions, combat, enemy defeat, relic/Nexo progression, save/load and HUD.
-6. Performance is measured on target hardware; 4K is a target, not a guarantee from configuration alone.
+2. Unity 7 Alpha Editor imports the project without compile errors.
+3. Package Manager resolves the existing URP, Input System and Test Framework dependencies; package compatibility must be confirmed by the Editor, not assumed.
+4. PlayMode tests pass and publish results.
+5. Linux player build succeeds and the artifact launches.
+6. Manual gameplay smoke test verifies movement, camera, interactions, combat, enemy defeat, relic/Nexo progression, save/load and HUD.
+7. Performance is measured on target hardware; 4K is a target, not a guarantee from configuration alone.
 
-Do not label Omnis as compiled or playable until Editor import, PlayMode, build and launch have real evidence.
+Do not label Omnis as compiled or playable until Editor import, PlayMode, build and launch have real evidence. Do not merge to `main` while the Unity 7 Alpha runner is missing or any gate is pending or failing.
