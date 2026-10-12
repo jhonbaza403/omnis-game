@@ -50,7 +50,7 @@ unity_project_validate:
 unity_editor_validate:
   stage: validate
   tags:
-    - omnis-unity7alpha
+    - omnis-unity7
   script:
     - |
       set -eu
@@ -82,7 +82,7 @@ unity_editor_validate:
 unity_playmode_tests:
   stage: validate
   tags:
-    - omnis-unity7alpha
+    - omnis-unity7
   script:
     - |
       set -eu
@@ -120,7 +120,7 @@ unity_playmode_tests:
 unity_build_linux:
   stage: build
   tags:
-    - omnis-unity7alpha
+    - omnis-unity7
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:

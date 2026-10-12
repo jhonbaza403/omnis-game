@@ -13,7 +13,7 @@ Official Unity 7 manual: https://docs.unity.com/en-us/engine/7000.0/manual
 
 A repository commit cannot install or register a runner on a physical host. A project/group administrator must install the matching Unity 7 Alpha Editor and register a Linux Shell runner with this tag:
 
-- `omnis-unity7alpha`
+- `omnis-unity7`
 
 Install Editor `7000.0.0a8` and Linux Build Support on that host. Make the Editor executable available as `unity-editor`, or set CI/CD variable `UNITY_EDITOR_PATH` to its absolute path. Do not commit runner authentication tokens.
 
@@ -21,7 +21,7 @@ Install Editor `7000.0.0a8` and Linux Build Support on that host. Make the Edito
 
 Configure `UNITY_LICENSE` as a protected File variable containing a valid Unity license file. Protect the default branch and ensure the runner can run protected jobs. Never paste license contents into issues or commits.
 
-Lightweight validation, Pages and Node/Cloudflare jobs use `omnis-linux-docker`. Unity Editor import, PlayMode and Linux build jobs use the dedicated `omnis-unity7alpha` runner. The optional Windows build remains isolated on `omnis-windows` and must have Editor `7000.0.0a8` plus Windows Build Support installed.
+Lightweight validation, Pages and Node/Cloudflare jobs use `omnis-linux-docker`. Unity Editor import, PlayMode and Linux build jobs use the dedicated `omnis-unity7` runner. The optional Windows build remains isolated on `omnis-windows` and must have Editor `7000.0.0a8` plus Windows Build Support installed.
 
 ## Compatibility and acceptance gates
 
