@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -97,10 +98,11 @@ namespace Omnis
             Collider[] hits = Physics.OverlapSphere(transform.position, pulseRadius, Physics.DefaultRaycastLayers,
                 QueryTriggerInteraction.Ignore);
             int affected = 0;
+            var damagedSentinels = new HashSet<OmnisSentinel>();
             foreach (Collider hit in hits)
             {
                 OmnisSentinel sentinel = hit.GetComponentInParent<OmnisSentinel>();
-                if (sentinel == null || sentinel.IsDefeated) continue;
+                if (sentinel == null || sentinel.IsDefeated || !damagedSentinels.Add(sentinel)) continue;
                 sentinel.TakeDamage(pulseDamage);
                 affected++;
             }
