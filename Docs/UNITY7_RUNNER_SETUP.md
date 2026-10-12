@@ -16,7 +16,7 @@ Install Unity Editor `7000.0.0a7` on that host, include Linux Build Support, and
 
 Configure `UNITY_LICENSE` as a protected File variable containing a valid Unity license file. Protect the default branch and ensure the runner is permitted to run protected jobs. Do not paste license content into issues or commits.
 
-Lightweight validation and Node jobs intentionally have no custom runner tag, so they can use eligible GitLab shared runners. Only jobs requiring the Unity Editor use `omnis-unity7`. The Windows build remains isolated on a Windows runner tagged `omnis-windows`.
+To avoid shared-runner quota exhaustion, lightweight validation, Pages, and Node/Cloudflare jobs use the project-owned Docker runner tagged `omnis-linux-docker`. That runner must be active and configured with a Docker executor. Jobs that launch the Unity Editor use a separate Linux Shell runner tagged `omnis-unity7`; it needs Unity 7 Alpha installed locally. The Windows build remains isolated on a Windows runner tagged `omnis-windows`. If one physical host is used for more than one role, register distinct runner configurations with the appropriate executor and tag; do not assume one runner with one tag can satisfy all jobs.
 
 ## Acceptance gates
 

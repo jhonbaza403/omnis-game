@@ -17,6 +17,8 @@ variables:
 
 create-pages:
   stage: deploy
+  tags:
+    - omnis-linux-docker
   image: node:24-alpine
   script:
     - test -f public/index.html
@@ -32,6 +34,8 @@ create-pages:
 
 unity_project_validate:
   stage: validate
+  tags:
+    - omnis-linux-docker
   image: alpine:3.22
   script:
     - sh CI/Unity/validate_project.sh
@@ -161,6 +165,8 @@ unity_build_windows:
 
 cloudflare_validate:
   stage: validate
+  tags:
+    - omnis-linux-docker
   image: node:24-alpine
   script:
     - npm install --no-audit --no-fund
@@ -174,6 +180,8 @@ cloudflare_validate:
 
 cloudflare_preview:
   stage: deploy
+  tags:
+    - omnis-linux-docker
   image: node:24-alpine
   script:
     - test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID CI/CD variable is required." >&2; exit 1)
@@ -188,6 +196,8 @@ cloudflare_preview:
 
 cloudflare_deploy_production:
   stage: deploy
+  tags:
+    - omnis-linux-docker
   image: node:24-alpine
   environment:
     name: production
