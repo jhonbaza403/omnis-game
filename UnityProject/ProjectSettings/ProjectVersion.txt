@@ -1,1 +1,1 @@
-m_EditorVersion: 7000.0.0a7
+m_EditorVersion: 6000.3.0f1

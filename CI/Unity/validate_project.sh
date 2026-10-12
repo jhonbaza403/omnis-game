@@ -2,7 +2,7 @@
 set -eu
 
 PROJECT_PATH="${UNITY_PROJECT_PATH:-UnityProject}"
-VERSION="${UNITY_VERSION:-7000.0.0a7}"
+VERSION="${UNITY_VERSION:-6000.3.0f1}"
 VERSION_FILE="$PROJECT_PATH/ProjectSettings/ProjectVersion.txt"
 MANIFEST="$PROJECT_PATH/Packages/manifest.json"
 SCENE="$PROJECT_PATH/Assets/Scenes/OmnisMain.unity"

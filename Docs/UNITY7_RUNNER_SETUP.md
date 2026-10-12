@@ -1,30 +1,30 @@
-# Unity 7 workspace and GitLab runner contract
+# Unity 6.3 LTS workspace and GitLab runner contract
 
 ## Workspace
 
-The canonical playable project lives in `UnityProject/`. The requested Unity 7 preview is pinned to `7000.0.0a7` in `ProjectSettings/ProjectVersion.txt` and CI's `UNITY_VERSION`. Unity 7 is currently an Alpha; keep this as a development target, not a production-release claim. Back up the project before opening it in the Alpha Editor.
+The canonical Unity project is in `UnityProject/`. The intended Editor version is Unity 6.3 LTS `6000.3.0f1`, pinned in `ProjectSettings/ProjectVersion.txt` and CI's `UNITY_VERSION`. Use the matching Editor and Linux Build Support module for reproducible builds.
 
 ## Required runner
 
-A repository commit cannot install a runner on a physical host. A project/group administrator must register and maintain a Linux Shell runner with this tag:
+A repository commit cannot install or register a runner on a physical host. A project/group administrator must register and maintain a Linux Shell runner with this tag:
 
-- `omnis-unity7`
+- `omnis-unity63`
 
-Install Unity Editor `7000.0.0a7` on that host, include Linux Build Support, and make the editor executable available as `unity-editor` or set the CI/CD variable `UNITY_EDITOR_PATH` to its absolute path. The runner must be able to run shell jobs and access the project checkout. Do not place runner authentication tokens in Git.
+Install Unity Editor `6000.3.0f1` on that host and make the Editor executable available as `unity-editor`, or set the CI/CD variable `UNITY_EDITOR_PATH` to its absolute path. The runner must execute shell jobs and access the project checkout. Do not commit runner authentication tokens.
 
 ## CI/CD variables
 
-Configure `UNITY_LICENSE` as a protected File variable containing a valid Unity license file. Protect the default branch and ensure the runner is permitted to run protected jobs. Do not paste license content into issues or commits.
+Configure `UNITY_LICENSE` as a protected File variable containing a valid Unity license file. Protect the default branch and ensure the runner can run protected jobs. Never paste license contents into issues or commits.
 
-To avoid shared-runner quota exhaustion, lightweight validation, Pages, and Node/Cloudflare jobs use the project-owned Docker runner tagged `omnis-linux-docker`. That runner must be active and configured with a Docker executor. Jobs that launch the Unity Editor use a separate Linux Shell runner tagged `omnis-unity7`; it needs Unity 7 Alpha installed locally. The Windows build remains isolated on a Windows runner tagged `omnis-windows`. If one physical host is used for more than one role, register distinct runner configurations with the appropriate executor and tag; do not assume one runner with one tag can satisfy all jobs.
+Lightweight validation, Pages and Node/Cloudflare jobs use the project-owned Docker runner tagged `omnis-linux-docker`. Unity Editor import, PlayMode and Linux build jobs use a separate Linux Shell runner tagged `omnis-unity63`. The optional Windows build remains isolated on a Windows runner tagged `omnis-windows`. If one physical host is used for multiple roles, register distinct runner configurations with the appropriate executor and tag.
 
 ## Acceptance gates
 
-1. Pipeline source validation passes.
-2. The Unity Editor job imports the project without compile errors.
-3. PlayMode tests pass and publish test results.
-4. Linux player build succeeds and the build artifact is downloaded and launched.
-5. A manual gameplay smoke test verifies keyboard/controller movement, camera, interactions, combat, enemy defeat, relic/Nexo progression, save/load, and HUD.
-6. Visual performance is checked on the actual target hardware; 4K is a target, not a guarantee from configuration alone.
+1. Static project validation passes.
+2. Unity Editor imports the project without compile errors.
+3. PlayMode tests pass and publish results.
+4. Linux player build succeeds and the artifact launches.
+5. A manual gameplay smoke test verifies movement, camera, interactions, combat, enemy defeat, relic/Nexo progression, save/load and HUD.
+6. Performance is measured on target hardware; 4K is a target, not a guarantee from configuration alone.
 
-Never label Omnis as compiled/playable until gates 2–5 have real evidence.
+Do not label Omnis as compiled or playable until Editor import, PlayMode, build and launch have real evidence.

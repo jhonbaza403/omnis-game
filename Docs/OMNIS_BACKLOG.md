@@ -1,10 +1,10 @@
 # Omnis — backlog priorizado y materialización
 
 ## P0 — Bloqueantes
-- [ ] Cambiar Unity 7 Alpha a Unity 6.3 LTS y validar la compatibilidad real de los paquetes.
+- [ ] Cambiar Unity 6.3 LTS Alpha a Unity 6.3 LTS y validar la compatibilidad real de los paquetes.
 - [ ] Ejecutar en Editor el ciclo día/noche y estados de atmósfera; el código no acredita por sí solo el resultado visual.
-- [ ] Confirmar la versión exacta de Unity 7 instalada en el runner y si los paquetes del proyecto la soportan; resolver incompatibilidades de manifiesto.
-- [ ] Confirmar runners activos `omnis-linux-docker` y `omnis-unity7`; validar ejecutores y permisos.
+- [ ] Confirmar la versión exacta de Unity 6.3 LTS instalada en el runner y si los paquetes del proyecto la soportan; resolver incompatibilidades de manifiesto.
+- [ ] Confirmar runners activos `omnis-linux-docker` y `omnis-unity63`; validar ejecutores y permisos.
 - [ ] Configurar `UNITY_LICENSE` como variable File protegida; no guardar licencia ni tokens en Git.
 - [ ] Ejecutar importación/compilación real, PlayMode y build Linux; conservar logs y artefactos.
 - [ ] Ejecutar el binario y completar el smoke test; anotar SO, CPU/GPU, resolución y resultado.

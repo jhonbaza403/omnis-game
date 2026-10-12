@@ -4,7 +4,7 @@ stages:
   - deploy
 
 # Lightweight Node/Alpine jobs use eligible shared runners.
-# Only Unity Editor jobs require the dedicated Unity 7 runner.
+# Only Unity Editor jobs require the dedicated Unity 6.3 LTS runner.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -13,7 +13,7 @@ workflow:
 variables:
   NODE_ENV: "production"
   UNITY_PROJECT_PATH: "UnityProject"
-  UNITY_VERSION: "7000.0.0a7"
+  UNITY_VERSION: "6000.3.0f1"
 
 create-pages:
   stage: deploy
@@ -50,7 +50,7 @@ unity_project_validate:
 unity_editor_validate:
   stage: validate
   tags:
-    - omnis-unity7
+    - omnis-unity63
   script:
     - |
       set -eu
@@ -82,7 +82,7 @@ unity_editor_validate:
 unity_playmode_tests:
   stage: validate
   tags:
-    - omnis-unity7
+    - omnis-unity63
   script:
     - |
       set -eu
@@ -120,7 +120,7 @@ unity_playmode_tests:
 unity_build_linux:
   stage: build
   tags:
-    - omnis-unity7
+    - omnis-unity63
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
@@ -168,10 +168,10 @@ unity_build_windows:
       $ErrorActionPreference = "Stop"
       $editor = $env:UNITY_EDITOR_PATH
       if ([string]::IsNullOrWhiteSpace($editor)) {
-        $editor = "C:\Program Files\Unity\Hub\Editor\7000.0.0a7\Editor\Unity.exe"
+        $editor = "C:\Program Files\Unity\Hub\Editor\6000.3.0f1\Editor\Unity.exe"
       }
       if (!(Test-Path -LiteralPath $editor)) {
-        throw "Unity Editor 7000.0.0a7 not found. Install Unity with Windows Build Support or set UNITY_EDITOR_PATH."
+        throw "Unity Editor 6000.3.0f1 not found. Install Unity with Windows Build Support or set UNITY_EDITOR_PATH."
       }
       if ([string]::IsNullOrWhiteSpace($env:UNITY_LICENSE)) {
         throw "UNITY_LICENSE must be configured as a protected File CI/CD variable."
