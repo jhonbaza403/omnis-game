@@ -34,6 +34,7 @@ namespace Omnis
         public int Resonance => resonance;
         public int ResonanceRequired => resonanceRequired;
         public bool IsInvulnerable => dodging && Time.time < dodgeEndsAt;
+        public float ResonanceNormalized => Mathf.Clamp01(resonance / (float)resonanceRequired);
 
         private void Awake()
         {
@@ -45,8 +46,15 @@ namespace Omnis
         {
             if (player == null || player.IsPaused || Keyboard.current == null) return;
 
-            if (Keyboard.current.leftCtrlKey.wasPressedThisFrame && Time.time >= nextDodgeTime)
-                BeginDodge();
+            if (Keyboard.current.leftCtrlKey.wasPressedThisFrame)
+            {
+                Vector3 direction = Vector3.zero;
+                if (Keyboard.current.wKey.isPressed) direction += transform.forward;
+                if (Keyboard.current.sKey.isPressed) direction -= transform.forward;
+                if (Keyboard.current.dKey.isPressed) direction += transform.right;
+                if (Keyboard.current.aKey.isPressed) direction -= transform.right;
+                TryBeginRiftStep(direction);
+            }
 
             if (Keyboard.current.qKey.wasPressedThisFrame)
                 TryFracturePulse();
@@ -70,31 +78,31 @@ namespace Omnis
             resonance = Mathf.Min(resonanceRequired, resonance + resonancePerHit);
         }
 
-        private void BeginDodge()
+        public bool TryBeginRiftStep(Vector3 direction)
         {
-            Vector3 input = Vector3.zero;
-            if (Keyboard.current.wKey.isPressed) input += transform.forward;
-            if (Keyboard.current.sKey.isPressed) input -= transform.forward;
-            if (Keyboard.current.dKey.isPressed) input += transform.right;
-            if (Keyboard.current.aKey.isPressed) input -= transform.right;
-
-            dodgeDirection = input.sqrMagnitude > 0.01f ? input.normalized : transform.forward;
+            if (player == null || player.IsPaused || Time.time < nextDodgeTime) return false;
+            dodgeDirection = direction.sqrMagnitude > 0.01f ? direction.normalized : transform.forward;
             dodgeStartedAt = Time.time;
             dodgeEndsAt = dodgeStartedAt + dodgeDuration;
             nextDodgeTime = Time.time + dodgeCooldown;
             dodging = true;
             player.SetStatusMessage("Paso de Grieta: evasión activa.", 0.7f);
+            OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.RiftStep);
+            SpawnCombatBurst(transform.position + Vector3.up * 0.85f, new Color(0.15f, 0.9f, 1f), 24, 3.8f);
+            return true;
         }
 
-        private void TryFracturePulse()
+        public bool TryFracturePulse()
         {
             if (resonance < resonanceRequired)
             {
-                player.SetStatusMessage("Resonancia " + resonance + "/" + resonanceRequired + ". Encadena impactos para cargar el Pulso.", 1.4f);
-                return;
+                player?.SetStatusMessage("Resonancia " + resonance + "/" + resonanceRequired + ". Encadena impactos para cargar el Pulso.", 1.4f);
+                return false;
             }
 
             resonance = 0;
+            OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.FracturePulse);
+            SpawnCombatBurst(transform.position + Vector3.up * 0.35f, new Color(0.2f, 0.75f, 1f), 72, 8f);
             Collider[] hits = Physics.OverlapSphere(transform.position, pulseRadius, Physics.DefaultRaycastLayers,
                 QueryTriggerInteraction.Ignore);
             int affected = 0;
@@ -110,6 +118,40 @@ namespace Omnis
             player.SetStatusMessage(affected > 0
                 ? "PULSO DE FRACTURA: " + affected + " centinela(s) alcanzado(s)."
                 : "Pulso de Fractura liberado; no hay centinelas en el radio.", 1.6f);
+            return true;
+        }
+
+        private static void SpawnCombatBurst(Vector3 position, Color color, int count, float speed)
+        {
+            GameObject burstObject = new GameObject("Omnis Combat Resonance Burst");
+            burstObject.transform.position = position;
+            ParticleSystem particles = burstObject.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.duration = 0.65f;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.28f, 0.9f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.35f, speed);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.045f, 0.16f);
+            main.startColor = color;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = Mathf.Max(32, count);
+            var emission = particles.emission;
+            emission.enabled = false;
+            var shape = particles.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.18f;
+            var colorOverLifetime = particles.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new[] { new GradientColorKey(color, 0f), new GradientColorKey(Color.white, 0.18f), new GradientColorKey(color, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.95f, 0.12f), new GradientAlphaKey(0f, 1f) });
+            colorOverLifetime.color = gradient;
+            particles.Play();
+            particles.Emit(count);
+            Destroy(burstObject, 2f);
         }
 
         private void OnDrawGizmosSelected()

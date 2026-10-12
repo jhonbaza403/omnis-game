@@ -9,7 +9,9 @@ namespace Omnis
         Nexus,
         SentinelHit,
         SentinelDefeated,
-        PlayerDamage
+        PlayerDamage,
+        RiftStep,
+        FracturePulse
     }
 
     /// <summary>Self-contained synthetic ambience and effects; no external audio files are faked.</summary>
@@ -28,6 +30,8 @@ namespace Omnis
         private AudioClip hitClip;
         private AudioClip defeatClip;
         private AudioClip damageClip;
+        private AudioClip riftStepClip;
+        private AudioClip fracturePulseClip;
 
         private void Awake()
         {
@@ -56,6 +60,8 @@ namespace Omnis
             hitClip = CreateImpact("Sentinel Pulse Impact", 140f, 0.22f);
             defeatClip = CreateToneSequence("Sentinel Collapse", new[] { 520, 390, 260 }, 0.65f, 0.24f);
             damageClip = CreateImpact("Wanderer Damage", 92f, 0.18f);
+            riftStepClip = CreateToneSequence("Rift-step Phase Shift", new[] { 980, 740, 1320 }, 0.24f, 0.22f);
+            fracturePulseClip = CreateToneSequence("Fracture Pulse", new[] { 110, 220, 440, 880 }, 0.72f, 0.34f);
 
             if (ambientSource.clip != null) ambientSource.Play();
         }
@@ -70,6 +76,8 @@ namespace Omnis
                 OmnisAudioCue.SentinelHit => hitClip,
                 OmnisAudioCue.SentinelDefeated => defeatClip,
                 OmnisAudioCue.PlayerDamage => damageClip,
+                OmnisAudioCue.RiftStep => riftStepClip,
+                OmnisAudioCue.FracturePulse => fracturePulseClip,
                 _ => null
             };
 
@@ -145,6 +153,8 @@ namespace Omnis
             DestroyClip(hitClip);
             DestroyClip(defeatClip);
             DestroyClip(damageClip);
+            DestroyClip(riftStepClip);
+            DestroyClip(fracturePulseClip);
         }
 
         private static void DestroyClip(AudioClip clip)

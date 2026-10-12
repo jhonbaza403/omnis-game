@@ -16,6 +16,9 @@ namespace Omnis
         private Texture2D panelTexture;
         private Texture2D healthTexture;
         private Texture2D healthBackgroundTexture;
+        private Texture2D resonanceTexture;
+        private Texture2D resonanceBackgroundTexture;
+        private GUIStyle resonanceLabelStyle;
 
         public void Configure(OmnisPlayerController target) => player = target;
 
@@ -59,6 +62,25 @@ namespace Omnis
             GUI.DrawTexture(new Rect(42f, 143f, 246f, 12f), healthBackgroundTexture);
             GUI.DrawTexture(new Rect(42f, 143f, 246f * (player.CurrentHealth / (float)player.MaxHealth), 12f), healthTexture);
             GUI.Label(new Rect(300f, 137f, 175f, 24f), $"INTEGRIDAD  {player.CurrentHealth}%", smallStyle);
+
+            OmnisResonanceCombat combat = player.GetComponent<OmnisResonanceCombat>();
+            if (combat != null)
+            {
+                float barX = 42f;
+                float barY = 170f;
+                float barWidth = 430f;
+                float fill = Mathf.Clamp01(combat.Resonance / (float)combat.ResonanceRequired);
+                bool ready = fill >= 1f;
+                float pulse = 0.72f + 0.28f * Mathf.Sin(Time.unscaledTime * 7f);
+                GUI.color = ready ? new Color(0.5f, 0.95f, 1f, pulse) : Color.white;
+                GUI.DrawTexture(new Rect(barX - 3f, barY - 3f, barWidth + 6f, 18f), resonanceBackgroundTexture);
+                GUI.DrawTexture(new Rect(barX, barY, barWidth * fill, 12f), resonanceTexture);
+                GUI.color = Color.white;
+                GUI.Label(new Rect(barX, barY + 14f, 280f, 23f),
+                    ready ? "RESONANCIA COMPLETA  ·  Q" : $"RESONANCIA  {combat.Resonance:000}/{combat.ResonanceRequired:000}", resonanceLabelStyle);
+                GUI.Label(new Rect(barX + 290f, barY + 14f, 180f, 23f),
+                    combat.IsInvulnerable ? "PASO DE GRIETA" : "CTRL · EVADIR", smallStyle);
+            }
 
             GUI.DrawTexture(new Rect(width - 350f, 22f, 326f, 118f), panelTexture);
             GUI.Label(new Rect(width - 326f, 36f, 282f, 28f), "OBJETIVO PRINCIPAL", bodyStyle);
@@ -116,6 +138,8 @@ namespace Omnis
             panelTexture = MakeTexture(new Color(0.015f, 0.035f, 0.07f, 0.86f));
             healthTexture = MakeTexture(new Color(0.18f, 0.96f, 0.8f, 1f));
             healthBackgroundTexture = MakeTexture(new Color(0.12f, 0.17f, 0.23f, 1f));
+            resonanceTexture = MakeTexture(new Color(0.12f, 0.78f, 1f, 1f));
+            resonanceBackgroundTexture = MakeTexture(new Color(0.055f, 0.11f, 0.2f, 0.96f));
 
             titleStyle = new GUIStyle(GUI.skin.label)
             {
@@ -141,6 +165,11 @@ namespace Omnis
             {
                 fontSize = 16, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold,
                 wordWrap = true, normal = { textColor = new Color(0.53f, 1f, 0.88f) }
+            };
+            resonanceLabelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 13, fontStyle = FontStyle.Bold,
+                normal = { textColor = new Color(0.42f, 0.9f, 1f) }
             };
             pauseTitleStyle = new GUIStyle(titleStyle)
             {
@@ -168,6 +197,8 @@ namespace Omnis
             if (panelTexture != null) Destroy(panelTexture);
             if (healthTexture != null) Destroy(healthTexture);
             if (healthBackgroundTexture != null) Destroy(healthBackgroundTexture);
+            if (resonanceTexture != null) Destroy(resonanceTexture);
+            if (resonanceBackgroundTexture != null) Destroy(resonanceBackgroundTexture);
         }
     }
 }

@@ -17,6 +17,7 @@ namespace Omnis
         private Vector3 initialPosition;
         private bool defeated;
         public bool IsDefeated => defeated;
+        public int CurrentHealth => health;
 
         public void Configure(string id, int healthValue = 100)
         {
