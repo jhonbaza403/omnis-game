@@ -9,6 +9,8 @@
 - [ ] Integrar en `main` solo tras gates verdes y revisión de la MR.
 
 ## P1 — Vertical slice
+- [x] Ampliar la escena a una primera frontera abierta con caminos largos, aldea, río/cruces y puntos de orientación; falta validar dentro del Editor.
+- [ ] Reemplazar la generación de prototipo por terreno/biomas artísticos, colisiones revisadas y vegetación instanciada/optimizada.
 - [ ] Verificar input, controlador, cámara, colisión, animación y reinicio.
 - [ ] Implementar ataque ligero/pesado, bloqueo, esquiva, stagger, daño y telegráficos.
 - [ ] Implementar enemigo básico, pesado y jefe de dos fases.
