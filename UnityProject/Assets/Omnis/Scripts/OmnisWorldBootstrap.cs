@@ -512,6 +512,7 @@ namespace Omnis
             cameraData.antialiasingQuality = AntialiasingQuality.High;
 
             OmnisPlayerController playerController = playerObject.AddComponent<OmnisPlayerController>();
+            playerObject.AddComponent<OmnisResonanceCombat>();
             playerController.ConfigureCamera(pivot.transform, camera);
 
             GameObject hudObject = new GameObject("Omnis HUD");

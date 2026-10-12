@@ -125,6 +125,8 @@ namespace Omnis
         {
             if (amount <= 0 || Time.time < nextDamageTime || currentHealth <= 0) return;
             nextDamageTime = Time.time + 0.65f;
+            OmnisResonanceCombat resonanceCombat = GetComponent<OmnisResonanceCombat>();
+            if (resonanceCombat != null && resonanceCombat.IsInvulnerable) return;
             currentHealth = Mathf.Max(0, currentHealth - amount);
             OmnisAudioDirector.Instance?.PlayCue(OmnisAudioCue.PlayerDamage);
 
@@ -241,7 +243,8 @@ namespace Omnis
             if (selected != null)
             {
                 selected.TakeDamage(attackDamage);
-                SetStatusMessage("Pulso del Nexo ejecutado.", 1.2f);
+                GetComponent<OmnisResonanceCombat>()?.RegisterMeleeHit();
+                SetStatusMessage("Impacto del Errante confirmado.", 1.2f);
             }
             else if (keyboardAttack)
             {
