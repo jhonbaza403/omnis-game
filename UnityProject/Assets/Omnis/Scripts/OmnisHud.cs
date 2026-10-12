@@ -82,12 +82,16 @@ namespace Omnis
                     combat.IsInvulnerable ? "PASO DE GRIETA" : "CTRL · EVADIR", smallStyle);
             }
 
-            GUI.DrawTexture(new Rect(width - 350f, 22f, 326f, 118f), panelTexture);
+            GUI.DrawTexture(new Rect(width - 350f, 22f, 326f, 150f), panelTexture);
             GUI.Label(new Rect(width - 326f, 36f, 282f, 28f), "OBJETIVO PRINCIPAL", bodyStyle);
             GUI.Label(new Rect(width - 326f, 69f, 282f, 27f),
                 $"Fragmentos del Nexo   {state.RelicsCollected}/3", bodyStyle);
             GUI.Label(new Rect(width - 326f, 100f, 282f, 24f),
                 state.Phase == OmnisCyclePhase.Nexus ? "R  ·  Iniciar renacimiento" : "E  ·  Sincronizar un objeto", smallStyle);
+            OmnisWorldSimulation worldSimulation = FindObjectOfType<OmnisWorldSimulation>();
+            if (worldSimulation != null)
+                GUI.Label(new Rect(width - 326f, 127f, 290f, 24f),
+                    worldSimulation.TimeLabel + "  ·  " + worldSimulation.WeatherLabel, smallStyle);
 
             float controlsY = height - 56f;
             GUI.DrawTexture(new Rect(22f, controlsY - 14f, Mathf.Min(width - 44f, 940f), 43f), panelTexture);
