@@ -51,6 +51,16 @@ namespace Omnis.Tests
             enemyObject.AddComponent<SphereCollider>().radius = 0.7f;
             OmnisSentinel sentinel = enemyObject.AddComponent<OmnisSentinel>();
             sentinel.Configure("Test-Sentinel", 100);
+            GameObject extraCollider = new GameObject("Sentinel Secondary Collider");
+            extraCollider.transform.SetParent(enemyObject.transform, false);
+            extraCollider.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+            extraCollider.AddComponent<SphereCollider>().radius = 0.55f;
+
+            GameObject distantObject = new GameObject("Distant Test Sentinel");
+            distantObject.transform.position = new Vector3(12f, 0f, 0f);
+            distantObject.AddComponent<SphereCollider>().radius = 0.7f;
+            OmnisSentinel distantSentinel = distantObject.AddComponent<OmnisSentinel>();
+            distantSentinel.Configure("Distant-Test-Sentinel", 100);
             yield return null;
 
             Assert.IsFalse(combat.TryFracturePulse(), "An undercharged pulse must not fire.");
@@ -59,7 +69,8 @@ namespace Omnis.Tests
             for (int i = 0; i < 5; i++) combat.RegisterMeleeHit();
             Assert.IsTrue(combat.TryFracturePulse());
             Assert.AreEqual(0, combat.Resonance);
-            Assert.AreEqual(52, sentinel.CurrentHealth, "A single pulse should apply 48 damage once.");
+            Assert.AreEqual(52, sentinel.CurrentHealth, "A single pulse should apply 48 damage once, even with multiple colliders.");
+            Assert.AreEqual(100, distantSentinel.CurrentHealth, "Targets outside the pulse radius must not be damaged.");
         }
 
         [UnityTest]
