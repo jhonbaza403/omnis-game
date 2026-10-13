@@ -1,43 +1,30 @@
 # OMNIS: El Último Ciclo
 
-Proyecto de videojuego construido sobre Unreal Engine 5.
+**Estado del proyecto:** en transición y no certificado todavía como build jugable.
 
-## Identidad
+## Motor oficial
 
-**Omnis: El Último Ciclo** es el título definitivo. El concepto sistémico interno se denomina **El Ciclo del Sin-Ciclo**: una realidad que colapsa y renace innumerables veces y que atraviesa su último ciclo conocido.
+La línea de trabajo actual usa **Unity 6.3 LTS (6000.3.0f1)**. La versión del Editor está declarada en `UnityProject/ProjectSettings/ProjectVersion.txt`. No se debe mezclar esta línea con Unity 7 Alpha ni declarar validada una versión que no haya pasado importación, resolución de paquetes, compilación, pruebas y build real en Unity Editor.
 
-Omnis integra exploración, construcción, narrativa, combate, Nexo, progresión y futuro mundo persistente mediante un mismo modelo de estado y consecuencias.
+Hay contenido y documentación heredados de Unreal Engine en el repositorio. Su presencia no significa que formen parte del build oficial de Unity ni que se hayan convertido automáticamente. Deben inventariarse por separado antes de migrarlos o retirarlos.
 
-## Premisa
+## Identidad y experiencia
 
-El jugador despierta en una realidad moribunda donde civilizaciones, naturaleza salvaje, magia y tecnología olvidada se superponen después de incontables ciclos. Sus decisiones pueden modificar personajes, facciones, rutas y lugares; sus obras pueden dejar huellas históricas.
+**Omnis: El Último Ciclo** combina exploración, construcción, narrativa, combate, progresión y un ciclo de renacimiento denominado Nexo. Su dirección artística es dark fantasy postapocalíptica: ruinas monumentales, naturaleza invasiva, tecnología perdida y fenómenos extraordinarios.
 
-## Meta-bucle
+El objetivo jugable contempla cooperación de escuadra, desafíos competitivos, personajes y regiones persistentes. Estas metas no deben describirse como funcionalidades terminadas sin pruebas reproducibles.
 
-EXPLORAR → DESCUBRIR → INTERACTUAR → DECIDIR → COMBATIR → FIN DEL CICLO → NEXO → MEJORAR → RENACER
+## Reglas de ingeniería
 
-## Dirección artística
+- No fabricar archivos nativos, capturas ni resultados para aparentar una migración o build.
+- No integrar una rama hasta que las comprobaciones requeridas hayan terminado correctamente.
+- No guardar secretos, tokens, licencias ni credenciales en el repositorio o en logs.
+- Mantener el motor y las versiones de paquetes fijados y verificables.
+- Distinguir validaciones estructurales de compilación real y pruebas ejecutadas dentro de Unity Editor.
+- Mantener los despliegues desactivados/manuales hasta validar el destino y las credenciales.
 
-La dirección base queda establecida como **dark fantasy postapocalíptica**: ruinas monumentales, naturaleza invasiva, tecnología perdida y fenómenos extraordinarios coexistiendo en un mundo que se aproxima a su último colapso.
+## CI y validación
 
-## Regla de ingeniería
+El proyecto usa GitLab CI. Los jobs que requieren Unity necesitan un runner compatible con las etiquetas declaradas y una licencia válida configurada en CI/CD Variables. Si el job queda pendiente por falta de runner, no se considera que la compilación o los tests hayan pasado.
 
-No se aceptan migraciones ficticias, duplicación de sistemas, falsos servicios externos, secretos en el repositorio ni artefactos binarios inventados para aparentar contenido.
-
-
-## Experiencia jugable
-
-La experiencia maestra está definida en Docs/OMNIS_MASTER_EXPERIENCE.md y en Content/Omnis/Data/experience-manifest.json.
-
-El vertical slice integra:
-- mundo abierto y World Partition;
-- exploración, interacción, combate y construcción autoritativa;
-- avatar y cosméticos;
-- experiencia y recompensas;
-- grupos cooperativos;
-- rating competitivo;
-- creaciones publicables;
-- controles sociales de bloqueo y reportes;
-- ciclo narrativo y Nexo.
-
-Los assets nativos UAsset y el mapa UMAP se generan exclusivamente dentro de Unreal Engine 5.8 mediante CI. No se crean binarios ficticios para aparentar materialización.
+El validador estructural en `CI/Unity/validate_project.sh` no sustituye la importación de paquetes, la compilación C# ni las pruebas PlayMode. Consulta `Docs/GITLAB_360_REMEDIATION.md` para los bloqueos y criterios de cierre de la auditoría.

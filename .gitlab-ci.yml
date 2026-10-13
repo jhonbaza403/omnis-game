@@ -65,6 +65,13 @@ unity_build_linux:
       - UnityProject/Assets/Scenes/OmnisMain.unity
       - UnityProject/Builds/Linux/omnis-release-manifest.json
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - UnityProject/**/*
+        - CI/Unity/**/*
+        - CI/Runner/**/*
+        - CI/Packaging/**/*
+        - .gitlab-ci.yml
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
         - UnityProject/**/*
