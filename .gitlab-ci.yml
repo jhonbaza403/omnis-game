@@ -3,11 +3,7 @@ stages:
   - build
   - deploy
 
-# Linux jobs use the project-owned Docker runner to avoid shared-runner minute quotas.
-default:
-  tags:
-    - omnis-linux-docker
-
+# Lightweight validation jobs use GitLab shared runners. Unity requires a dedicated runner.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -48,6 +44,8 @@ unity_project_validate:
 
 unity_build_linux:
   stage: build
+  tags:
+    - omnis-linux-docker
   image: "unityci/editor:ubuntu-6000.3.0f1-linux-il2cpp-3"
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
