@@ -68,5 +68,5 @@ jobs:
         run: |
           set -euo pipefail
           while IFS= read -r script; do
-            sh -n "$script"
+            bash -n "$script"
           done < <(find CI Tools -type f -name '*.sh' -print)
