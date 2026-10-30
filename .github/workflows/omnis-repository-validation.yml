@@ -1,0 +1,71 @@
+name: Omnis Repository Validation
+
+on:
+  push:
+    branches: [main, "audit/**", "fix/**", "feat/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnis-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-validation:
+    name: Static checks (no engine license required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate repository tests
+        run: python -m unittest discover -s Tests -p 'test_*.py' -v
+
+      - name: Validate Unity project layout
+        run: sh CI/Unity/validate_project.sh
+
+      - name: Validate tracked JSON files
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          paths = subprocess.run(
+              ["git", "ls-files", "*.json"],
+              check=True,
+              text=True,
+              capture_output=True,
+          ).stdout.splitlines()
+          failures = []
+          for raw_path in paths:
+              path = Path(raw_path)
+              try:
+                  json.loads(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  failures.append(f"{path}: {exc}")
+          if failures:
+              print("\n".join(failures), file=sys.stderr)
+              raise SystemExit(1)
+          print(f"Validated {len(paths)} tracked JSON files.")
+          PY
+
+      - name: Check shell-script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r script; do
+            bash -n "$script"
+          done < <(find CI Tools -type f -name '*.sh' -print)
