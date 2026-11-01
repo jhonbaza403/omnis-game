@@ -9,7 +9,6 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 $projectFile = Join-Path $repoRoot "Omnis.uproject"
 $pythonScript = Join-Path $repoRoot "Tools/Editor/MaterializeOmnisPremiumWorld.py"
-$editorCmd = Join-Path $EngineRoot "Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
 $mapFile = Join-Path $repoRoot "Content/Omnis/Maps/Omnis_OpenWorld.umap"
 $artRoot = Join-Path $repoRoot "Content/Omnis/Art"
 $materialsRoot = Join-Path $repoRoot "Content/Omnis/Materials"
@@ -18,6 +17,7 @@ if ([string]::IsNullOrWhiteSpace($EngineRoot)) {
     throw "Set UE_ENGINE_ROOT to your Unreal Engine 5.8 installation or pass -EngineRoot."
 }
 $EngineRoot = (Resolve-Path $EngineRoot).Path
+$editorCmd = Join-Path $EngineRoot "Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
 $versionFile = Join-Path $EngineRoot "Engine/Build/Build.version"
 if (!(Test-Path $versionFile -PathType Leaf)) { throw "Build.version not found: $versionFile" }
 $version = Get-Content $versionFile -Raw | ConvertFrom-Json
