@@ -6,7 +6,7 @@ public class OmnisEditorTarget : TargetRules
     {
         Type = TargetType.Editor;
         DefaultBuildSettings = BuildSettingsVersion.V5;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_6;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_8;
         ExtraModuleNames.Add("Omnis");
     }
 }
