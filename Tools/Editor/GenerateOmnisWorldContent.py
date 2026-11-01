@@ -37,16 +37,37 @@ def import_all():
     for family, names in FAMILIES.items():
         for name in names:
             filename = source_file(family, name)
+            destination = "/Game/Omnis/Art/" + family
+            target = asset_path(family, name)
             if not unreal.Paths.file_exists(filename):
                 raise RuntimeError("Missing authored source mesh: " + filename)
+
+            # Existing native assets are preserved. Re-importing an OBJ over an
+            # existing .uasset can silently replace reviewed work.
+            if unreal.EditorAssetLibrary.does_asset_exist(target):
+                existing = unreal.EditorAssetLibrary.load_asset(target)
+                if not existing or not isinstance(existing, unreal.StaticMesh):
+                    raise RuntimeError(
+                        "Existing asset is not a valid StaticMesh; refusing overwrite: "
+                        + target)
+                log("Preserving existing native mesh: " + target)
+                continue
+
             task = unreal.AssetImportTask()
             task.set_editor_property("filename", filename)
-            task.set_editor_property("destination_path", "/Game/Omnis/Art/" + family)
+            task.set_editor_property("destination_path", destination)
             task.set_editor_property("automated", True)
-            task.set_editor_property("replace_existing", True)
+            task.set_editor_property("replace_existing", False)
             task.set_editor_property("save", True)
             tasks.append(task)
-    tools.import_asset_tasks(tasks)
+
+    if tasks:
+        tools.import_asset_tasks(tasks)
+
+    # Verify every family after import, including assets preserved above.
+    for family, names in FAMILIES.items():
+        for name in names:
+            require_mesh(family, name)
 
 def require_mesh(family, name):
     path = asset_path(family, name)
