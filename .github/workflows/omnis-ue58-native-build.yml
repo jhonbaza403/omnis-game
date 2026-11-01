@@ -1,0 +1,61 @@
+name: Omnis Unreal Engine 5.8 Native Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      materialize_world:
+        description: "Create the native Open World map only when it does not already exist"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnis-ue58-native-build
+  cancel-in-progress: false
+
+jobs:
+  ue58-linux:
+    name: UE 5.8 UHT, Editor, Game, Server and Automation
+    runs-on: [self-hosted, linux, x64, omnis-ue58]
+    timeout-minutes: 240
+    env:
+      # Configure UE_ENGINE_ROOT in the self-hosted runner service environment.
+      # Do not store engine paths or license files in repository secrets.
+      UE_ENGINE_ROOT: ${{ vars.UE_ENGINE_ROOT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Unreal Engine 5.8 installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${UE_ENGINE_ROOT:?Set the repository variable UE_ENGINE_ROOT or runner service environment}"
+          bash CI/Build/preflight_unreal.sh
+
+      - name: Build Editor, Game and Dedicated Server
+        shell: bash
+        run: bash Tools/Build/build_omnis.sh
+
+      - name: Optional native world materialization
+        if: ${{ inputs.materialize_world }}
+        shell: bash
+        run: bash CI/Build/generate_content.sh
+
+      - name: Run Unreal Automation
+        shell: bash
+        run: bash CI/Tests/run_unreal_automation.sh
+
+      - name: Preserve build and automation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnis-ue58-native-build-${{ github.run_id }}
+          path: |
+            Saved/Logs/
+            Saved/Automation/
+          if-no-files-found: warn
+          retention-days: 14
