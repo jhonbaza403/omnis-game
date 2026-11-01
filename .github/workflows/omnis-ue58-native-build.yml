@@ -22,9 +22,8 @@ jobs:
     runs-on: [self-hosted, linux, x64, omnis-ue58]
     timeout-minutes: 240
     env:
-      # Configure UE_ENGINE_ROOT in the self-hosted runner service environment.
-      # Do not store engine paths or license files in repository secrets.
-      UE_ENGINE_ROOT: ${{ vars.UE_ENGINE_ROOT }}
+      # Optional repository variable; runner service environment takes precedence.
+      UE_ENGINE_ROOT_CONFIG: ${{ vars.UE_ENGINE_ROOT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,7 +32,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          : "${UE_ENGINE_ROOT:?Set the repository variable UE_ENGINE_ROOT or runner service environment}"
+          if [[ -z "${UE_ENGINE_ROOT:-}" && -n "${UE_ENGINE_ROOT_CONFIG:-}" ]]; then
+            echo "UE_ENGINE_ROOT=$UE_ENGINE_ROOT_CONFIG" >> "$GITHUB_ENV"
+          fi
+          : "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT in the runner service environment or repository variable}"
           bash CI/Build/preflight_unreal.sh
 
       - name: Build Editor, Game and Dedicated Server
