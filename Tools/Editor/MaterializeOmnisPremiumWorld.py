@@ -74,11 +74,24 @@ def import_obelisk():
 
     task=unreal.AssetImportTask()
     task.set_editor_property("filename",filename)
-    task.set_editor_property("destination_path",ART_ROOT+"/Obelisk")
+    destination = ART_ROOT + "/Obelisk"
+    target = destination + "/Omnis_Obelisk.Omnis_Obelisk"
+    if unreal.EditorAssetLibrary.does_asset_exist(target):
+        existing = unreal.EditorAssetLibrary.load_asset(target)
+        if not existing or not isinstance(existing, unreal.StaticMesh):
+            raise RuntimeError(
+                "Existing Obelisk asset is invalid; refusing overwrite: " + target)
+        log("Preserving existing Obelisk mesh: " + target)
+        return
+
+    task.set_editor_property("destination_path",destination)
     task.set_editor_property("automated",True)
-    task.set_editor_property("replace_existing",True)
+    task.set_editor_property("replace_existing",False)
     task.set_editor_property("save",True)
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    imported = unreal.EditorAssetLibrary.load_asset(target)
+    if not imported or not isinstance(imported, unreal.StaticMesh):
+        raise RuntimeError("Obelisk import did not create a native StaticMesh: " + target)
 
 def spawn_premium(sub,mesh,loc,scale,label,mat,yaw=0):
     actor=base.spawn_mesh(sub,mesh,loc,scale,label,yaw)
