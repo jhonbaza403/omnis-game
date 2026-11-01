@@ -69,3 +69,24 @@ jobs:
           while IFS= read -r script; do
             bash -n "$script"
           done < <(find CI Tools -type f -name '*.sh' -print)
+
+      - name: Check PowerShell script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v pwsh >/dev/null
+          pwsh -NoLogo -NoProfile -Command '
+            $files = Get-ChildItem -Path Tools/Build -Filter *.ps1 -Recurse
+            foreach ($file in $files) {
+              $tokens = $null
+              $errors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                $file.FullName, [ref]$tokens, [ref]$errors
+              ) | Out-Null
+              if ($errors.Count -gt 0) {
+                $errors | ForEach-Object { Write-Error $_ }
+                exit 1
+              }
+            }
+            Write-Host "Parsed $($files.Count) PowerShell build scripts."
+          '
