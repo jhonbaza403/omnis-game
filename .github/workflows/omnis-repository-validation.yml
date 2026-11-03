@@ -28,6 +28,11 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Validate repository tests
         run: python -m unittest discover -s Tests -p 'test_*.py' -v
 
@@ -61,6 +66,14 @@ jobs:
               raise SystemExit(1)
           print(f"Validated {len(paths)} tracked JSON files.")
           PY
+
+      - name: Validate world design catalogs
+        shell: bash
+        run: |
+          set -euo pipefail
+          node CI/World/validate_elemental_regions.mjs
+          node CI/World/validate_vertical_slice.mjs
+          node CI/World/validate_visual_quality_profile.mjs
 
       - name: Check shell-script syntax
         shell: bash

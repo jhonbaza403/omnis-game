@@ -26,6 +26,12 @@
 
 Esta tabla expresa la ubicación de código observada, no certifica que todas las funciones estén completas o conectadas en runtime.
 
+## Catálogos de mundo incorporados
+
+Se seleccionaron de `feature/elemental-regions-world-v1` ocho recursos sin duplicar código de gameplay: tres JSON de diseño, tres validadores Node.js y dos documentos técnicos. Se corrigió el ID de la región del vertical slice a `life` para coincidir con el catálogo y el validador ahora verifica el campo real de resolución 3840×2160.
+
+Los datos describen 12 regiones y 1.608 subregiones planificadas; el vertical slice Valle del Despertar permanece marcado como **diseño no verificado como jugable**. Estos catálogos no crean mapas, jefes, assets ni regiones dentro del motor. El CI estático ejecuta sus validadores de estructura y referencias.
+
 ## Un único flujo de build por sistema operativo
 
 - Linux: `Tools/Build/build_omnis.sh`.
@@ -37,11 +43,16 @@ Esta tabla expresa la ubicación de código observada, no certifica que todas la
 
 La rama de auditoría existente es la única candidata a consolidación y reutiliza PR #1. No se crean ramas o PR adicionales para volver a implementar los mismos sistemas.
 
-Las ramas Unity, Cloudflare, prototipos y experimentos divergentes se conservan como referencias recuperables. No se fusionan en bloque: contienen líneas de motor/configuración distintas y algunas están divergidas o atrasadas respecto a `main`. Cualquier aporte útil se seleccionará por archivo, se asignará a un único propietario funcional y se cubrirá con pruebas antes de integrarlo. No se borran ramas ni recursos durante esta consolidación.
+- `feature/elemental-regions-world-v1`: se incorporaron selectivamente los ocho archivos de datos/documentación/validación mencionados arriba; no se importó su cambio de pipeline GitLab.
+- `feature/omnis-complete-foundation`: se conserva sin merge masivo. Está divergida respecto a esta rama y modifica archivos centrales compartidos de personaje, sesión, autenticación y matchmaking; también añade subsistemas de guardado, persistencia cloud, telemetría, plataforma, logros, localización y rendimiento. Estas aportaciones son trabajo recuperable, pero requieren revisión por grupo funcional, análisis de dependencias y compilación/Automation antes de transferirlas.
+- Las ramas Unity se conservan como referencia del proyecto secundario; no se importan implementaciones paralelas de gameplay en el motor principal.
+- Las ramas antiguas de Cloudflare y prototipos se conservan como referencias, no como infraestructura activa ni como línea de build de Omnis.
+
+Las ramas no se borran ni se sobrescriben. Cualquier aporte adicional se seleccionará por archivo, se asignará a un único propietario funcional y se cubrirá con pruebas antes de integrarlo.
 
 ## Puertas obligatorias antes de promover
 
-1. Validación estática y pruebas Python en el SHA candidato.
+1. Validación estática, pruebas Python y validadores de catálogos en el SHA candidato.
 2. Preflight del motor real UE 5.8.
 3. UHT/UBT de Editor, Game y Dedicated Server.
 4. Mapa nativo existente preservado o mundo creado solo cuando no exista; validación de 63 mallas nativas y 10 materiales.
