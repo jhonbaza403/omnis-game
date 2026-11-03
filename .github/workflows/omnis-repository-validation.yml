@@ -42,6 +42,11 @@ jobs:
       - name: Validate Worker security tests
         run: npm run test:worker
 
+      - name: Validate Wrangler configuration (dry-run only)
+        run: |
+          npm install --no-audit --no-fund
+          npm run cf:check
+
       - name: Validate tracked JSON files
         shell: bash
         run: |
@@ -83,6 +88,7 @@ jobs:
         run: |
           set -euo pipefail
           bash -n Cloudflare/configure_gitlab_oauth.sh
+          bash -n Cloudflare/rotate_runner_delivery_secret.sh
           while IFS= read -r script; do
             bash -n "$script"
           done < <(find CI Tools -type f -name '*.sh' -print)
