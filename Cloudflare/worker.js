@@ -2,9 +2,12 @@ const GITLAB_AUTHORIZE_URL = "https://gitlab.com/oauth/authorize";
 const GITLAB_TOKEN_URL = "https://gitlab.com/oauth/token";
 const GITLAB_API_BASE = "https://gitlab.com/api/v4";
 const OAUTH_STATE_TTL_SECONDS = 600;
+const OAUTH_SESSION_TTL_SECONDS = 1800;
+const RUNNER_TOKEN_TTL_SECONDS = 900;
 const TOKEN_REFRESH_SKEW_SECONDS = 300;
 const OAUTH_STATE_COOKIE = "omnis_oauth_state";
-const OAUTH_CONNECTED_COOKIE = "omnis_oauth_connected";
+const OAUTH_SESSION_COOKIE = "omnis_oauth_session";
+const OAUTH_SESSION_PREFIX = "oauth:session:";
 const TOKEN_KV_KEY = "gitlab:oauth:credential";
 const META_KV_KEY = "gitlab:oauth:metadata";
 const RUNNER_CREDENTIAL_KV_KEY = "gitlab:runner:credential";
@@ -16,7 +19,8 @@ function json(data, status = 200, extra = {}) {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
+      "cache-control": "no-store, max-age=0",
+      "pragma": "no-cache",
       "x-content-type-options": "nosniff",
       "referrer-policy": "no-referrer",
       ...extra
@@ -33,43 +37,60 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-function html(title, body, status = 200) {
-  return new Response(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title>
-</head>
-<body>
-<main style="font-family:system-ui,sans-serif;max-width:720px;margin:10vh auto;padding:24px">
-${body}
-</main>
-</body>
-</html>`, {
-    status,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer"
+function html(title, body, status = 200, extraHeaders = {}) {
+  return new Response(
+    "<!doctype html>\n" +
+    '<html lang="en">\n<head>\n' +
+    '<meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
+    "<title>" + escapeHtml(title) + "</title>\n" +
+    "</head>\n<body>\n" +
+    '<main style="font-family:system-ui,sans-serif;max-width:720px;margin:10vh auto;padding:24px">\n' +
+    body +
+    "\n</main>\n</body>\n</html>",
+    {
+      status,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store, max-age=0",
+        "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        ...extraHeaders
+      }
     }
-  });
+  );
 }
 
 function oauthEnabled(env) {
   return env.GITLAB_OAUTH_ENABLED === "true";
 }
 
-function requireConfig(env) {
+function allowedGitLabUserIds(env) {
+  return new Set(
+    String(env.GITLAB_OAUTH_ALLOWED_USER_IDS ?? "")
+      .split(/[,\s]+/)
+      .map((value) => value.trim())
+      .filter((value) => /^\d+$/.test(value))
+  );
+}
+
+function missingOAuthConfig(env) {
   const missing = [];
   if (!env.GITLAB_OAUTH_CLIENT_ID) missing.push("GITLAB_OAUTH_CLIENT_ID");
   if (!env.GITLAB_OAUTH_CLIENT_SECRET) missing.push("GITLAB_OAUTH_CLIENT_SECRET");
   if (!env.OMNIS_OAUTH_ENCRYPTION_KEY) missing.push("OMNIS_OAUTH_ENCRYPTION_KEY");
   if (!env.OMNIS_OAUTH_KV) missing.push("OMNIS_OAUTH_KV");
   if (!env.GITLAB_OAUTH_REDIRECT_URI) missing.push("GITLAB_OAUTH_REDIRECT_URI");
-  if (missing.length) throw new Error(`OAuth configuration incomplete: ${missing.join(", ")}`);
+  if (allowedGitLabUserIds(env).size === 0) missing.push("GITLAB_OAUTH_ALLOWED_USER_IDS");
+  return missing;
+}
+
+function requireConfig(env) {
+  const missing = missingOAuthConfig(env);
+  if (missing.length) {
+    throw new Error("OAuth configuration incomplete: " + missing.join(", "));
+  }
 }
 
 function cookieMap(request) {
@@ -77,17 +98,44 @@ function cookieMap(request) {
   for (const part of (request.headers.get("cookie") ?? "").split(";")) {
     const i = part.indexOf("=");
     if (i === -1) continue;
-    out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    const name = part.slice(0, i).trim();
+    try {
+      out[name] = decodeURIComponent(part.slice(i + 1).trim());
+    } catch {
+      // Ignore malformed cookie values; never let a bad cookie create a 500.
+    }
   }
   return out;
 }
 
-function cookie(name, value, maxAgeSeconds) {
-  return `${name}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+function cookie(name, value, maxAgeSeconds, sameSite = "Lax") {
+  return name + "=" + encodeURIComponent(value) +
+    "; Max-Age=" + maxAgeSeconds +
+    "; Path=/; HttpOnly; Secure; SameSite=" + sameSite;
 }
 
-function deleteCookie(name) {
-  return `${name}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`;
+function deleteCookie(name, sameSite = "Lax") {
+  return name + "=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=" + sameSite;
+}
+
+function isSameOriginBrowserRequest(request) {
+  const origin = request.headers.get("origin");
+  const requestOrigin = new URL(request.url).origin;
+  if (origin !== requestOrigin) return false;
+  const fetchSite = request.headers.get("sec-fetch-site");
+  return !fetchSite || fetchSite === "same-origin";
+}
+
+function constantTimeEqual(actual, expected) {
+  const left = new TextEncoder().encode(String(actual ?? ""));
+  const right = new TextEncoder().encode(String(expected ?? ""));
+  if (left.length === 0 || right.length === 0) return false;
+  let mismatch = left.length ^ right.length;
+  const length = Math.max(left.length, right.length);
+  for (let index = 0; index < length; index += 1) {
+    mismatch |= (left[index] ?? 0) ^ (right[index] ?? 0);
+  }
+  return mismatch === 0;
 }
 
 function base64FromBytes(bytes) {
@@ -108,7 +156,9 @@ function bytesFromBase64(value) {
 
 async function encryptionKey(env) {
   const raw = bytesFromBase64(env.OMNIS_OAUTH_ENCRYPTION_KEY);
-  if (raw.byteLength !== 32) throw new Error("OMNIS_OAUTH_ENCRYPTION_KEY must decode to exactly 32 bytes");
+  if (raw.byteLength !== 32) {
+    throw new Error("OMNIS_OAUTH_ENCRYPTION_KEY must decode to exactly 32 bytes");
+  }
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 
@@ -116,7 +166,9 @@ async function encryptJson(env, value) {
   const key = await encryptionKey(env);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const plaintext = new TextEncoder().encode(JSON.stringify(value));
-  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext)
+  );
   const packed = new Uint8Array(iv.length + ciphertext.length);
   packed.set(iv, 0);
   packed.set(ciphertext, iv.length);
@@ -137,10 +189,30 @@ function scopes(env) {
   return (env.GITLAB_OAUTH_SCOPES ?? "create_runner manage_runner").trim();
 }
 
+async function getRunnerSession(request, env) {
+  const sessionId = cookieMap(request)[OAUTH_SESSION_COOKIE];
+  if (!sessionId || sessionId.length > 128 || !env.OMNIS_OAUTH_KV) return null;
+
+  const session = await env.OMNIS_OAUTH_KV.get(OAUTH_SESSION_PREFIX + sessionId, "json");
+  if (!session || !session.gitlab_user_id) return null;
+
+  const userId = String(session.gitlab_user_id);
+  if (!allowedGitLabUserIds(env).has(userId)) {
+    await env.OMNIS_OAUTH_KV.delete(OAUTH_SESSION_PREFIX + sessionId);
+    return null;
+  }
+
+  return { sessionId, ...session };
+}
+
 async function startOAuth(env) {
   requireConfig(env);
   const state = crypto.randomUUID();
-  await env.OMNIS_OAUTH_KV.put(`oauth:state:${state}`, "1", { expirationTtl: OAUTH_STATE_TTL_SECONDS });
+  await env.OMNIS_OAUTH_KV.put(
+    "oauth:state:" + state,
+    "1",
+    { expirationTtl: OAUTH_STATE_TTL_SECONDS }
+  );
   const params = new URLSearchParams({
     client_id: env.GITLAB_OAUTH_CLIENT_ID,
     redirect_uri: env.GITLAB_OAUTH_REDIRECT_URI,
@@ -151,7 +223,7 @@ async function startOAuth(env) {
   return new Response(null, {
     status: 302,
     headers: {
-      location: `${GITLAB_AUTHORIZE_URL}?${params.toString()}`,
+      location: GITLAB_AUTHORIZE_URL + "?" + params.toString(),
       "cache-control": "no-store",
       "set-cookie": cookie(OAUTH_STATE_COOKIE, state, OAUTH_STATE_TTL_SECONDS)
     }
@@ -168,12 +240,15 @@ async function exchangeCode(env, code) {
   });
   const response = await fetch(GITLAB_TOKEN_URL, {
     method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      accept: "application/json"
+    },
     body: form
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.access_token) {
-    throw new Error(`GitLab token exchange failed (${response.status})`);
+    throw new Error("GitLab token exchange failed (" + response.status + ")");
   }
   return {
     access_token: payload.access_token,
@@ -195,12 +270,15 @@ async function refreshCredential(env, credential) {
   });
   const response = await fetch(GITLAB_TOKEN_URL, {
     method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      accept: "application/json"
+    },
     body: form
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.access_token) {
-    throw new Error(`GitLab token refresh failed (${response.status})`);
+    throw new Error("GitLab token refresh failed (" + response.status + ")");
   }
   return {
     access_token: payload.access_token,
@@ -232,8 +310,11 @@ async function handleCallback(request, env) {
   if (error) {
     return html(
       "Omnis OAuth",
-      `<h1>GitLab authorization not completed</h1><p>${escapeHtml(errorDescription ?? error)}</p>`,
-      400
+      "<h1>GitLab authorization not completed</h1><p>" +
+        escapeHtml(errorDescription ?? error) +
+        "</p>",
+      400,
+      { "set-cookie": deleteCookie(OAUTH_STATE_COOKIE) }
     );
   }
 
@@ -241,24 +322,48 @@ async function handleCallback(request, env) {
   const code = url.searchParams.get("code");
   const cookies = cookieMap(request);
   if (!state || !code || !cookies[OAUTH_STATE_COOKIE] || state !== cookies[OAUTH_STATE_COOKIE]) {
-    return html("Omnis OAuth", "<h1>Invalid OAuth state</h1><p>The authorization request could not be verified.</p>", 400);
+    return html(
+      "Omnis OAuth",
+      "<h1>Invalid OAuth state</h1><p>The authorization request could not be verified.</p>",
+      400,
+      { "set-cookie": deleteCookie(OAUTH_STATE_COOKIE) }
+    );
   }
 
-  const stateExists = await env.OMNIS_OAUTH_KV.get(`oauth:state:${state}`);
-  await env.OMNIS_OAUTH_KV.delete(`oauth:state:${state}`);
+  const stateExists = await env.OMNIS_OAUTH_KV.get("oauth:state:" + state);
+  await env.OMNIS_OAUTH_KV.delete("oauth:state:" + state);
   if (!stateExists) {
-    return html("Omnis OAuth", "<h1>Expired OAuth state</h1><p>Start the GitLab authorization again.</p>", 400);
+    return html(
+      "Omnis OAuth",
+      "<h1>Expired OAuth state</h1><p>Start the GitLab authorization again.</p>",
+      400,
+      { "set-cookie": deleteCookie(OAUTH_STATE_COOKIE) }
+    );
   }
 
   const credential = await exchangeCode(env, code);
-  const profileResponse = await fetch(`${GITLAB_API_BASE}/user`, {
-    headers: { authorization: `Bearer ${credential.access_token}`, accept: "application/json" }
+  const profileResponse = await fetch(GITLAB_API_BASE + "/user", {
+    headers: {
+      authorization: "Bearer " + credential.access_token,
+      accept: "application/json"
+    }
   });
   const profile = await profileResponse.json().catch(() => null);
   if (!profileResponse.ok || !profile?.id) {
     return html("Omnis OAuth", "<h1>GitLab profile verification failed</h1>", 502);
   }
 
+  const gitLabUserId = String(profile.id);
+  if (!allowedGitLabUserIds(env).has(gitLabUserId)) {
+    return html(
+      "Omnis OAuth",
+      "<h1>This GitLab account is not authorized for runner administration.</h1>",
+      403,
+      { "set-cookie": deleteCookie(OAUTH_STATE_COOKIE) }
+    );
+  }
+
+  const sessionId = crypto.randomUUID();
   await env.OMNIS_OAUTH_KV.put(TOKEN_KV_KEY, await encryptJson(env, credential));
   await env.OMNIS_OAUTH_KV.put(META_KV_KEY, JSON.stringify({
     gitlab_user_id: profile.id,
@@ -267,106 +372,122 @@ async function handleCallback(request, env) {
     connected_at: new Date().toISOString(),
     scopes: scopes(env)
   }));
+  await env.OMNIS_OAUTH_KV.put(
+    OAUTH_SESSION_PREFIX + sessionId,
+    JSON.stringify({
+      gitlab_user_id: gitLabUserId,
+      username: profile.username ?? null,
+      created_at: new Date().toISOString()
+    }),
+    { expirationTtl: OAUTH_SESSION_TTL_SECONDS }
+  );
 
+  const callbackHeaders = new Headers({
+    location: "/runner",
+    "cache-control": "no-store"
+  });
+  callbackHeaders.append("set-cookie", deleteCookie(OAUTH_STATE_COOKIE));
+  callbackHeaders.append(
+    "set-cookie",
+    cookie(OAUTH_SESSION_COOKIE, sessionId, OAUTH_SESSION_TTL_SECONDS, "Lax")
+  );
   return new Response(null, {
     status: 303,
-    headers: {
-      location: "/runner",
-      "cache-control": "no-store",
-      "set-cookie": [
-        deleteCookie(OAUTH_STATE_COOKIE),
-        cookie(OAUTH_CONNECTED_COOKIE, "1", 3600)
-      ]
-    }
+    headers: callbackHeaders
   });
 }
 
 async function oauthStatus(env) {
-  requireConfig(env);
-  const credential = await env.OMNIS_OAUTH_KV.get(TOKEN_KV_KEY);
+  const missing = missingOAuthConfig(env);
+  const credential = env.OMNIS_OAUTH_KV
+    ? await env.OMNIS_OAUTH_KV.get(TOKEN_KV_KEY)
+    : null;
   return json({
     service: "omnis-gitlab-oauth",
-    configured: true,
+    enabled: true,
+    configured: missing.length === 0,
     connected: Boolean(credential),
     scopes: scopes(env),
-    redirect_uri: env.GITLAB_OAUTH_REDIRECT_URI
-  });
+    redirect_uri: env.GITLAB_OAUTH_REDIRECT_URI ?? null
+  }, missing.length === 0 ? 200 : 503);
 }
 
-function runnerPage(request) {
-  const cookies = cookieMap(request);
-  if (cookies[OAUTH_CONNECTED_COOKIE] !== "1") {
-    return html("Omnis Runner", "<h1>GitLab authorization required</h1><p>Authorize GitLab before provisioning the runner.</p><p><a href=\"/oauth/start\">Authorize GitLab</a></p>", 401);
+async function runnerPage(request, env) {
+  const session = await getRunnerSession(request, env);
+  if (!session) {
+    return html(
+      "Omnis Runner",
+      '<h1>GitLab authorization required</h1><p>Sign in with an allowlisted GitLab account before provisioning a runner.</p><p><a href="/oauth/start">Authorize GitLab</a></p>',
+      401
+    );
   }
 
-  return new Response(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Omnis Runner Control</title>
-</head>
-<body>
-<main style="font-family:system-ui,sans-serif;max-width:820px;margin:8vh auto;padding:24px">
-<h1>Omnis Runner Control</h1>
-<p>Project runner: <strong>omnis-ue58-linux</strong></p>
-<p>Tag: <strong>omnis-ci-linux</strong></p>
-<p>Target: Unreal Engine 5.8.3 / Docker / Linux x86_64</p>
-<button id="provision" style="padding:12px 18px">Create project runner</button>
-<pre id="output" style="white-space:pre-wrap;background:#111;color:#eee;padding:16px;margin-top:20px;border-radius:8px"></pre>
-<script>
-const button=document.getElementById("provision");
-const output=document.getElementById("output");
-button.addEventListener("click",async()=>{
-  button.disabled=true;
-  output.textContent="Creating runner...";
-  try{
-    const response=await fetch("/runner/provision",{method:"POST",headers:{"Origin":location.origin}});
-    const data=await response.json();
-    output.textContent=JSON.stringify(data,null,2);
-  }catch(error){
-    output.textContent=String(error);
-  }finally{
-    button.disabled=false;
-  }
-});
-</script>
-</main>
-</body>
-</html>`, {
-    status: 200,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer"
+  return new Response(
+    '<!doctype html>\n<html lang="en">\n<head>\n' +
+    '<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
+    "<title>Omnis Runner Control</title>\n</head>\n<body>\n" +
+    '<main style="font-family:system-ui,sans-serif;max-width:820px;margin:8vh auto;padding:24px">\n' +
+    "<h1>Omnis Runner Control</h1>\n" +
+    "<p>Project runner: <strong>omnis-ue58-linux</strong></p>\n" +
+    "<p>Tag: <strong>omnis-ci-linux</strong></p>\n" +
+    "<p>Target: Unreal Engine 5.8 / Linux x86_64</p>\n" +
+    "<p>Registration credentials are not returned to this browser.</p>\n" +
+    '<button id="provision" style="padding:12px 18px">Create project runner</button>\n' +
+    '<button id="logout" style="padding:12px 18px;margin-left:8px">Sign out</button>\n' +
+    '<pre id="output" style="white-space:pre-wrap;background:#111;color:#eee;padding:16px;margin-top:20px;border-radius:8px"></pre>\n' +
+    "<script>\n" +
+    'const button=document.getElementById("provision");\n' +
+    'const logout=document.getElementById("logout");\n' +
+    'const output=document.getElementById("output");\n' +
+    'button.addEventListener("click",async()=>{\n' +
+    '  button.disabled=true; output.textContent="Creating runner...";\n' +
+    '  try{\n' +
+    '    const response=await fetch("/runner/provision",{method:"POST",headers:{"Origin":location.origin,"Content-Type":"application/json"},body:"{}"});\n' +
+    '    const data=await response.json();\n' +
+    '    output.textContent=JSON.stringify(data,null,2);\n' +
+    '  }catch(error){output.textContent="Runner provisioning request failed.";}\n' +
+    '  finally{button.disabled=false;}\n' +
+    '});\n' +
+    'logout.addEventListener("click",async()=>{\n' +
+    '  logout.disabled=true;\n' +
+    '  try{await fetch("/runner/logout",{method:"POST",headers:{"Origin":location.origin,"Content-Type":"application/json"},body:"{}"});location.assign("/");}\n' +
+    '  catch(error){output.textContent="Sign-out request failed.";logout.disabled=false;}\n' +
+    '});\n' +
+    "</script>\n" +
+    "</main>\n</body>\n</html>",
+    {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store, max-age=0",
+        "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer"
+      }
     }
-  });
+  );
 }
 
 async function provisionProjectRunner(request, env) {
   requireConfig(env);
-
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const origin = request.headers.get("origin");
-  const requestOrigin = new URL(request.url).origin;
-  if (origin !== requestOrigin) {
-    return json({ error: "Origin check failed" }, 403);
+  if (!isSameOriginBrowserRequest(request)) {
+    return json({ error: "Same-origin request required" }, 403);
   }
 
-  const cookies = cookieMap(request);
-  if (cookies[OAUTH_CONNECTED_COOKIE] !== "1") {
-    return json({ error: "GitLab OAuth session required" }, 401);
-  }
+  const session = await getRunnerSession(request, env);
+  if (!session) return json({ error: "Authorized GitLab session required" }, 401);
 
-  const existing = await env.OMNIS_OAUTH_KV.get(RUNNER_CREDENTIAL_KV_KEY);
-  if (existing) {
-    const meta = await env.OMNIS_OAUTH_KV.get(RUNNER_META_KV_KEY, "json");
+  const existingCredential = await env.OMNIS_OAUTH_KV.get(RUNNER_CREDENTIAL_KV_KEY);
+  const existingMeta = await env.OMNIS_OAUTH_KV.get(RUNNER_META_KV_KEY, "json");
+  if (existingMeta?.id || existingCredential) {
     return json({
       service: "omnis-gitlab-runner",
-      status: "already_provisioned",
-      runner: meta ?? null
+      status: existingCredential ? "already_provisioned_pending_secure_delivery" : "runner_exists_token_unavailable",
+      runner: existingMeta ?? null,
+      token_delivery: existingCredential
+        ? "Use the authenticated out-of-band delivery endpoint from a trusted terminal."
+        : "Do not create a duplicate runner. Revoke or recover the existing runner through GitLab administration."
     });
   }
 
@@ -382,15 +503,15 @@ async function provisionProjectRunner(request, env) {
     tag_list: "omnis-ci-linux",
     run_untagged: "false",
     locked: "true",
-    access_level: "not_protected",
+    access_level: "ref_protected",
     paused: "false",
-    maintenance_note: "Omnis UE 5.8.3 Linux Docker runner"
+    maintenance_note: "Omnis Unreal Engine 5.8 Linux runner"
   });
 
-  const response = await fetch(`${GITLAB_API_BASE}/user/runners`, {
+  const response = await fetch(GITLAB_API_BASE + "/user/runners", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${credential.access_token}`,
+      authorization: "Bearer " + credential.access_token,
       "content-type": "application/x-www-form-urlencoded",
       accept: "application/json"
     },
@@ -405,51 +526,52 @@ async function provisionProjectRunner(request, env) {
     }, 502);
   }
 
+  const createdAt = new Date().toISOString();
   await env.OMNIS_OAUTH_KV.put(
     RUNNER_CREDENTIAL_KV_KEY,
-    await encryptJson(env, { id: payload.id, token: payload.token })
+    await encryptJson(env, { id: payload.id, token: payload.token }),
+    { expirationTtl: RUNNER_TOKEN_TTL_SECONDS }
   );
-  await env.OMNIS_OAUTH_KV.put(
-    RUNNER_META_KV_KEY,
-    JSON.stringify({
-      id: payload.id,
-      description: "omnis-ue58-linux",
-      tags: ["omnis-ci-linux"],
-      project_id: Number(OMNIS_PROJECT_ID),
-      created_at: new Date().toISOString()
-    })
-  );
+  const runnerMeta = {
+    id: payload.id,
+    description: "omnis-ue58-linux",
+    tags: ["omnis-ci-linux"],
+    project_id: Number(OMNIS_PROJECT_ID),
+    requested_by_gitlab_user_id: String(session.gitlab_user_id),
+    created_at: createdAt,
+    token_delivery_expires_at: new Date(Date.now() + RUNNER_TOKEN_TTL_SECONDS * 1000).toISOString()
+  };
+  await env.OMNIS_OAUTH_KV.put(RUNNER_META_KV_KEY, JSON.stringify(runnerMeta));
 
   return json({
     service: "omnis-gitlab-runner",
     status: "provisioned",
-    runner: {
-      id: payload.id,
-      description: "omnis-ue58-linux",
-      tags: ["omnis-ci-linux"],
-      project_id: Number(OMNIS_PROJECT_ID)
-    },
-    registration_token: payload.token,
-    warning: "The runner authentication token is returned only in this response. Store it securely and never commit it."
+    runner: runnerMeta,
+    token_delivery: "A short-lived authenticated terminal request is required. The browser response never contains the runner token."
   });
 }
 
-async function runnerStatus(env) {
+async function runnerStatus(request, env) {
   requireConfig(env);
+  const session = await getRunnerSession(request, env);
+  if (!session) return json({ error: "Authorized GitLab session required" }, 401);
+
   const credential = await getCredential(env);
   if (!credential) return json({ service: "omnis-gitlab-runner", connected: false }, 401);
 
   const response = await fetch(
-    `${GITLAB_API_BASE}/projects/${OMNIS_PROJECT_ID}/runners?type=project_type`,
+    GITLAB_API_BASE + "/projects/" + OMNIS_PROJECT_ID + "/runners?type=project_type",
     {
       headers: {
-        authorization: `Bearer ${credential.access_token}`,
+        authorization: "Bearer " + credential.access_token,
         accept: "application/json"
       }
     }
   );
   const payload = await response.json().catch(() => null);
-  if (!response.ok) return json({ error: "GitLab runner status failed", upstream_status: response.status }, 502);
+  if (!response.ok) {
+    return json({ error: "GitLab runner status failed", upstream_status: response.status }, 502);
+  }
 
   return json({
     service: "omnis-gitlab-runner",
@@ -468,6 +590,60 @@ async function runnerStatus(env) {
   });
 }
 
+async function logoutRunnerSession(request, env) {
+  if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (!isSameOriginBrowserRequest(request)) {
+    return json({ error: "Same-origin request required" }, 403);
+  }
+  const session = await getRunnerSession(request, env);
+  if (session) {
+    await env.OMNIS_OAUTH_KV.delete(OAUTH_SESSION_PREFIX + session.sessionId);
+  }
+  return json(
+    { service: "omnis-gitlab-oauth", signed_out: true },
+    200,
+    { "set-cookie": deleteCookie(OAUTH_SESSION_COOKIE, "Strict") }
+  );
+}
+
+async function deliverRunnerRegistrationToken(request, env) {
+  if (!oauthEnabled(env)) return json({ error: "Runner Control is disabled" }, 503);
+  if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (request.headers.has("origin") || request.headers.has("cookie")) {
+    return json({ error: "Machine-to-machine delivery only" }, 403);
+  }
+
+  const deliverySecret = env.OMNIS_RUNNER_DELIVERY_SECRET;
+  if (!deliverySecret || deliverySecret.length < 32) {
+    return json({ error: "Runner token delivery is not configured" }, 503);
+  }
+  const authorization = request.headers.get("authorization") ?? "";
+  if (!constantTimeEqual(authorization, "Bearer " + deliverySecret)) {
+    return json({ error: "Runner delivery authorization failed" }, 401);
+  }
+
+  if (!env.OMNIS_OAUTH_KV) {
+    return json({ error: "Runner credential storage is unavailable" }, 503);
+  }
+  const encrypted = await env.OMNIS_OAUTH_KV.get(RUNNER_CREDENTIAL_KV_KEY);
+  if (!encrypted) {
+    return json({ error: "No unexpired runner registration token is available" }, 404);
+  }
+
+  const runnerCredential = await decryptJson(env, encrypted);
+  if (!runnerCredential?.id || !runnerCredential?.token) {
+    return json({ error: "Stored runner credential is invalid" }, 500);
+  }
+
+  return json({
+    service: "omnis-gitlab-runner",
+    runner_id: runnerCredential.id,
+    registration_token: runnerCredential.token,
+    expires_in_seconds: RUNNER_TOKEN_TTL_SECONDS,
+    warning: "Store this response only in a protected secret store. Do not print it or include it in logs, tickets, screenshots, or shell history."
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -475,6 +651,7 @@ export default {
 
     try {
       if (url.pathname === "/health") {
+        const missing = missingOAuthConfig(env);
         return json({
           service: "omnis-cloudflare-worker",
           game: "Omnis: El Último Ciclo",
@@ -482,15 +659,17 @@ export default {
           status: "ok",
           oauth: {
             enabled: oauthEnabled(env),
-            configured: oauthEnabled(env) && Boolean(
-              env.GITLAB_OAUTH_CLIENT_ID &&
-              env.GITLAB_OAUTH_CLIENT_SECRET &&
-              env.OMNIS_OAUTH_ENCRYPTION_KEY &&
-              env.OMNIS_OAUTH_KV &&
-              env.GITLAB_OAUTH_REDIRECT_URI
+            configured: missing.length === 0,
+            runner_token_delivery_ready: Boolean(
+              env.OMNIS_RUNNER_DELIVERY_SECRET &&
+              env.OMNIS_RUNNER_DELIVERY_SECRET.length >= 32
             )
           }
         });
+      }
+
+      if (url.pathname === "/runner/registration-token" && request.method === "POST") {
+        return await deliverRunnerRegistrationToken(request, env);
       }
 
       if (oauthEnabled(env) && url.pathname === "/oauth/start" && request.method === "GET") {
@@ -509,7 +688,7 @@ export default {
       }
 
       if (oauthEnabled(env) && url.pathname === "/runner" && request.method === "GET") {
-        return runnerPage(request);
+        return await runnerPage(request, env);
       }
 
       if (oauthEnabled(env) && url.pathname === "/runner/provision" && request.method === "POST") {
@@ -517,7 +696,11 @@ export default {
       }
 
       if (oauthEnabled(env) && url.pathname === "/runner/status" && request.method === "GET") {
-        return await runnerStatus(env);
+        return await runnerStatus(request, env);
+      }
+
+      if (oauthEnabled(env) && url.pathname === "/runner/logout" && request.method === "POST") {
+        return await logoutRunnerSession(request, env);
       }
 
       if (url.pathname === "/") {
@@ -538,7 +721,10 @@ export default {
 
       return new Response("Omnis Worker: Not Found", {
         status: 404,
-        headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" }
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "no-store"
+        }
       });
     } catch (error) {
       console.error(JSON.stringify({
@@ -553,10 +739,13 @@ export default {
   async queue(batch) {
     for (const message of batch.messages) {
       console.log(JSON.stringify({
-        event: "queue_message",
+        event: "queue_message_processed",
         queue: batch.queue,
         messageId: message.id,
-        body: message.body
+        attempts: Number.isInteger(message.attempts) ? message.attempts : null,
+        timestamp: message.timestamp instanceof Date
+          ? message.timestamp.toISOString()
+          : null
       }));
     }
   }

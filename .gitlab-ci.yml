@@ -3,7 +3,8 @@ stages:
   - build
   - deploy
 
-# Linux jobs use the project-owned Docker runner to avoid shared-runner minute quotas.
+# GitLab CI is auxiliary. Unreal Engine 5.8 on GitHub Actions is the official game release gate.
+# Unity 6.3 is retained as a secondary reference project; its builds are optional.
 default:
   tags:
     - omnis-linux-docker
@@ -72,8 +73,11 @@ unity_build_linux:
         - CI/Runner/**/*
         - CI/Packaging/**/*
         - .gitlab-ci.yml
+      when: manual
+      allow_failure: true
 
-# Manual Windows release: requires a separate registered Windows shell runner.
+
+# Manual Windows Unity reference build; not part of the official Unreal release pipeline.
 unity_build_windows:
   stage: build
   tags:
@@ -122,6 +126,7 @@ cloudflare_validate:
   image: node:24-alpine
   script:
     - npm install --no-audit --no-fund
+    - npm run test:worker
     - npm run cf:check
   rules:
     - changes:
@@ -144,11 +149,12 @@ cloudflare_preview:
     - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CLOUDFLARE_API_TOKEN'
       when: manual
 
+# Manual deployment of the auxiliary Worker only; this is not a game release.
 cloudflare_deploy_production:
   stage: deploy
   image: node:24-alpine
   environment:
-    name: production
+    name: cloudflare-operations
   script:
     - test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID CI/CD variable is required." >&2; exit 1)
     - test -n "$CLOUDFLARE_API_TOKEN" || (echo "CLOUDFLARE_API_TOKEN CI/CD variable is required." >&2; exit 1)

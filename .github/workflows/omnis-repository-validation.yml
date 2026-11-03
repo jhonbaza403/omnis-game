@@ -31,13 +31,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Validate repository tests
         run: python -m unittest discover -s Tests -p 'test_*.py' -v
 
       - name: Validate Unity project layout
         run: sh CI/Unity/validate_project.sh
+
+      - name: Validate Worker security tests
+        run: npm run test:worker
 
       - name: Validate tracked JSON files
         shell: bash
@@ -79,6 +82,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          bash -n Cloudflare/configure_gitlab_oauth.sh
           while IFS= read -r script; do
             bash -n "$script"
           done < <(find CI Tools -type f -name '*.sh' -print)
