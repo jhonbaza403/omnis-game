@@ -1,10 +1,10 @@
-# Build Omnis targets with a local Unreal Engine 5.8 installation.
-# UBT invokes UnrealHeaderTool as part of each target build.
 [CmdletBinding()]
 param(
     [string]$EngineRoot = $env:UE_ENGINE_ROOT,
     [ValidateSet("Development", "DebugGame", "Shipping")]
     [string]$Configuration = "Development",
+    [ValidateSet("Win64")]
+    [string]$Platform = "Win64",
     [switch]$IncludeServer
 )
 
@@ -28,17 +28,17 @@ if ([int]$version.MajorVersion -ne 5 -or [int]$version.MinorVersion -ne 8) {
     throw "Expected Unreal Engine 5.8.x; found $($version.MajorVersion).$($version.MinorVersion).$($version.PatchVersion)."
 }
 
-$runId = Get-Date -Format "yyyyMMddTHHmmssfffZ"
+$runId = [DateTime]::UtcNow.ToString("yyyyMMddTHHmmssfffZ")
 $logDirectory = Join-Path $repoRoot "Saved/Logs"
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 $logFile = Join-Path $logDirectory "omnis_ue58_windows_$runId.log"
 
 $targets = @(
-    @{ Name = "OmnisEditor"; Platform = "Win64" },
-    @{ Name = "Omnis"; Platform = "Win64" }
+    @{ Name = "OmnisEditor"; Platform = $Platform },
+    @{ Name = "Omnis"; Platform = $Platform }
 )
 if ($IncludeServer) {
-    $targets += @{ Name = "OmnisServer"; Platform = "Win64" }
+    $targets += @{ Name = "OmnisServer"; Platform = $Platform }
 }
 
 "Omnis UE 5.8 build | Version $($version.MajorVersion).$($version.MinorVersion).$($version.PatchVersion) | $runId" |

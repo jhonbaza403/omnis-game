@@ -20,6 +20,17 @@ FAMILIES = {
 def log(message):
     unreal.log("[OMNIS CONTENT] " + message)
 
+def ensure_map_absent():
+    """Fail closed if the destination level already exists on disk or in the asset registry."""
+    map_file = PROJECT_ROOT + "Content/Omnis/Maps/Omnis_OpenWorld.umap"
+    if (
+        unreal.Paths.file_exists(map_file)
+        or unreal.EditorAssetLibrary.does_asset_exist(MAP_PATH)
+    ):
+        raise RuntimeError(
+            "Refusing to overwrite existing Omnis world map: " + map_file
+        )
+
 def source_file(family, name):
     return PROJECT_ROOT + "Content/Omnis/SourceAssets/" + family + "/" + name + ".obj"
 
@@ -186,6 +197,7 @@ def add_lighting(subsystem):
     fog.set_actor_label("Omnis_AtmosphereFog")
 
 def main():
+    ensure_map_absent()
     ensure_dirs()
     import_all()
     subsystem=unreal.get_editor_subsystem(unreal.EditorActorSubsystem)

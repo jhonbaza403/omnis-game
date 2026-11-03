@@ -2,12 +2,6 @@ name: Omnis Unreal Engine 5.8 Native Build
 
 on:
   workflow_dispatch:
-    inputs:
-      materialize_world:
-        description: "Create the native Open World map only when it does not already exist"
-        required: true
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -18,7 +12,7 @@ concurrency:
 
 jobs:
   ue58-linux:
-    name: UE 5.8 UHT, Editor, Game, Server and Automation
+    name: UE 5.8 build, world, automation, package and smoke tests
     runs-on: [self-hosted, linux, x64, omnis-ue58]
     timeout-minutes: 240
     env:
@@ -42,22 +36,52 @@ jobs:
         shell: bash
         run: bash Tools/Build/build_omnis.sh
 
-      - name: Optional native world materialization
-        if: ${{ inputs.materialize_world }}
+      - name: Preserve existing world or materialize only when absent
         shell: bash
-        run: bash CI/Build/generate_content.sh
+        run: |
+          set -euo pipefail
+          map_file="Content/Omnis/Maps/Omnis_OpenWorld.umap"
+          if [[ ! -s "$map_file" ]]; then
+            bash CI/Build/generate_content.sh
+          else
+            echo "Existing Omnis_OpenWorld.umap detected; it will be preserved."
+          fi
+          [[ -s "$map_file" ]] || { echo "Native Omnis world map is missing." >&2; exit 1; }
+          native_assets="$(find Content/Omnis/Art -type f -name '*.uasset' | wc -l | tr -d ' ')"
+          native_materials="$(find Content/Omnis/Materials -type f -name '*.uasset' | wc -l | tr -d ' ')"
+          [[ "$native_assets" -ge 63 ]] || { echo "Expected at least 63 native art assets; found $native_assets." >&2; exit 1; }
+          [[ "$native_materials" -ge 10 ]] || { echo "Expected at least 10 native materials; found $native_materials." >&2; exit 1; }
+          echo "Validated map, native assets=$native_assets, native materials=$native_materials."
 
       - name: Run Unreal Automation
         shell: bash
         run: bash CI/Tests/run_unreal_automation.sh
 
-      - name: Preserve build and automation logs
+      - name: Package Linux client without replacing earlier packages
+        shell: bash
+        run: bash Tools/Build/package_omnis.sh
+
+      - name: Smoke test packaged Linux client
+        shell: bash
+        run: bash CI/Tests/smoke_client.sh
+
+      - name: Package Linux dedicated server without replacing earlier packages
+        shell: bash
+        run: bash Tools/Build/package_omnis_server.sh
+
+      - name: Smoke test packaged dedicated server
+        shell: bash
+        run: bash CI/Tests/smoke_dedicated_server.sh
+
+      - name: Preserve build, test and package evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: omnis-ue58-native-build-${{ github.run_id }}
+          name: omnis-ue58-certified-candidate-${{ github.run_id }}
           path: |
             Saved/Logs/
             Saved/Automation/
+            Build/Omnis/
+            Build/OmnisServer/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 30

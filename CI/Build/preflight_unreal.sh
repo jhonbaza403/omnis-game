@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
 
-if [[ -z "$UE_ENGINE_ROOT" ]]; then
+if [[ -z "${UE_ENGINE_ROOT:-}" ]]; then
   echo "UE_ENGINE_ROOT must point to an Unreal Engine 5.8.x installation." >&2
   exit 1
 fi

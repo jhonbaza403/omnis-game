@@ -162,6 +162,7 @@ def extra_dressing(sub,m,mat):
             "Premium_Cycle_Landmark_%02d"%i,mat["Obelisk"])
 
 def main():
+    base.ensure_map_absent()
     base.ensure_dirs()
     base.import_all()
     import_obelisk()
@@ -205,13 +206,15 @@ def main():
         1 for f in COLORS
         if unreal.EditorAssetLibrary.load_asset(
             MAT_ROOT+"/M_"+f+"_Premium"))
+    mat_count += int(
+        unreal.EditorAssetLibrary.does_asset_exist(MAT_ROOT + "/M_Water_Premium"))
 
     if not unreal.Paths.file_exists(
         ROOT+"Content/Omnis/Maps/Omnis_OpenWorld.umap"):
         raise RuntimeError("Native .umap missing")
     if found<expected:
         raise RuntimeError("Native mesh library incomplete")
-    if mat_count<9:
+    if mat_count<10:
         raise RuntimeError("Premium materials incomplete")
     if count<250:
         raise RuntimeError("World dressing incomplete: %d actors"%count)
@@ -221,5 +224,5 @@ def main():
         %(found,expected,mat_count,count))
     log("REAL PREMIUM WORLD MATERIALIZED")
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
