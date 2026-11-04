@@ -17,19 +17,72 @@ jobs:
     timeout-minutes: 240
     env:
       # Optional repository variable; runner service environment takes precedence.
-      UE_ENGINE_ROOT_CONFIG: ${{ vars.UE_ENGINE_ROOT }}
+      UE_ENGINE_ROOT_CONFIG: \${{ vars.UE_ENGINE_ROOT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Omnis source OBJ files are stored in Git LFS. Download real mesh
+          # contents before Unreal's content materializer is allowed to run.
+          lfs: true
+
+      - name: Verify Git LFS source meshes are hydrated
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+
+          source_root = Path("Content/Omnis/SourceAssets")
+          expected_minimum = 63
+          pointer_header = b"version https://git-lfs.github.com/spec/v1"
+
+          if not source_root.is_dir():
+              print(f"Missing LFS source directory: {source_root}", file=sys.stderr)
+              raise SystemExit(1)
+
+          obj_files = sorted(source_root.rglob("*.obj"))
+          if len(obj_files) < expected_minimum:
+              print(
+                  f"Expected at least {expected_minimum} source OBJ files; "
+                  f"found {len(obj_files)}.",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
+
+          pointers = []
+          for path in obj_files:
+              try:
+                  with path.open("rb") as stream:
+                      first_line = stream.readline(256).rstrip(b"\r\n")
+              except OSError as exc:
+                  print(f"Cannot read {path}: {exc}", file=sys.stderr)
+                  raise SystemExit(1)
+              if first_line == pointer_header:
+                  pointers.append(str(path))
+
+          if pointers:
+              print(
+                  "Git LFS pointers were checked out instead of real OBJ data:",
+                  file=sys.stderr,
+              )
+              print("\n".join(pointers), file=sys.stderr)
+              raise SystemExit(1)
+
+          print(
+              f"Git LFS hydration verified: {len(obj_files)} real OBJ source files."
+          )
+          PY
 
       - name: Verify Unreal Engine 5.8 installation
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${UE_ENGINE_ROOT:-}" && -n "${UE_ENGINE_ROOT_CONFIG:-}" ]]; then
+          if [[ -z "\${UE_ENGINE_ROOT:-}" && -n "\${UE_ENGINE_ROOT_CONFIG:-}" ]]; then
             echo "UE_ENGINE_ROOT=$UE_ENGINE_ROOT_CONFIG" >> "$GITHUB_ENV"
           fi
-          : "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT in the runner service environment or repository variable}"
+          : "\${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT in the runner service environment or repository variable}"
           bash CI/Build/preflight_unreal.sh
 
       - name: Build Editor, Game and Dedicated Server
@@ -77,7 +130,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: omnis-ue58-certified-candidate-${{ github.run_id }}
+          name: omnis-ue58-certified-candidate-\${{ github.run_id }}
           path: |
             Saved/Logs/
             Saved/Automation/
