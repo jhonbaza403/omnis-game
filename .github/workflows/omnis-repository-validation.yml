@@ -1,0 +1,115 @@
+name: Omnis Repository Validation
+
+on:
+  push:
+    branches: [main, "audit/**", "fix/**", "feat/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnis-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-validation:
+    name: Static checks (no engine license required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Validate repository tests
+        run: python -m unittest discover -s Tests -p 'test_*.py' -v
+
+      - name: Validate Unity project layout
+        run: sh CI/Unity/validate_project.sh
+
+      - name: Validate Worker security tests
+        run: npm run test:worker
+
+      - name: Validate Wrangler configuration (dry-run only)
+        run: |
+          npm install --no-audit --no-fund
+          npm run cf:check
+
+      - name: Validate tracked JSON files
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          paths = subprocess.run(
+              ["git", "ls-files", "*.json"],
+              check=True,
+              text=True,
+              capture_output=True,
+          ).stdout.splitlines()
+          failures = []
+          for raw_path in paths:
+              path = Path(raw_path)
+              try:
+                  json.loads(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  failures.append(f"{path}: {exc}")
+          if failures:
+              print("\n".join(failures), file=sys.stderr)
+              raise SystemExit(1)
+          print(f"Validated {len(paths)} tracked JSON files.")
+          PY
+
+      - name: Validate world design catalogs
+        shell: bash
+        run: |
+          set -euo pipefail
+          node CI/World/validate_elemental_regions.mjs
+          node CI/World/validate_vertical_slice.mjs
+          node CI/World/validate_visual_quality_profile.mjs
+
+      - name: Check shell-script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n Cloudflare/configure_gitlab_oauth.sh
+          bash -n Cloudflare/rotate_runner_delivery_secret.sh
+          while IFS= read -r script; do
+            bash -n "$script"
+          done < <(find CI Tools -type f -name '*.sh' -print)
+
+      - name: Check PowerShell script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v pwsh >/dev/null
+          pwsh -NoLogo -NoProfile -Command '
+            $files = Get-ChildItem -Path Tools/Build -Filter *.ps1 -Recurse
+            foreach ($file in $files) {
+              $tokens = $null
+              $errors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                $file.FullName, [ref]$tokens, [ref]$errors
+              ) | Out-Null
+              if ($errors.Count -gt 0) {
+                $errors | ForEach-Object { Write-Error $_ }
+                exit 1
+              }
+            }
+            Write-Host "Parsed $($files.Count) PowerShell build scripts."
+          '

@@ -1,45 +1,37 @@
-# Unreal Engine 5.8 — build real
+# Flujo canónico de compilación — Unreal Engine 5.8
 
-El proyecto debe compilarse contra una instalación real de **Unreal Engine 5.8.x**. El runner compartido que ejecuta validaciones Python no contiene Unreal Engine, por lo que no debe usarse para la prueba C++/UHT/UBT.
+Unreal Engine 5.8.x es el motor principal. Unity 6.3 se conserva en `UnityProject/` como proyecto secundario de referencia; no se deben duplicar allí las nuevas implementaciones de gameplay.
 
-## Pipeline de GitLab
+## Entradas canónicas
 
-El job `unreal_build` usa exclusivamente el tag:
-`unreal58-linux`
+- Linux: `Tools/Build/build_omnis.sh`. Valida UE 5.8 y construye UHT, Editor, Game y Dedicated Server mediante UBT.
+- Windows: `Tools/Build/build_omnis_windows.ps1`. Es la única implementación Windows de compilación; construye Editor y Game y añade Server con `-IncludeServer`.
+- Compatibilidad: `Tools/Build/compile_omnis.ps1` conserva el nombre y los parámetros históricos, pero delega todo en `build_omnis_windows.ps1`. No contiene una segunda implementación UHT/UBT.
 
-La máquina del runner debe tener:
+UBT ejecuta UHT dentro del flujo normal de compilación. No se mantiene una secuencia Windows paralela que vuelva a invocar el mismo proceso.
 
-- Unreal Engine 5.8.x instalado de forma válida.
-- `UE_ENGINE_ROOT` definido en el entorno del runner, apuntando a la raíz que contiene `Engine/`.
-- `RunUBT.sh` ejecutable en `$UE_ENGINE_ROOT/Engine/Build/BatchFiles/`.
-- Toolchain C++ de Linux compatible con UE 5.8.
+## Materialización protegida
 
-El job es **manual** y depende de `python_tests`. Si no existe un runner con el tag `unreal58-linux`, el job debe quedar pendiente y no ejecutarse en el runner genérico.
+El mapa `Content/Omnis/Maps/Omnis_OpenWorld.umap` se crea solo cuando no existe. Las dos entradas Python comprueban la ausencia del mapa antes de importar o crear contenido. Las mallas nativas existentes se validan y conservan; los OBJ se importan con `replace_existing=False`.
 
-## Secuencia de build
+No se reemplazan automáticamente mapas ni assets revisados. Una migración de un mapa existente requiere un procedimiento separado, respaldado y revisado.
 
-1. Comprueba que el motor sea 5.8.x.
-2. Ejecuta **UnrealHeaderTool** mediante el modo UHT de UBT para `OmnisEditor`.
-3. Verifica que UHT haya generado código de reflexión.
-4. Ejecuta **UBT + compilación + enlace** del target `OmnisEditor Linux Development`.
-5. Ejecuta **UBT + compilación + enlace** del target `Omnis Linux Development`.
-6. Comprueba que existan binarios/módulos de Omnis bajo `Binaries/`.
-7. Conserva `Saved/Logs/omnis_ue58_build.log` como artefacto del job.
+## Certificación nativa
 
-Epic documenta que UHT forma parte del flujo de compilación de Unreal y que UBT invoca UHT antes de compilar el código generado; los targets de proyecto se definen mediante `.Target.cs` y los módulos mediante `.Build.cs`.
-https://dev.epicgames.com/documentation/unreal-engine/unreal-header-tool-for-unreal-engine
-https://dev.epicgames.com/documentation/en-us/unreal-engine/compiling-game-projects-in-unreal-engine-using-cplusplus
+El workflow manual `.github/workflows/omnis-ue58-native-build.yml` requiere un runner Linux autohospedado con etiquetas `self-hosted, linux, x64, omnis-ue58`, Unreal Engine 5.8.x y `UE_ENGINE_ROOT`.
 
-## Ejecución local Windows
+Una ejecución completa debe superar, en el mismo SHA:
 
-Use:
-`Tools/Build/compile_omnis.ps1`
+1. preflight y versión del motor;
+2. UHT/UBT para Editor, Game y Dedicated Server;
+3. validación o materialización protegida del mapa y assets nativos;
+4. Unreal Automation Tests;
+5. empaquetado del cliente Linux y del servidor dedicado;
+6. smoke test de arranque del cliente y del servidor;
+7. conservación de logs, reportes y paquetes como artefactos.
 
-Ejemplo:
-`.\Tools\Build\compile_omnis.ps1 -UnrealRoot "C:\Program Files\Epic Games\UE_5.8"`
+Los directorios de paquetes son únicos por ejecución. Los scripts se niegan a sobrescribir una carpeta de salida existente.
 
-El script ejecuta UHT, luego UBT para Editor y Game. No declara una compilación exitosa hasta que los comandos reales de Unreal terminan con código 0.
+## Alcance de los resultados
 
-## Importante
-
-No se deben crear mocks, migraciones ficticias, binarios falsos ni una imagen de contenedor que pretenda contener UE 5.8 sin una instalación válida del motor. Para un build real de proyecto C++, la máquina ejecutora debe disponer del motor y del toolchain correspondiente.
+El workflow de validación estática no instala Unreal Engine y no sustituye el build nativo. Un resultado estático verde no certifica C++, UHT/UBT, importación de assets, Automation, empaquetado ni lanzamiento. No promover a `main` hasta obtener evidencia completa del workflow nativo en el commit candidato exacto.

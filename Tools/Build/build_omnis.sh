@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 PROJECT_FILE="$ROOT/Omnis.uproject"
-LOG_FILE="$ROOT/Saved/Logs/omnis_ue58_build.log"
+RUN_ID="${GITHUB_RUN_ID:-${CI_JOB_ID:-$(date -u +%Y%m%dT%H%M%SZ)}}"
+LOG_FILE="$ROOT/Saved/Logs/omnis_ue58_build_$RUN_ID.log"
 
 : "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT to the Unreal Engine 5.8 installation on the dedicated runner}"
 
@@ -80,15 +81,22 @@ echo ">>> PHASE 3/4 — UBT + compile + link Game target" | tee -a "$LOG_FILE"
 run_step "UBT Omnis Linux Development" "$RUN_UBT" Omnis Linux Development "-Project=$PROJECT_FILE" -WaitMutex
 
 echo "" | tee -a "$LOG_FILE"
-echo ">>> PHASE 4/4 — output verification" | tee -a "$LOG_FILE"
+echo ">>> PHASE 4/5 — UBT + compile + link dedicated Server target" | tee -a "$LOG_FILE"
+run_step "UBT OmnisServer Linux Development" "$RUN_UBT" OmnisServer Linux Development "-Project=$PROJECT_FILE" -WaitMutex
+
+echo "" | tee -a "$LOG_FILE"
+echo ">>> PHASE 5/5 — output verification" | tee -a "$LOG_FILE"
 if [[ ! -d "$ROOT/Binaries" ]]; then
   echo "Project Binaries directory was not generated." | tee -a "$LOG_FILE" >&2
   exit 1
 fi
 
-if ! find "$ROOT/Binaries" -type f -iname '*Omnis*' -print -quit 2>/dev/null | grep -q .; then
-  echo "No Omnis binary/module artifact was found under Binaries after successful UBT builds." | tee -a "$LOG_FILE" >&2
-  exit 1
-fi
+for module in Omnis OmnisEditor OmnisServer; do
+  if ! find "$ROOT/Binaries" -type f -iname "*$module*" -print -quit 2>/dev/null | grep -q .; then
+    echo "No $module binary/module artifact was found under Binaries." | tee -a "$LOG_FILE" >&2
+    exit 1
+  fi
+done
 
-echo "=== RESULT: UE 5.8 UHT + UBT + module link + Editor/Game build PASSED ===" | tee -a "$LOG_FILE"
+echo "=== RESULT: UE 5.8 UHT + UBT + Editor/Game/Server target builds PASSED ===" | tee -a "$LOG_FILE"
+echo "Build log: $LOG_FILE" | tee -a "$LOG_FILE"

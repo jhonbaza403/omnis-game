@@ -8,7 +8,7 @@
 
   "vars": {
     "OMNIS_ENVIRONMENT": "production",
-    "GITLAB_OAUTH_ENABLED": "true",
+    "GITLAB_OAUTH_ENABLED": "false",
     "GITLAB_OAUTH_CLIENT_ID": "37bf6a8424c159c7305dadf922fddad94e12f35046776d5f6965af67124a4df8",
     "GITLAB_OAUTH_REDIRECT_URI": "https://omnis-game.bazajhon.workers.dev/oauth/callback",
     "GITLAB_OAUTH_SCOPES": "create_runner manage_runner"

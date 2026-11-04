@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$BASH_SOURCE")/../.." && pwd)"
 LOG_FILE="$ROOT/Saved/Logs/omnis_client_smoke.log"
-CLIENT_BIN="$(find "$ROOT/Build/Omnis" -maxdepth 6 -type f -perm -u+x -iname 'Omnis*' -print -quit 2>/dev/null || true)"
+CLIENT_BIN="$(find "$ROOT/Build/Omnis" -maxdepth 8 -type f -perm -u+x -iname 'Omnis*' -print -quit 2>/dev/null || true)"
 [[ -n "$CLIENT_BIN" ]] || { echo "Packaged Omnis client executable not found." >&2; exit 1; }
 mkdir -p "$(dirname "$LOG_FILE")"
 PORT="${OMNIS_CLIENT_SMOKE_PORT:-17778}"

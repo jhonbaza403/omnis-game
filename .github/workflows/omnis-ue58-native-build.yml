@@ -1,0 +1,140 @@
+name: Omnis Unreal Engine 5.8 Native Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnis-ue58-native-build
+  cancel-in-progress: false
+
+jobs:
+  ue58-linux:
+    name: UE 5.8 build, world, automation, package and smoke tests
+    runs-on: [self-hosted, linux, x64, omnis-ue58]
+    timeout-minutes: 240
+    env:
+      # Optional repository variable; runner service environment takes precedence.
+      UE_ENGINE_ROOT_CONFIG: ${{ vars.UE_ENGINE_ROOT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Omnis source OBJ files are stored in Git LFS. Download real mesh
+          # contents before Unreal's content materializer is allowed to run.
+          lfs: true
+
+      - name: Verify Git LFS source meshes are hydrated
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+
+          source_root = Path("Content/Omnis/SourceAssets")
+          expected_minimum = 63
+          pointer_header = b"version https://git-lfs.github.com/spec/v1"
+
+          if not source_root.is_dir():
+              print(f"Missing LFS source directory: {source_root}", file=sys.stderr)
+              raise SystemExit(1)
+
+          obj_files = sorted(source_root.rglob("*.obj"))
+          if len(obj_files) < expected_minimum:
+              print(
+                  f"Expected at least {expected_minimum} source OBJ files; "
+                  f"found {len(obj_files)}.",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
+
+          pointers = []
+          for path in obj_files:
+              try:
+                  with path.open("rb") as stream:
+                      first_line = stream.readline(256).rstrip(b"\r\n")
+              except OSError as exc:
+                  print(f"Cannot read {path}: {exc}", file=sys.stderr)
+                  raise SystemExit(1)
+              if first_line == pointer_header:
+                  pointers.append(str(path))
+
+          if pointers:
+              print(
+                  "Git LFS pointers were checked out instead of real OBJ data:",
+                  file=sys.stderr,
+              )
+              print("\n".join(pointers), file=sys.stderr)
+              raise SystemExit(1)
+
+          print(
+              f"Git LFS hydration verified: {len(obj_files)} real OBJ source files."
+          )
+          PY
+
+      - name: Verify Unreal Engine 5.8 installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${UE_ENGINE_ROOT:-}" && -n "${UE_ENGINE_ROOT_CONFIG:-}" ]]; then
+            echo "UE_ENGINE_ROOT=$UE_ENGINE_ROOT_CONFIG" >> "$GITHUB_ENV"
+          fi
+          : "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT in the runner service environment or repository variable}"
+          bash CI/Build/preflight_unreal.sh
+
+      - name: Build Editor, Game and Dedicated Server
+        shell: bash
+        run: bash Tools/Build/build_omnis.sh
+
+      - name: Preserve existing world or materialize only when absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          map_file="Content/Omnis/Maps/Omnis_OpenWorld.umap"
+          if [[ ! -s "$map_file" ]]; then
+            bash CI/Build/generate_content.sh
+          else
+            echo "Existing Omnis_OpenWorld.umap detected; it will be preserved."
+          fi
+          [[ -s "$map_file" ]] || { echo "Native Omnis world map is missing." >&2; exit 1; }
+          native_assets="$(find Content/Omnis/Art -type f -name '*.uasset' | wc -l | tr -d ' ')"
+          native_materials="$(find Content/Omnis/Materials -type f -name '*.uasset' | wc -l | tr -d ' ')"
+          [[ "$native_assets" -ge 63 ]] || { echo "Expected at least 63 native art assets; found $native_assets." >&2; exit 1; }
+          [[ "$native_materials" -ge 10 ]] || { echo "Expected at least 10 native materials; found $native_materials." >&2; exit 1; }
+          echo "Validated map, native assets=$native_assets, native materials=$native_materials."
+
+      - name: Run Unreal Automation
+        shell: bash
+        run: bash CI/Tests/run_unreal_automation.sh
+
+      - name: Package Linux client without replacing earlier packages
+        shell: bash
+        run: bash Tools/Build/package_omnis.sh
+
+      - name: Smoke test packaged Linux client
+        shell: bash
+        run: bash CI/Tests/smoke_client.sh
+
+      - name: Package Linux dedicated server without replacing earlier packages
+        shell: bash
+        run: bash Tools/Build/package_omnis_server.sh
+
+      - name: Smoke test packaged dedicated server
+        shell: bash
+        run: bash CI/Tests/smoke_dedicated_server.sh
+
+      - name: Preserve build, test and package evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnis-ue58-certified-candidate-${{ github.run_id }}
+          path: |
+            Saved/Logs/
+            Saved/Automation/
+            Build/Omnis/
+            Build/OmnisServer/
+          if-no-files-found: warn
+          retention-days: 30
