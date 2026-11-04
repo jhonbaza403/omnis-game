@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 240
     env:
       # Optional repository variable; runner service environment takes precedence.
-      UE_ENGINE_ROOT_CONFIG: \${{ vars.UE_ENGINE_ROOT }}
+      UE_ENGINE_ROOT_CONFIG: ${{ vars.UE_ENGINE_ROOT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,10 +79,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "\${UE_ENGINE_ROOT:-}" && -n "\${UE_ENGINE_ROOT_CONFIG:-}" ]]; then
+          if [[ -z "${UE_ENGINE_ROOT:-}" && -n "${UE_ENGINE_ROOT_CONFIG:-}" ]]; then
             echo "UE_ENGINE_ROOT=$UE_ENGINE_ROOT_CONFIG" >> "$GITHUB_ENV"
           fi
-          : "\${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT in the runner service environment or repository variable}"
+          : "${UE_ENGINE_ROOT:?Set UE_ENGINE_ROOT in the runner service environment or repository variable}"
           bash CI/Build/preflight_unreal.sh
 
       - name: Build Editor, Game and Dedicated Server
@@ -130,7 +130,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: omnis-ue58-certified-candidate-\${{ github.run_id }}
+          name: omnis-ue58-certified-candidate-${{ github.run_id }}
           path: |
             Saved/Logs/
             Saved/Automation/
