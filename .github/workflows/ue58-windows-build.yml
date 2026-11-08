@@ -64,8 +64,12 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          & ".\Tools\Build\compile_omnis.ps1" -UnrealRoot "$env:UE_ENGINE_ROOT" -Platform "$env:BUILD_PLATFORM" -Configuration "$env:BUILD_CONFIGURATION"
-          if ($LASTEXITCODE -ne 0) { throw "Unreal UHT/UBT compilation failed with exit code $LASTEXITCODE." }
+          $ubt = Join-Path $env:UE_ENGINE_ROOT "Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.exe"
+          if (!(Test-Path $ubt)) { throw "UnrealBuildTool.exe not found: $ubt" }
+          & $ubt OmnisEditor Win64 Development "-Project=$env:GITHUB_WORKSPACE\\$env:PROJECT_FILE" -WaitMutex -NoHotReload
+          if ($LASTEXITCODE -ne 0) { throw "UnrealBuildTool Editor compile failed with exit code $LASTEXITCODE." }
+          & $ubt Omnis Win64 Development "-Project=$env:GITHUB_WORKSPACE\\$env:PROJECT_FILE" -WaitMutex -NoHotReload
+          if ($LASTEXITCODE -ne 0) { throw "UnrealBuildTool Game compile failed with exit code $LASTEXITCODE." }
 
       - name: Cook and package Windows executable
         shell: pwsh
