@@ -1,0 +1,101 @@
+name: OMNIS — Unreal Engine 5.8 Windows Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnis-ue58-windows-build
+  cancel-in-progress: false
+
+jobs:
+  build-win64:
+    name: Compile, cook and package Win64
+    # Requires a dedicated Windows self-hosted runner with Unreal Engine 5.8.x
+    # and Visual Studio 2022 C++ toolchain installed. No Unreal download on the
+    # developer's local PC and no GitHub-hosted runner is assumed.
+    runs-on: [self-hosted, Windows, X64, omnis-ue58]
+    timeout-minutes: 360
+
+    env:
+      PROJECT_FILE: Omnis.uproject
+      BUILD_CONFIGURATION: Development
+      BUILD_PLATFORM: Win64
+
+    steps:
+      - name: Checkout repository (including Git LFS assets)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Verify Git LFS materialization
+        shell: pwsh
+        run: |
+          git lfs install
+          git lfs pull
+          if (git lfs ls-files | Select-String -Quiet '(^| )\*') {
+            throw "Git LFS assets appear to be unresolved pointer files."
+          }
+
+      - name: Validate Unreal Engine 5.8.x installation
+        shell: pwsh
+        env:
+          UE_ENGINE_ROOT: ${{ vars.UE_ENGINE_ROOT }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:UE_ENGINE_ROOT)) {
+            throw "Configure the repository variable UE_ENGINE_ROOT on this runner, pointing to the installed Unreal Engine 5.8.x root."
+          }
+          $versionFile = Join-Path $env:UE_ENGINE_ROOT "Engine/Build/Build.version"
+          $uat = Join-Path $env:UE_ENGINE_ROOT "Engine/Build/BatchFiles/RunUAT.bat"
+          if (!(Test-Path $versionFile)) { throw "Unreal Build.version not found: $versionFile" }
+          if (!(Test-Path $uat)) { throw "RunUAT.bat not found: $uat" }
+          $version = Get-Content $versionFile -Raw | ConvertFrom-Json
+          if ("$($version.MajorVersion).$($version.MinorVersion)" -ne "5.8") {
+            throw "Expected Unreal Engine 5.8.x; found $($version.MajorVersion).$($version.MinorVersion).$($version.PatchVersion)."
+          }
+          if (!(Test-Path $env:PROJECT_FILE)) { throw "Omnis.uproject is missing." }
+          "UE_ENGINE_ROOT=$env:UE_ENGINE_ROOT" >> $env:GITHUB_ENV
+
+      - name: Run UnrealHeaderTool and compile Editor/Game targets
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          & ".\Tools\Build\compile_omnis.ps1" -UnrealRoot "$env:UE_ENGINE_ROOT" -Platform "$env:BUILD_PLATFORM" -Configuration "$env:BUILD_CONFIGURATION"
+          if ($LASTEXITCODE -ne 0) { throw "Unreal UHT/UBT compilation failed with exit code $LASTEXITCODE." }
+
+      - name: Cook and package Windows executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $uat = Join-Path $env:UE_ENGINE_ROOT "Engine/Build/BatchFiles/RunUAT.bat"
+          $archive = Join-Path $env:GITHUB_WORKSPACE "Build/Omnis/Windows"
+          New-Item -ItemType Directory -Force -Path $archive | Out-Null
+          & $uat BuildCookRun "-project=$env:GITHUB_WORKSPACE\$env:PROJECT_FILE" -noP4 -platform=Win64 -clientconfig=Development -build -cook -stage -pak -archive "-archivedirectory=$archive" -utf8output
+          if ($LASTEXITCODE -ne 0) { throw "BuildCookRun failed with exit code $LASTEXITCODE." }
+          $exe = Get-ChildItem -Path $archive -Filter "Omnis.exe" -File -Recurse | Select-Object -First 1
+          if ($null -eq $exe) { throw "BuildCookRun returned success but Omnis.exe was not found in the archive." }
+          $hash = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash
+          $manifest = [ordered]@{
+            product = "OMNIS"
+            engine = "Unreal Engine 5.8.x"
+            platform = "Win64"
+            configuration = "Development"
+            executable = $exe.FullName.Substring($archive.Length).TrimStart('\','/')
+            sha256 = $hash
+            commit = "${{ github.sha }}"
+            built_at_utc = (Get-Date).ToUniversalTime().ToString("o")
+          }
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $archive "omnis-release-manifest.json") -Encoding utf8
+          "OMNIS_EXE=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Windows build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnis-win64-development
+          path: Build/Omnis/Windows/
+          if-no-files-found: error
+          retention-days: 14
