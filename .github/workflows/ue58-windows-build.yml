@@ -37,7 +37,7 @@ jobs:
           git lfs install
           git lfs pull
           if (git lfs ls-files | Select-String -Quiet '(^| )\*') {
-            throw "Git LFS assets appear to be unresolved pointer files."
+            throw "One or more Git LFS assets are not materialized on the runner."
           }
 
       - name: Validate Unreal Engine 5.8.x installation
