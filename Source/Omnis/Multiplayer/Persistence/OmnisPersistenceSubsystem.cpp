@@ -228,14 +228,15 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
         return false;
     }
 
-    // Schema 0 is the legacy save layout: migrate the permanent-point field.
-    // Schema 2 predates player inventory/equipment/cooldown persistence; empty arrays are valid.
-    if (Save->SchemaVersion == 0)
-    {
-        Save->NexusProgression.PermanentUpgradePoints = FMath::Max(
-            Save->NexusProgression.PermanentUpgradePoints,
-            Save->PermanentUpgradePoints);
-    }
+    // The top-level field predates NexusProgression. Merge it for every schema
+    // so saves created before this field existed cannot silently lose points.
+    // New saves write both fields with the same value, so this is idempotent.
+    Save->NexusProgression.PermanentUpgradePoints = FMath::Max(
+        Save->NexusProgression.PermanentUpgradePoints,
+        Save->PermanentUpgradePoints);
+
+    // Schema 2 predates player inventory/equipment/cooldown persistence;
+    // absent arrays remain valid empty inventories/loadouts.
 
     // Validate every saved character identity before changing any live subsystem.
     TMap<FName, AOmnisNPCCharacter*> NPCsById;

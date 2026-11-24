@@ -131,7 +131,10 @@ void UOmnisCharacterLifeSubsystem::Tick(float DeltaSeconds)
             continue;
         }
 
-        Entry.LastSimulatedGameSeconds = CurrentGameSeconds;
+        // Process elapsed simulation in bounded slices. Never drop backlog for
+        // NPCs that were off-screen or deferred by the per-frame population budget.
+        const double SimulatedStepSeconds = FMath::Min(ElapsedGameSeconds, 10.0);
+        Entry.LastSimulatedGameSeconds += SimulatedStepSeconds;
 
         bool bAllowNavigation = false;
         for (const FVector& PlayerLocation : PlayerLocations)
@@ -145,7 +148,7 @@ void UOmnisCharacterLifeSubsystem::Tick(float DeltaSeconds)
         }
 
         NPC->SimulateLifeFromPopulationManager(
-            static_cast<float>(ElapsedGameSeconds),
+            static_cast<float>(SimulatedStepSeconds),
             bAllowNavigation);
     }
 }

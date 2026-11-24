@@ -108,6 +108,12 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("DOREPLIFETIME(UOmnisAbilityComponent, ReplicatedCooldowns)", abilities_cpp)
         self.assertIn("GetServerWorldTimeSeconds", abilities_cpp)
 
+    def test_legacy_permanent_upgrade_points_are_migrated_to_nexus(self):
+        source = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("Save->NexusProgression.PermanentUpgradePoints = FMath::Max(", source)
+        self.assertIn("Save->PermanentUpgradePoints", source)
+        self.assertIn("Nexus->ImportProgression(Save->NexusProgression)", source)
+
     def test_save_schema_three_keeps_legacy_zero_and_two_compatible(self):
         save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
         persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
