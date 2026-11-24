@@ -268,3 +268,9 @@ Las partidas anteriores al esquema 4 no almacenaban el ID personalizado de conse
 - Al cargar, solo los registros que siguen en estado \`Failed\` reconstruyen consecuencias pendientes. Un registro \`Recovered\` conserva el historial sin volver a activar la vergüenza.
 - Se amplía la Automation Test de snapshots para cubrir dos misiones fallidas que comparten una consecuencia agregada y una misión ya recuperada.
 
+## 20. Decimocuarta integración — reloj de simulación al cargar partidas
+
+- Tras restaurar el reloj y los snapshots de personajes, \`LoadCurrentGame\` rebasa cada NPC registrado al tiempo simulado restaurado.
+- Evita reproducir tiempo pendiente del proceso anterior después de cargar una partida más avanzada y volver a incrementar hambre, energía o necesidad social sobre valores que ya estaban guardados.
+- La población mantiene el reparto por lotes y el límite de diez segundos simulados por actualización; el rebase solo fija el punto de partida, sin simular tiempo extra.
+

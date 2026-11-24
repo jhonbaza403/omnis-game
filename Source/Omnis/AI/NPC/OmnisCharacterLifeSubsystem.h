@@ -30,6 +30,7 @@ public:
 
     void RegisterNPC(AOmnisNPCCharacter* NPC);
     void UnregisterNPC(AOmnisNPCCharacter* NPC);
+    void RebaseRegisteredNPCsToCurrentTime();
 
     int32 GetRegisteredNPCCount() const { return RegisteredNPCs.Num(); }
 

@@ -190,3 +190,27 @@ void UOmnisCharacterLifeSubsystem::Tick(float DeltaSeconds)
     }
 }
 
+void UOmnisCharacterLifeSubsystem::RebaseRegisteredNPCsToCurrentTime()
+{
+    UWorld* World = GetWorld();
+    const UOmnisTimeSubsystem* Time = World
+        ? World->GetSubsystem<UOmnisTimeSubsystem>()
+        : nullptr;
+    if (!World || !Time || World->GetNetMode() == NM_Client)
+    {
+        return;
+    }
+
+    const double RestoredGameSeconds = Time->GetElapsedSeconds();
+    for (FOmnisRegisteredNPCEntry& Entry : RegisteredNPCs)
+    {
+        if (IsValid(Entry.NPC.Get()))
+        {
+            Entry.LastSimulatedGameSeconds = RestoredGameSeconds;
+        }
+    }
+
+    NextNPCIndex = RegisteredNPCs.IsEmpty()
+        ? 0
+        : NextNPCIndex % RegisteredNPCs.Num();
+}

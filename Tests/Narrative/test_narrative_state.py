@@ -370,5 +370,18 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("SchemaVersion = 4", (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8"))
 
 
+
+    def test_loading_a_save_rebases_population_simulation_clock(self):
+        life_h = (ROOT / "Source/Omnis/AI/NPC/OmnisCharacterLifeSubsystem.h").read_text(encoding="utf-8")
+        life_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisCharacterLifeSubsystem.cpp").read_text(encoding="utf-8")
+        persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("RebaseRegisteredNPCsToCurrentTime", life_h)
+        self.assertIn("Entry.LastSimulatedGameSeconds = RestoredGameSeconds", life_cpp)
+        self.assertIn("Life->RebaseRegisteredNPCsToCurrentTime()", persistence)
+        self.assertLess(
+            persistence.index("Life->RebaseRegisteredNPCsToCurrentTime()"),
+            persistence.index("It->RefreshNarrativeState();", persistence.index("Life->RebaseRegisteredNPCsToCurrentTime()")))
+
+
 if __name__ == "__main__":
     unittest.main()

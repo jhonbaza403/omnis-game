@@ -2,6 +2,7 @@
 #include "Multiplayer/World/OmnisReplicatedWorldStateActor.h"
 
 #include "AI/NPC/OmnisNPCCharacter.h"
+#include "AI/NPC/OmnisCharacterLifeSubsystem.h"
 #include "Core/Cycle/OmnisCycleSubsystem.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
 #include "Core/Save/OmnisSaveGame.h"
@@ -380,6 +381,12 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
                     !SavedCharacter.LifeState.bAlive);
             }
         }
+    }
+
+    if (UOmnisCharacterLifeSubsystem* Life =
+        World->GetSubsystem<UOmnisCharacterLifeSubsystem>())
+    {
+        Life->RebaseRegisteredNPCsToCurrentTime();
     }
 
     for (TActorIterator<AOmnisReplicatedWorldStateActor> It(World); It; ++It)
