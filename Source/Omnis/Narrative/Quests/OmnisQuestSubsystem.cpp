@@ -15,6 +15,24 @@
 
 namespace
 {
+    FString BuildMissionFailureRumorPrefix(FName QuestId)
+    {
+        return QuestId.IsNone()
+            ? FString()
+            : FString::Printf(TEXT("Mission.Failure.%s.Attempt."), *QuestId.ToString());
+    }
+
+    FName BuildMissionFailureRumorId(FName QuestId, int32 AttemptNumber)
+    {
+        const FString Prefix = BuildMissionFailureRumorPrefix(QuestId);
+        return Prefix.IsEmpty()
+            ? NAME_None
+            : FName(*FString::Printf(TEXT("%s%d"), *Prefix, FMath::Max(1, AttemptNumber)));
+    }
+}
+
+namespace
+{
     void RefreshNarrativeReplication(UWorld* World)
     {
         if (!World)
@@ -168,6 +186,7 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
     }
 
     UGameInstance* GameInstance = GetGameInstance();
+    UWorld* World = GetWorld();
     if (!GameInstance)
     {
         return;
@@ -206,29 +225,66 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
         }
     }
 
-    if (!Definition->FailureWorldStateKey.IsNone() &&
+    if (World && !Definition->FailureWorldStateKey.IsNone() &&
         Definition->FailureWorldStateDelta != 0)
     {
-        if (UWorld* World = GetWorld())
+        if (UOmnisWorldStateSubsystem* WorldState =
+            World->GetSubsystem<UOmnisWorldStateSubsystem>())
         {
-            if (UOmnisWorldStateSubsystem* WorldState =
-                World->GetSubsystem<UOmnisWorldStateSubsystem>())
-            {
-                WorldState->IncrementState(
-                    Definition->FailureWorldStateKey,
-                    Definition->FailureWorldStateDelta);
-            }
+            WorldState->IncrementState(
+                Definition->FailureWorldStateKey,
+                Definition->FailureWorldStateDelta);
         }
     }
 
-    if (UWorld* World = GetWorld())
+    if (World)
     {
+        const FName RumorEventId = BuildMissionFailureRumorId(
+            Definition->QuestId,
+            GetQuestAttemptCount(Definition->QuestId));
+        const float ConfiguredWitnessRadius = FMath::IsFinite(Definition->FailureWitnessRadius)
+            ? Definition->FailureWitnessRadius
+            : 0.0f;
+        const float WitnessRadius = FMath::Clamp(
+            ConfiguredWitnessRadius,
+            0.0f,
+            10000.0f);
+        const float WitnessRadiusSquared = FMath::Square(WitnessRadius);
+
         for (TActorIterator<AOmnisNPCCharacter> It(World); It; ++It)
         {
             AOmnisNPCCharacter* NPC = *It;
-            if (!NPC || !NPC->CharacterState ||
-                (!Definition->WitnessCharacterIds.Contains(NPC->CharacterId) &&
-                 !Definition->WitnessCharacterIds.Contains(NPC->GetPersistentId())))
+            if (!NPC || !NPC->CharacterState || !NPC->CharacterState->IsAlive())
+            {
+                continue;
+            }
+
+            const bool bExplicitWitness =
+                Definition->WitnessCharacterIds.Contains(NPC->CharacterId) ||
+                Definition->WitnessCharacterIds.Contains(NPC->GetPersistentId());
+
+            bool bNearbyWitness = false;
+            if (Definition->bFailureIsPublic && WitnessRadius > 0.0f)
+            {
+                for (TActorIterator<AOmnisPlayerCharacter> PlayerIt(World); PlayerIt; ++PlayerIt)
+                {
+                    const AOmnisPlayerCharacter* Player = *PlayerIt;
+                    if (!Player || (Player->CharacterState && !Player->CharacterState->IsAlive()))
+                    {
+                        continue;
+                    }
+
+                    if (FVector::DistSquared(
+                        NPC->GetActorLocation(),
+                        Player->GetActorLocation()) <= WitnessRadiusSquared)
+                    {
+                        bNearbyWitness = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!bExplicitWitness && !bNearbyWitness)
             {
                 continue;
             }
@@ -237,10 +293,13 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
                 FailureReason,
                 Definition->QuestId,
                 100);
-            NPC->CharacterState->RecordMemory(
-                Definition->FailureConsequenceId,
-                Definition->FailureReputationTargetId,
-                100);
+            if (!RumorEventId.IsNone())
+            {
+                NPC->CharacterState->RecordMemory(
+                    RumorEventId,
+                    Definition->FailureReputationTargetId,
+                    100);
+            }
             NPC->CharacterState->AdjustRelationship(
                 Definition->FailureReputationTargetId,
                 Definition->FailureRelationshipDelta);
@@ -248,14 +307,20 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
 
         for (TActorIterator<AOmnisPlayerCharacter> It(World); It; ++It)
         {
-            if (It->CharacterState)
+            AOmnisPlayerCharacter* Player = *It;
+            if (!Player || !Player->CharacterState)
             {
-                It->CharacterState->RecordMemory(
-                    FailureReason,
-                    Definition->QuestId,
-                    80);
-                It->CharacterState->RecordMemory(
-                    Definition->FailureConsequenceId,
+                continue;
+            }
+
+            Player->CharacterState->RecordMemory(
+                FailureReason,
+                Definition->QuestId,
+                80);
+            if (!RumorEventId.IsNone())
+            {
+                Player->CharacterState->RecordMemory(
+                    RumorEventId,
                     Definition->FailureReputationTargetId,
                     80);
             }
@@ -265,7 +330,9 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
     if (UOmnisEventSubsystem* Events =
         GameInstance->GetSubsystem<UOmnisEventSubsystem>())
     {
-        Events->RaiseEvent(TEXT("Quest.Failed"), GetQuestAttemptCount(Definition->QuestId));
+        Events->RaiseEvent(
+            TEXT("Quest.Failed"),
+            GetQuestAttemptCount(Definition->QuestId));
     }
 }
 
@@ -381,28 +448,86 @@ void UOmnisQuestSubsystem::ApplyCompletionOutcome(
         }
     }
 
-    if (World && Definition->RecoveryRelationshipDelta != 0)
+    if (!World)
     {
-        for (TActorIterator<AOmnisNPCCharacter> It(World); It; ++It)
+        return;
+    }
+
+    // A recovery quest repairs all remembered attempts linked to this recovery asset.
+    TArray<FName> FailedQuestIds;
+    for (const TPair<FName, FName>& Pair : RecoveryQuestByFailedQuest)
+    {
+        if (Pair.Value == Definition->QuestId)
         {
-            AOmnisNPCCharacter* NPC = *It;
-            if (!NPC || !NPC->CharacterState)
-            {
-                continue;
-            }
+            FailedQuestIds.Add(Pair.Key);
+        }
+    }
 
-            const bool bIsRecoveryWitness =
-                Definition->RecoveryWitnessCharacterIds.Contains(NPC->CharacterId) ||
-                Definition->RecoveryWitnessCharacterIds.Contains(NPC->GetPersistentId());
+    for (TActorIterator<AOmnisNPCCharacter> It(World); It; ++It)
+    {
+        AOmnisNPCCharacter* NPC = *It;
+        if (!NPC || !NPC->CharacterState)
+        {
+            continue;
+        }
 
-            if (bIsRecoveryWitness)
+        int32 RepairedRumorCount = 0;
+        for (const FName FailedQuestId : FailedQuestIds)
+        {
+            const FString RumorPrefix = BuildMissionFailureRumorPrefix(FailedQuestId);
+            const int32 RemovedCount =
+                NPC->CharacterState->RemoveMemoriesByPrefix(RumorPrefix);
+            if (RemovedCount > 0)
             {
-                NPC->CharacterState->AdjustRelationship(
-                    Definition->RecoveryReputationTargetId,
-                    Definition->RecoveryRelationshipDelta);
                 NPC->CharacterState->RecordMemory(
                     TEXT("Quest.RecoveryCompleted"),
-                    Definition->QuestId,
+                    FailedQuestId,
+                    80);
+                RepairedRumorCount += RemovedCount;
+            }
+        }
+
+        const bool bConfiguredRecoveryWitness =
+            Definition->RecoveryWitnessCharacterIds.Contains(NPC->CharacterId) ||
+            Definition->RecoveryWitnessCharacterIds.Contains(NPC->GetPersistentId());
+
+        if (bConfiguredRecoveryWitness && RepairedRumorCount == 0)
+        {
+            NPC->CharacterState->RecordMemory(
+                TEXT("Quest.RecoveryCompleted"),
+                Definition->QuestId,
+                80);
+            RepairedRumorCount = 1;
+        }
+
+        if (RepairedRumorCount > 0 && Definition->RecoveryRelationshipDelta != 0)
+        {
+            const FName SubjectId = Definition->RecoveryReputationTargetId;
+            const int32 Previous = NPC->CharacterState->GetRelationship(SubjectId);
+            const int64 Desired = static_cast<int64>(Previous) +
+                static_cast<int64>(FMath::Clamp(Definition->RecoveryRelationshipDelta, -100, 100)) *
+                static_cast<int64>(RepairedRumorCount);
+            const int32 BoundedDesired = static_cast<int32>(FMath::Clamp<int64>(Desired, -100, 100));
+            NPC->CharacterState->AdjustRelationship(SubjectId, BoundedDesired - Previous);
+        }
+    }
+
+    for (TActorIterator<AOmnisPlayerCharacter> It(World); It; ++It)
+    {
+        AOmnisPlayerCharacter* Player = *It;
+        if (!Player || !Player->CharacterState)
+        {
+            continue;
+        }
+
+        for (const FName FailedQuestId : FailedQuestIds)
+        {
+            const FString RumorPrefix = BuildMissionFailureRumorPrefix(FailedQuestId);
+            if (Player->CharacterState->RemoveMemoriesByPrefix(RumorPrefix) > 0)
+            {
+                Player->CharacterState->RecordMemory(
+                    TEXT("Quest.RecoveryCompleted"),
+                    FailedQuestId,
                     80);
             }
         }

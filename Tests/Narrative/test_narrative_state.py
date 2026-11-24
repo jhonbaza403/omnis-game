@@ -290,30 +290,6 @@ class PersistenceContractTests(unittest.TestCase):
         bootstrap = (ROOT / "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem.cpp").read_text(encoding="utf-8")
         automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
         self.assertIn("FOmnisWorldCalendarDate GetCalendarDate() const", time_h)
-        self.assertIn("DaysPerSeason = 30", time_cpp)
-        self.assertIn("DaysPerYear = DaysPerSeason * 4", time_cpp)
-        self.assertIn("Date.DayOfWeek = static_cast<int32>(TotalDays % 7)", time_cpp)
-        self.assertIn("int32 WorkDaysMask = 0x7F", definition)
-        self.assertIn("int32 WorkDaysMask = 0x7F", npc_h)
-        self.assertIn("Time->GetCalendarDate()", npc_cpp)
-        self.assertIn("bIsScheduledWorkday &&", npc_cpp)
-        self.assertIn("NPC->WorkDaysMask = Seed.WorkDaysMask", world)
-        for mask in ("0x1F", "0x3F", "0x7F"):
-            self.assertIn(mask, world + bootstrap)
-        self.assertIn("Omnis.Time.CalendarBoundaries", automation)
-
-
-
-    def test_calendar_and_per_character_weekly_work_schedule(self):
-        time_h = (ROOT / "Source/Omnis/Core/Time/OmnisTimeSubsystem.h").read_text(encoding="utf-8")
-        time_cpp = (ROOT / "Source/Omnis/Core/Time/OmnisTimeSubsystem.cpp").read_text(encoding="utf-8")
-        definition = (ROOT / "Source/Omnis/Data/Characters/OmnisCharacterDefinition.h").read_text(encoding="utf-8")
-        npc_h = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
-        npc_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
-        world = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
-        bootstrap = (ROOT / "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem.cpp").read_text(encoding="utf-8")
-        automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
-        self.assertIn("FOmnisWorldCalendarDate GetCalendarDate() const", time_h)
         self.assertIn("BuildCalendarDate(float ElapsedGameSeconds)", time_h)
         self.assertIn("DaysPerSeason = 30", time_cpp)
         self.assertIn("DaysPerYear = DaysPerSeason * 4", time_cpp)
@@ -326,6 +302,28 @@ class PersistenceContractTests(unittest.TestCase):
         for mask in ("0x1F", "0x3F", "0x7F"):
             self.assertIn(mask, world + bootstrap)
         self.assertIn("Omnis.Time.CalendarBoundaries", automation)
+
+
+
+    def test_public_mission_failure_has_unique_rumors_and_auto_witnesses(self):
+        definition = (ROOT / "Source/Omnis/Data/Quests/OmnisQuestDefinition.h").read_text(encoding="utf-8")
+        quest = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.cpp").read_text(encoding="utf-8")
+        state_h = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.h").read_text(encoding="utf-8")
+        state_cpp = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.cpp").read_text(encoding="utf-8")
+        npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        self.assertIn("bool bFailureIsPublic = true", definition)
+        self.assertIn("float FailureWitnessRadius = 2500.0f", definition)
+        self.assertIn("BuildMissionFailureRumorId", quest)
+        self.assertIn("Mission.Failure.%s", quest)
+        self.assertIn("WitnessRadiusSquared", quest)
+        self.assertIn("!bExplicitWitness && !bNearbyWitness", quest)
+        self.assertIn("RemoveMemory(FName EventId)", state_h)
+        self.assertIn("RemoveMemoriesByPrefix(const FString& EventPrefix)", state_h)
+        self.assertIn("RemoveMemoriesByPrefix", state_cpp)
+        self.assertIn("GetQuestAttemptCount(Definition->QuestId)", quest)
+        self.assertIn("Memories.RemoveAll", state_cpp)
+        self.assertIn("RemoveMemoriesByPrefix(RumorPrefix)", quest)
+        self.assertIn("SpreadRumorsTo(SocialTarget)", npc)
 
 
 if __name__ == "__main__":

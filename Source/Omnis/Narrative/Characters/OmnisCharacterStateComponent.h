@@ -128,6 +128,12 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Life")
     bool HasMemory(FName EventId) const;
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Life")
+    bool RemoveMemory(FName EventId);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Life")
+    int32 RemoveMemoriesByPrefix(const FString& EventPrefix);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Life")
     bool HasMemoryPrefix(const FString& EventPrefix) const;
 

@@ -235,3 +235,15 @@ El registro cubre las ubicaciones del mundo de inicio; aún falta conectar todas
 ### Límite restante
 
 El calendario es determinista y funcional para horarios, pero todavía no representa feriados, fechas históricas, eventos estacionales, clima por estación ni ciclos económicos. La simulación offline de los NPC en regiones descargadas sigue pendiente.
+
+## 17. Undécima integración — testigos automáticos, rumores por misión y reparación social
+
+- Cada intento fallido genera un ID de rumor propio \`Mission.Failure.<QuestId>.Attempt.<n>\`, evitando que misiones distintas o reintentos compartan la misma memoria y se bloqueen por deduplicación.
+- Los testigos pueden configurarse explícitamente en \`WitnessCharacterIds\`; además, los NPC vivos dentro de \`FailureWitnessRadius\` respecto de un jugador activo pueden presenciar el fallo cuando \`bFailureIsPublic\` está habilitado.
+- Los recuerdos del rumor conservan como sujeto al objetivo de reputación y se propagan durante encuentros sociales con pérdida de intensidad y deduplicación por receptor.
+- Las misiones de recuperación buscan por prefijo todos los rumores de los intentos vinculados a la misión fallida, los retiran de los recuerdos de NPC y jugadores, registran \`Quest.RecoveryCompleted\` y recuperan relaciones en proporción a los recuerdos realmente reparados.
+- La lista \`ConsequencesToRemoveOnCompletion\` continúa controlando qué consecuencias globales se eliminan; la reparación social no borra automáticamente consecuencias no configuradas.
+
+### Límite restante
+
+El radio usa la posición del jugador como aproximación al lugar del suceso; las misiones deben poder pasar una posición explícita del evento para casos que ocurran lejos del jugador o en escenas de cinemática. Los testigos y rumores se simulan en los NPC cargados; la población de regiones descargadas aún no participa.

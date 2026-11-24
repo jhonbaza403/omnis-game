@@ -44,9 +44,15 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
     int32 FailureRelationshipDelta = -15;
 
-    // Witness IDs may target an archetype CharacterId or an individual PersistentId.
+    // Explicit witnesses can be combined with nearby NPCs who saw a public failure.
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
     TArray<FName> WitnessCharacterIds;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
+    bool bFailureIsPublic = true;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure", meta=(ClampMin="0.0", ClampMax="10000.0"))
+    float FailureWitnessRadius = 2500.0f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
     FName RecoveryQuestId;

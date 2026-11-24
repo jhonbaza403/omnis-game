@@ -274,3 +274,52 @@ bool UOmnisCharacterStateComponent::HasMemoryPrefix(const FString& EventPrefix) 
                 ESearchCase::IgnoreCase);
         });
 }
+
+bool UOmnisCharacterStateComponent::RemoveMemory(FName EventId)
+{
+    if (!HasMutationAuthority() || EventId.IsNone())
+    {
+        return false;
+    }
+
+    const int32 RemovedCount = Memories.RemoveAll(
+        [EventId](const FOmnisCharacterMemoryEntry& Entry)
+        {
+            return Entry.EventId == EventId;
+        });
+    if (RemovedCount > 0)
+    {
+        if (AActor* Owner = GetOwner())
+        {
+            Owner->ForceNetUpdate();
+        }
+        return true;
+    }
+
+    return false;
+}
+
+int32 UOmnisCharacterStateComponent::RemoveMemoriesByPrefix(const FString& EventPrefix)
+{
+    if (!HasMutationAuthority() || EventPrefix.IsEmpty())
+    {
+        return 0;
+    }
+
+    const int32 RemovedCount = Memories.RemoveAll(
+        [&EventPrefix](const FOmnisCharacterMemoryEntry& Entry)
+        {
+            return Entry.EventId.ToString().StartsWith(
+                EventPrefix,
+                ESearchCase::IgnoreCase);
+        });
+    if (RemovedCount > 0)
+    {
+        if (AActor* Owner = GetOwner())
+        {
+            Owner->ForceNetUpdate();
+        }
+    }
+
+    return RemovedCount;
+}
