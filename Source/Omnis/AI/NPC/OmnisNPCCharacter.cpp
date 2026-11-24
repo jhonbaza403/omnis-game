@@ -1,6 +1,7 @@
 #include "AI/NPC/OmnisNPCCharacter.h"
 
 #include "AIController.h"
+#include "AI/NPC/OmnisCharacterLifeSubsystem.h"
 #include "AI/Perception/OmnisPerceptionComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/Time/OmnisTimeSubsystem.h"
@@ -15,8 +16,7 @@
 
 AOmnisNPCCharacter::AOmnisNPCCharacter()
 {
-    PrimaryActorTick.bCanEverTick = true;
-    PrimaryActorTick.TickInterval = 1.0f;
+    PrimaryActorTick.bCanEverTick = false;
     SetReplicates(true);
     SetReplicateMovement(true);
     NetUpdateFrequency = 2.0f;
@@ -79,6 +79,25 @@ void AOmnisNPCCharacter::BeginPlay()
         CharacterState->SetAlive(true);
         CharacterState->RecordMemory(TEXT("NPC.Spawned"), CharacterId, 10);
     }
+
+    if (UOmnisCharacterLifeSubsystem* Life = GetWorld()
+        ? GetWorld()->GetSubsystem<UOmnisCharacterLifeSubsystem>()
+        : nullptr)
+    {
+        Life->RegisterNPC(this);
+    }
+}
+
+void AOmnisNPCCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (UOmnisCharacterLifeSubsystem* Life = GetWorld()
+        ? GetWorld()->GetSubsystem<UOmnisCharacterLifeSubsystem>()
+        : nullptr)
+    {
+        Life->UnregisterNPC(this);
+    }
+
+    Super::EndPlay(EndPlayReason);
 }
 
 void AOmnisNPCCharacter::GetLifetimeReplicatedProps(
@@ -92,33 +111,6 @@ void AOmnisNPCCharacter::GetLifetimeReplicatedProps(
     DOREPLIFETIME(AOmnisNPCCharacter, OccupationId);
     DOREPLIFETIME(AOmnisNPCCharacter, HomeLocationId);
     DOREPLIFETIME(AOmnisNPCCharacter, WorkLocationId);
-}
-
-void AOmnisNPCCharacter::Tick(float DeltaSeconds)
-{
-    Super::Tick(DeltaSeconds);
-
-    // The server owns schedules, needs and navigation; clients only consume replicated state.
-    if (!HasAuthority())
-    {
-        return;
-    }
-
-    if (!CharacterState || !CharacterState->IsAlive())
-    {
-        return;
-    }
-
-    LifeUpdateClock += DeltaSeconds;
-    const float UpdateEvery = FMath::Max(1.0f, LifeUpdateInterval);
-    if (LifeUpdateClock < UpdateEvery)
-    {
-        return;
-    }
-
-    const float Elapsed = LifeUpdateClock;
-    LifeUpdateClock = 0.0f;
-    SimulateLife(Elapsed);
 }
 
 void AOmnisNPCCharacter::ApplyCharacterDefinition()
@@ -167,7 +159,20 @@ void AOmnisNPCCharacter::ApplyCharacterDefinition()
     }
 }
 
-void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
+void AOmnisNPCCharacter::SimulateLifeFromPopulationManager(
+    float DeltaSeconds,
+    bool bAllowNavigation)
+{
+    if (!HasAuthority() || !CharacterState || !CharacterState->IsAlive() ||
+        !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
+    {
+        return;
+    }
+
+    SimulateLife(DeltaSeconds, bAllowNavigation);
+}
+
+void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds, bool bAllowNavigation)
 {
     if (!CharacterState || !CharacterState->IsAlive())
     {
@@ -282,7 +287,15 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
         !bHasLifeDestination ||
         FVector::DistSquared(Destination, CurrentDestination) > FMath::Square(200.0f);
 
-    if (bGoalChanged || bDestinationChanged)
+    if (!bAllowNavigation)
+    {
+        if (AAIController* AIController = Cast<AAIController>(GetController()))
+        {
+            AIController->StopMovement();
+        }
+        bHasLifeDestination = false;
+    }
+    else if (bGoalChanged || bDestinationChanged)
     {
         CurrentDestination = Destination;
         bHasLifeDestination = true;

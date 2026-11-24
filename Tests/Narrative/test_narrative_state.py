@@ -22,6 +22,9 @@ class PersistenceContractTests(unittest.TestCase):
             "Health",
             "MaxHealth",
             "PersistentId",
+            "InventoryItems",
+            "EquippedItems",
+            "AbilityCooldowns",
         )
         for field in required:
             self.assertIn(field, source)
@@ -32,10 +35,17 @@ class PersistenceContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("SaveCurrentGame", source)
         self.assertIn("LoadCurrentGame", source)
-        self.assertIn("CurrentSaveSchemaVersion = 2", source)
+        self.assertIn("CurrentSaveSchemaVersion = 3", source)
+        self.assertIn("Save->SchemaVersion != 2", source)
         self.assertIn("SaveGameToSlot", source)
         self.assertIn("LoadGameFromSlot", source)
         self.assertIn("World->GetNetMode() != NM_Client", source)
+        self.assertIn("Inventory->ExportItems()", source)
+        self.assertIn("Equipment->ExportEquipment()", source)
+        self.assertIn("Abilities->ExportCooldowns()", source)
+        self.assertIn("Inventory->ImportItems", source)
+        self.assertIn("Equipment->ImportEquipment", source)
+        self.assertIn("Abilities->ImportCooldowns", source)
 
     def test_npc_identity_is_not_the_archetype_name(self):
         npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
@@ -77,6 +87,34 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("FMath::Clamp", reputation)
         self.assertIn("-100", reputation)
         self.assertIn("100", reputation)
+
+
+    def test_inventory_equipment_and_abilities_are_server_authoritative(self):
+        inventory_h = (ROOT / "Source/Omnis/Gameplay/Inventory/OmnisInventoryComponent.h").read_text(encoding="utf-8")
+        inventory_cpp = (ROOT / "Source/Omnis/Gameplay/Inventory/OmnisInventoryComponent.cpp").read_text(encoding="utf-8")
+        equipment_h = (ROOT / "Source/Omnis/Gameplay/Equipment/OmnisEquipmentComponent.h").read_text(encoding="utf-8")
+        equipment_cpp = (ROOT / "Source/Omnis/Gameplay/Equipment/OmnisEquipmentComponent.cpp").read_text(encoding="utf-8")
+        abilities_h = (ROOT / "Source/Omnis/Gameplay/Abilities/OmnisAbilityComponent.h").read_text(encoding="utf-8")
+        abilities_cpp = (ROOT / "Source/Omnis/Gameplay/Abilities/OmnisAbilityComponent.cpp").read_text(encoding="utf-8")
+        self.assertIn("ServerRemoveItem", inventory_h)
+        self.assertIn("HasMutationAuthority", inventory_cpp)
+        self.assertIn("DOREPLIFETIME(UOmnisInventoryComponent, ReplicatedItems)", inventory_cpp)
+        self.assertIn("ServerEquip", equipment_h)
+        self.assertIn("ServerUnequip", equipment_h)
+        self.assertIn("GetQuantity(ItemId) < 1", equipment_cpp)
+        self.assertIn("DOREPLIFETIME(UOmnisEquipmentComponent, ReplicatedEquipment)", equipment_cpp)
+        self.assertIn("ServerActivateAbility", abilities_h)
+        self.assertIn("MulticastAbilityActivated", abilities_h)
+        self.assertIn("DOREPLIFETIME(UOmnisAbilityComponent, ReplicatedCooldowns)", abilities_cpp)
+        self.assertIn("GetServerWorldTimeSeconds", abilities_cpp)
+
+    def test_save_schema_three_keeps_legacy_zero_and_two_compatible(self):
+        save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
+        persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("SchemaVersion = 3", save)
+        self.assertIn("Save->SchemaVersion != 0", persistence)
+        self.assertIn("Save->SchemaVersion != 2", persistence)
+        self.assertIn("CurrentSaveSchemaVersion = 3", persistence)
 
     def test_authoritative_gameplay_uses_server_rpcs(self):
         interaction = (ROOT / "Source/Omnis/Gameplay/Interaction/OmnisInteractionComponent.cpp").read_text(encoding="utf-8")
@@ -177,6 +215,27 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("State.RecoveryQuestId = Progress.RecoveryQuestId", actor_cpp)
         self.assertIn("RefreshNarrativeReplication", quest_cpp)
 
+
+
+    def test_npc_life_is_batched_with_distance_based_navigation_lod(self):
+        manager_h = (ROOT / "Source/Omnis/AI/NPC/OmnisCharacterLifeSubsystem.h").read_text(encoding="utf-8")
+        manager_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisCharacterLifeSubsystem.cpp").read_text(encoding="utf-8")
+        npc_h = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
+        npc_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        self.assertIn("MaxNPCUpdatesPerTick = 128", manager_h)
+        self.assertIn("NavigationSimulationRadius = 6000.0f", manager_h)
+        self.assertIn("FOmnisRegisteredNPCEntry", manager_h)
+        self.assertIn("FOmnisRegisteredNPCEntry", manager_cpp)
+        self.assertNotIn("FRegisteredNPC", manager_cpp)
+        self.assertIn("RegisterNPC", manager_cpp)
+        self.assertIn("UnregisterNPC", manager_cpp)
+        self.assertIn("SimulateLifeFromPopulationManager", manager_cpp)
+        self.assertIn("FVector::DistSquared", manager_cpp)
+        self.assertIn("Life->RegisterNPC(this)", npc_cpp)
+        self.assertIn("Life->UnregisterNPC(this)", npc_cpp)
+        self.assertIn("PrimaryActorTick.bCanEverTick = false", npc_cpp)
+        self.assertIn("SimulateLifeFromPopulationManager(float DeltaSeconds, bool bAllowNavigation)", npc_h)
+        self.assertIn("if (!bAllowNavigation)", npc_cpp)
 
     def test_health_component_notifies_clients_on_replication(self):
         header = (ROOT / "Source/Omnis/Systems/Damage/OmnisHealthComponent.h").read_text(encoding="utf-8")

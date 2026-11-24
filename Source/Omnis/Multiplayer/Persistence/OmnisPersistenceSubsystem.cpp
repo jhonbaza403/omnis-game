@@ -8,6 +8,9 @@
 #include "Core/Time/OmnisTimeSubsystem.h"
 #include "EngineUtils.h"
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
+#include "Gameplay/Abilities/OmnisAbilityComponent.h"
+#include "Gameplay/Equipment/OmnisEquipmentComponent.h"
+#include "Gameplay/Inventory/OmnisInventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Narrative/Consequences/OmnisConsequenceSubsystem.h"
@@ -19,7 +22,7 @@
 
 namespace
 {
-    constexpr int32 CurrentSaveSchemaVersion = 2;
+    constexpr int32 CurrentSaveSchemaVersion = 3;
 
     bool IsValidSlotName(const FString& SlotName)
     {
@@ -146,6 +149,18 @@ bool UOmnisPersistenceSubsystem::SaveCurrentGame(const FString& SlotName)
                 Character.Health = Player->Health->GetHealth();
                 Character.MaxHealth = Player->Health->GetMaxHealth();
             }
+            if (Player->Inventory)
+            {
+                Character.InventoryItems = Player->Inventory->ExportItems();
+            }
+            if (Player->Equipment)
+            {
+                Character.EquippedItems = Player->Equipment->ExportEquipment();
+            }
+            if (Player->Abilities)
+            {
+                Character.AbilityCooldowns = Player->Abilities->ExportCooldowns();
+            }
             Save->Characters.Add(Character);
             SavedCharacterIds.Add(Character.PersistentId);
         }
@@ -205,6 +220,7 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
     UOmnisSaveGame* Save = Cast<UOmnisSaveGame>(
         UGameplayStatics::LoadGameFromSlot(SlotName, 0));
     if (!Save || (Save->SchemaVersion != 0 &&
+        Save->SchemaVersion != 2 &&
         Save->SchemaVersion != CurrentSaveSchemaVersion))
     {
         UE_LOG(LogTemp, Error,
@@ -213,6 +229,7 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
     }
 
     // Schema 0 is the legacy save layout: migrate the permanent-point field.
+    // Schema 2 predates player inventory/equipment/cooldown persistence; empty arrays are valid.
     if (Save->SchemaVersion == 0)
     {
         Save->NexusProgression.PermanentUpgradePoints = FMath::Max(
@@ -327,6 +344,18 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
                         SavedCharacter.Health,
                         SavedCharacter.MaxHealth,
                         !SavedCharacter.LifeState.bAlive);
+                }
+                if (Player->Inventory)
+                {
+                    Player->Inventory->ImportItems(SavedCharacter.InventoryItems);
+                }
+                if (Player->Equipment)
+                {
+                    Player->Equipment->ImportEquipment(SavedCharacter.EquippedItems);
+                }
+                if (Player->Abilities)
+                {
+                    Player->Abilities->ImportCooldowns(SavedCharacter.AbilityCooldowns);
                 }
             }
             continue;

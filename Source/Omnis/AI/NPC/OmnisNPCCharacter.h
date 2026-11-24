@@ -24,12 +24,15 @@ public:
 
     virtual void BeginPlay() override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    virtual void Tick(float DeltaSeconds) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Interact_Implementation(AActor* Interactor) override;
     virtual FText GetInteractionPrompt_Implementation() const override;
 
     void RestorePersistentState(const FTransform& SavedTransform, const FOmnisCharacterLifeSnapshot& SavedLifeState);
     FName GetPersistentId() const;
+
+    void SimulateLifeFromPopulationManager(float DeltaSeconds, bool bAllowNavigation);
+    float GetLifeUpdateInterval() const { return FMath::Max(1.0f, LifeUpdateInterval); }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category="Omnis|NPC")
     FName CharacterId = TEXT("NPC.Wanderer");
@@ -110,7 +113,7 @@ protected:
 
 private:
     void ApplyCharacterDefinition();
-    void SimulateLife(float DeltaSeconds);
+    void SimulateLife(float DeltaSeconds, bool bAllowNavigation);
     void SpreadRumorsTo(AActor* Target);
     void MoveToLifeDestination(const FVector& Destination, float AcceptanceRadius = 100.0f);
 
@@ -120,6 +123,5 @@ private:
     FVector HomeLocation = FVector::ZeroVector;
     FVector WorkLocation = FVector::ZeroVector;
     FVector CurrentDestination = FVector::ZeroVector;
-    float LifeUpdateClock = 0.0f;
     bool bHasLifeDestination = false;
 };

@@ -93,7 +93,7 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 
 **Código añadido en la revisión posterior de la misma PR:**
 
-- \`UOmnisSaveGame\` usa esquema versionado 2 y almacena fecha UTC, ciclo, Nexo, reloj de mundo, progreso/intent os de misión, consecuencias activas, reputación, facciones, estado global, variables persistentes y snapshots de personajes.
+- \`UOmnisSaveGame\` usa esquema versionado 3 y almacena fecha UTC, ciclo, Nexo, reloj de mundo, progreso e intentos de misión, consecuencias activas, reputación, facciones, estado global, variables persistentes y snapshots de personajes.
 - \`UOmnisPersistenceSubsystem\` incorpora \`SaveCurrentGame\` y \`LoadCurrentGame\` usando los slots estándar de Unreal. El guardado/carga se rechaza en clientes de red; la autoridad del servidor mantiene el control del estado compartido.
 - Los snapshots de personajes contienen identidad persistente, transform, necesidades, relaciones, recuerdos, estado vital y salud actual/máxima.
 - Los NPC colocados usan como clave fallback su ruta de actor estable; los NPC generados dinámicamente deben recibir un \`PersistentId\` explícito y único. \`CharacterId\` continúa siendo el tipo/arquetipo narrativo.
@@ -123,7 +123,7 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 - Se reutiliza AOmnisReplicatedWorldStateActor como puente de lectura para misiones, consecuencias, reputación, facciones y contadores del mundo; emite OnNarrativeStateChanged al actualizarse.
 - Los NPC simulan necesidades y rutinas en autoridad y replican estado/movimiento a clientes.
 - Los identificadores persistentes de NPC ahora son explícitos; no se usa un nombre de actor generado en runtime como identidad duradera. El guardado falla de forma segura si falta o se duplica el ID.
-- Se acepta el esquema legado 0 y se migra el campo de puntos permanentes al esquema 2; otros esquemas desconocidos se rechazan antes de modificar el estado de partida.
+- Se acepta el esquema legado 0 y se migra el campo de puntos permanentes al esquema 3; otros esquemas desconocidos se rechazan antes de modificar el estado de partida.
 - Los dos NPC creados por el mundo bootstrap reciben `NPC.Bootstrap.01` y `.02` antes de `BeginPlay`; NPC adicionales deben recibir un `PersistentId` único explícito.
 - Reputación y facciones se acotan a [-100, 100], también al importar un guardado. El estado de jugadores online sigue necesitando un identificador de cuenta estable por jugador; la instantánea de jugador actual corresponde al índice local 0.
 
@@ -170,8 +170,45 @@ Resultado actualizado: el mundo abierto tiene una población inicial de seis hab
 
 Límite deliberado: esto es una red emergente de rumores entre personajes que llegan a socializar. Todavía no simula radio de prensa, redes sociales, difusión por ciudad, conversación contextual extensa ni reacciones automáticas de multitudes. Tampoco simula la propagación mientras una región está descargada.
 
-## 12. Quinta capa de replicación — salud, muerte y feedback de cliente
+## 12. Sexta integración — salud, muerte y feedback de cliente
 
 - La salud actual usa RepNotify para emitir OnHealthChanged también en clientes cuando la propiedad replicada cambia.
 - El estado de muerte usa RepNotify para emitir OnDeath en cliente; el servidor sigue siendo el único que aplica daño, restaura salud o elimina al actor.
 - Los widgets/animaciones pueden suscribirse a los mismos delegates de salud y muerte en servidor/cliente; la integración de HUD visual se mantiene pendiente de prueba en Unreal.
+
+## 13. Séptima integración — simulación por lotes y LOD de navegación
+
+- AOmnisNPCCharacter deja de ejecutar un Tick propio para simular necesidades y horarios. Se registra en UOmnisCharacterLifeSubsystem al entrar en mundo y se elimina del registro al salir.
+- El subsistema procesa como máximo 128 NPC por frame, con reloj de juego escalado por UOmnisTimeSubsystem; así el presupuesto de decisiones no crece como un Tick por NPC.
+- La navegación solo se permite dentro de 6.000 unidades de al menos un jugador. Fuera de ese radio el NPC conserva necesidades, horarios, memoria y relaciones, pero detiene pathfinding; cuando entra en el radio de un jugador, retoma su objetivo de navegación.
+- El gestor utiliza timestamps de tiempo simulado; al cargar un guardado cuyo reloj sea anterior al de la sesión actual, rebasa el timestamp del NPC y no espera a que el reloj antiguo se alcance.
+
+### Límites de la LOD
+
+- El presupuesto 128/frame y el radio de 6.000 son valores iniciales de ingeniería, no resultados medidos en perfilador. Deben ajustarse con pruebas de servidor dedicado, cantidad real de habitantes y coste de navegación.
+- La LOD no sustituye el sistema de persistencia de World Partition: los actores descargados se desregistran y su vida no avanza mientras la región permanece descargada.
+- Los NPC lejanos siguen siendo actores cargados y sus necesidades/horarios se actualizan por lotes; todavía falta una simulación de población agregada para miles de habitantes descargados, con economía/rumores por distrito y materialización al volver a cargar una región.
+- Esta arquitectura reduce ticks propios y pathfinding distante, pero no constituye por sí sola una certificación de 10.000+ NPC. Eso requiere UHT/UBT, perfiles de CPU/red/memoria, NavMesh y una prueba de población a escala.
+
+Resultado actualizado: la vida de los NPC tiene un gestor central de presupuesto por frame y una LOD de navegación por proximidad. Se mantiene pendiente la simulación agregada para regiones no cargadas y la certificación de rendimiento real.
+
+## 14. Octava integración — inventario, equipo y habilidades autoritativas
+
+- El inventario se replica como entradas ItemId/Quantity. El servidor es el único que concede objetos; las solicitudes de retirada desde cliente se procesan por RPC y el servidor verifica la cantidad disponible.
+- Se incorporan límites por inventario (100 tipos de objeto) y por pila (999 por defecto), además de exportación/importación ordenadas y evento OnInventoryChanged.
+- El equipo valida que el jugador posea el objeto antes de equiparlo. Sustituir un objeto devuelve el anterior al inventario; si no puede devolverse, se revierte la operación. Desequipar añade primero el objeto y solo después limpia el slot.
+- El equipo replica sus slots y emite OnEquipmentChanged en servidor/cliente.
+- La activación de habilidades se solicita al servidor mediante RPC; el cooldown se calcula con hora de servidor, se replica y el evento de activación se distribuye a los clientes.
+- Las partidas de esquema 3 incorporan inventario, equipo y cooldowns restantes por jugador. Los cooldowns se guardan como segundos restantes, no como timestamps absolutos de una sesión antigua. La lectura sigue aceptando los formatos antiguos 0 y 2.
+- Los tests de Automation prueban exportación/importación de stacks, slots de equipo y cooldowns, además de guardar esos snapshots dentro de un registro de personaje.
+
+### Límites del gameplay económico y de habilidades
+
+- El inventario es un contenedor de IDs y cantidades. Aún falta un catálogo UOmnisItemDefinition con peso, rareza, categoría, reglas de stack, tipo de uso, slots válidos, iconos, descripción y reglas de comercio.
+- La concesión de objetos está restringida a autoridad, pero falta conectar los puntos de recogida, tiendas, loot y recompensas a la validación del servidor.
+- Los slots de equipo se validan contra cantidad disponible, pero todavía no se coteja compatibilidad ItemId↔Slot con un catálogo de objetos.
+- El sistema de habilidades proporciona RPC, cooldown y evento replicado; todavía no tiene Data Assets de habilidades, costes de recursos, efectos, animaciones, interrupciones, combos ni validaciones específicas por habilidad.
+- Se guarda solo el inventario/equipo/cooldowns del jugador local 0; el guardado individual por Net ID para varias cuentas multijugador sigue pendiente.
+- La ejecución de pruebas C++ sigue pendiente en Unreal Engine 5.8; las comprobaciones estáticas no demuestran el comportamiento de los RPC ni la serialización en disco.
+
+Resultado actualizado: inventario, equipo y una primera vía de activación de habilidades están integrados con autoridad y replicación; el catálogo de objetos, los efectos de habilidades y la integración con economía/misiones continúan abiertos.

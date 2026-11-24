@@ -4,6 +4,9 @@
 #include "GameFramework/SaveGame.h"
 #include "Core/Cycle/OmnisCycleTypes.h"
 #include "Core/Nexus/OmnisNexusSubsystem.h"
+#include "Gameplay/Abilities/OmnisAbilityComponent.h"
+#include "Gameplay/Equipment/OmnisEquipmentComponent.h"
+#include "Gameplay/Inventory/OmnisInventoryComponent.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Narrative/Quests/OmnisQuestSubsystem.h"
 #include "OmnisSaveGame.generated.h"
@@ -30,6 +33,15 @@ struct FOmnisSavedCharacterState
 
     UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
     float MaxHealth = 100.0f;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisInventoryEntry> InventoryItems;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisEquipmentEntry> EquippedItems;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisSavedAbilityCooldown> AbilityCooldowns;
 };
 
 UCLASS()
@@ -39,7 +51,7 @@ class OMNIS_API UOmnisSaveGame : public USaveGame
 
 public:
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
-    int32 SchemaVersion = 0;
+    int32 SchemaVersion = 3;
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
     FDateTime SavedAtUtc;
