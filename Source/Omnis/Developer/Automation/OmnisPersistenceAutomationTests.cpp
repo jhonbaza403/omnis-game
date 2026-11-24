@@ -34,6 +34,7 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     OriginalState->RecordMemory(TEXT("Quest.Failed"), TEXT("Quest.Escort"), 90);
     OriginalState->RecordMemory(TEXT("Mission.Failure.PublicShame"), TEXT("Player"), 100);
     OriginalState->RecordMemory(TEXT("Mission.Failure.Quest.Escort.Attempt.1"), TEXT("Player"), 100);
+    OriginalState->RecordMemory(TEXT("Mission.Failure.Quest.Escort.Attempt.1"), TEXT("Player"), 100);
     OriginalState->SimulateNeeds(10.0f, EOmnisCharacterLifeGoal::Work, false);
     const FOmnisCharacterLifeSnapshot LifeSnapshot = OriginalState->ExportSnapshot();
     RestoredState->ImportSnapshot(LifeSnapshot);
@@ -42,6 +43,13 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     TestEqual(TEXT("Memory count survives snapshot"), RestoredState->GetMemories().Num(), 3);
     TestTrue(TEXT("Mission failure memory survives snapshot"), RestoredState->HasMemory(TEXT("Quest.Failed")));
     TestTrue(TEXT("Public shame rumor prefix survives snapshot"), RestoredState->HasMemoryPrefix(TEXT("Mission.Failure.")));
+    TestTrue(TEXT("Unique mission attempt rumor survives snapshot"), RestoredState->HasMemory(TEXT("Mission.Failure.Quest.Escort.Attempt.1")));
+    TestEqual(
+        TEXT("Recovery removes mission-specific attempt rumors"),
+        RestoredState->RemoveMemoriesByPrefix(TEXT("Mission.Failure.Quest.Escort.Attempt.")),
+        1);
+    TestFalse(TEXT("Repaired attempt rumor no longer remains"),
+        RestoredState->HasMemoryPrefix(TEXT("Mission.Failure.Quest.Escort.Attempt.")));
     TestTrue(TEXT("Unique mission rumor survives snapshot"), RestoredState->HasMemory(TEXT("Mission.Failure.Quest.Escort")));
     TestTrue(TEXT("Recovery removes the mission-specific rumor"), RestoredState->RemoveMemory(TEXT("Mission.Failure.Quest.Escort")));
     TestFalse(TEXT("Repaired rumor no longer remains in memory"), RestoredState->HasMemory(TEXT("Mission.Failure.Quest.Escort")));
