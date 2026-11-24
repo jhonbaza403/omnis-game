@@ -102,3 +102,16 @@ void UOmnisHealthComponent::RestoreSavedState(
         Health = 1.0f;
     }
 }
+
+void UOmnisHealthComponent::OnRep_Health(float PreviousHealth)
+{
+    OnHealthChanged.Broadcast(Health, Health - PreviousHealth);
+}
+
+void UOmnisHealthComponent::OnRep_Dead()
+{
+    if (bDead)
+    {
+        OnDeath.Broadcast();
+    }
+}

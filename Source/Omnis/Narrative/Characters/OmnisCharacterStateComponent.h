@@ -128,6 +128,9 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Life")
     bool HasMemory(FName EventId) const;
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Life")
+    bool HasMemoryPrefix(const FString& EventPrefix) const;
+
 private:
     UFUNCTION()
     void OnRep_Alive();

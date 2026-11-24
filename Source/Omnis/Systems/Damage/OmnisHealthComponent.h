@@ -56,11 +56,17 @@ protected:
 
 private:
     UFUNCTION()
+    void OnRep_Health(float PreviousHealth);
+
+    UFUNCTION()
+    void OnRep_Dead();
+
+    UFUNCTION()
     void HandleDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
-    UPROPERTY(SaveGame, Replicated)
+    UPROPERTY(SaveGame, ReplicatedUsing=OnRep_Health)
     float Health = 100.0f;
 
-    UPROPERTY(SaveGame, Replicated)
+    UPROPERTY(SaveGame, ReplicatedUsing=OnRep_Dead)
     bool bDead = false;
 };

@@ -111,6 +111,7 @@ protected:
 private:
     void ApplyCharacterDefinition();
     void SimulateLife(float DeltaSeconds);
+    void SpreadRumorsTo(AActor* Target);
     void MoveToLifeDestination(const FVector& Destination, float AcceptanceRadius = 100.0f);
 
     UPROPERTY(VisibleAnywhere)

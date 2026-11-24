@@ -129,6 +129,21 @@ class PersistenceContractTests(unittest.TestCase):
             self.assertIn("Replicated", header)
             self.assertIn(field, header)
 
+
+    def test_failure_rumors_spread_with_bounded_decay_and_deduplication(self):
+        npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        state = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.cpp").read_text(encoding="utf-8")
+        quest = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("SpreadRumorsTo(SocialTarget)", npc)
+        self.assertIn("RumorSpreadLoss = 20", npc)
+        self.assertIn("MinimumRumorStrength = 30", npc)
+        self.assertIn("TargetState->HasMemory(Memory.EventId)", npc)
+        self.assertIn("HasMemoryPrefix", state)
+        self.assertIn("RumorSpreadLoss", npc)
+        automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
+        self.assertIn("HasMemoryPrefix", automation)
+        self.assertIn("Definition->FailureReputationTargetId", quest)
+
     def test_state_and_economic_mutations_are_server_authoritative(self):
         state = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.cpp").read_text(encoding="utf-8")
         reputation = (ROOT / "Source/Omnis/Narrative/Reputation/OmnisReputationSubsystem.cpp").read_text(encoding="utf-8")
@@ -153,6 +168,15 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("RefreshNarrativeState", actor_cpp)
         self.assertIn("State.RecoveryQuestId = Progress.RecoveryQuestId", actor_cpp)
         self.assertIn("RefreshNarrativeReplication", quest_cpp)
+
+
+    def test_health_component_notifies_clients_on_replication(self):
+        header = (ROOT / "Source/Omnis/Systems/Damage/OmnisHealthComponent.h").read_text(encoding="utf-8")
+        source = (ROOT / "Source/Omnis/Systems/Damage/OmnisHealthComponent.cpp").read_text(encoding="utf-8")
+        self.assertIn("ReplicatedUsing=OnRep_Health", header)
+        self.assertIn("ReplicatedUsing=OnRep_Dead", header)
+        self.assertIn("OnHealthChanged.Broadcast(Health, Health - PreviousHealth)", source)
+        self.assertIn("OnDeath.Broadcast()", source)
 
     def test_npc_and_life_state_replicate_from_authority(self):
         npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")

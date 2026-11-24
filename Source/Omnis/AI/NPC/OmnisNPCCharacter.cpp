@@ -311,6 +311,7 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
         }
         CharacterState->RecordMemory(TEXT("NPC.SocialEncounter"), SocialTargetId, 5);
         CharacterState->AdjustRelationship(SocialTargetId, 1);
+        SpreadRumorsTo(SocialTarget);
 
         if (AOmnisNPCCharacter* OtherNPC = Cast<AOmnisNPCCharacter>(SocialTarget))
         {
@@ -338,6 +339,59 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
     CharacterState->SimulateNeeds(DeltaSeconds, Goal, bReachedGoal);
 }
 
+void AOmnisNPCCharacter::SpreadRumorsTo(AActor* Target)
+{
+    if (!HasAuthority() || !Target || Target == this || !CharacterState)
+    {
+        return;
+    }
+
+    UOmnisCharacterStateComponent* TargetState = nullptr;
+    const bool bTargetIsPlayer = Cast<AOmnisPlayerCharacter>(Target) != nullptr;
+    if (AOmnisNPCCharacter* TargetNPC = Cast<AOmnisNPCCharacter>(Target))
+    {
+        TargetState = TargetNPC->CharacterState;
+    }
+    else if (AOmnisPlayerCharacter* TargetPlayer = Cast<AOmnisPlayerCharacter>(Target))
+    {
+        TargetState = TargetPlayer->CharacterState;
+    }
+
+    if (!TargetState || TargetState == CharacterState)
+    {
+        return;
+    }
+
+    // Rumors are bounded by strength and by one receipt per event/person.
+    // Each social exchange reduces importance, so they eventually stop spreading.
+    constexpr int32 RumorSpreadLoss = 20;
+    constexpr int32 MinimumRumorStrength = 30;
+    const TArray<FOmnisCharacterMemoryEntry> SourceMemories = CharacterState->GetMemories();
+
+    for (const FOmnisCharacterMemoryEntry& Memory : SourceMemories)
+    {
+        if (!Memory.EventId.ToString().StartsWith(TEXT("Mission.Failure.")) ||
+            Memory.Importance <= MinimumRumorStrength ||
+            TargetState->HasMemory(Memory.EventId))
+        {
+            continue;
+        }
+
+        const int32 ReceivedStrength = FMath::Max(
+            MinimumRumorStrength,
+            Memory.Importance - RumorSpreadLoss);
+        TargetState->RecordMemory(
+            Memory.EventId,
+            Memory.RelatedCharacterId,
+            ReceivedStrength);
+
+        if (!bTargetIsPlayer && !Memory.RelatedCharacterId.IsNone())
+        {
+            TargetState->AdjustRelationship(Memory.RelatedCharacterId, -5);
+        }
+    }
+}
+
 void AOmnisNPCCharacter::MoveToLifeDestination(
     const FVector& Destination,
     float AcceptanceRadius)
@@ -350,7 +404,7 @@ void AOmnisNPCCharacter::MoveToLifeDestination(
 
 FText AOmnisNPCCharacter::GetInteractionPrompt_Implementation() const
 {
-    if (CharacterState && CharacterState->HasMemory(TEXT("Mission.Failure.PublicShame")))
+    if (CharacterState && CharacterState->HasMemoryPrefix(TEXT("Mission.Failure.")))
     {
         return NSLOCTEXT("Omnis", "PublicShamePrompt", "No olvido lo que ocurrió");
     }

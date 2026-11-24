@@ -258,3 +258,19 @@ bool UOmnisCharacterStateComponent::HasMemory(FName EventId) const
             return Entry.EventId == EventId;
         });
 }
+
+bool UOmnisCharacterStateComponent::HasMemoryPrefix(const FString& EventPrefix) const
+{
+    if (EventPrefix.IsEmpty())
+    {
+        return false;
+    }
+
+    return Memories.ContainsByPredicate(
+        [&EventPrefix](const FOmnisCharacterMemoryEntry& Entry)
+        {
+            return Entry.EventId.ToString().StartsWith(
+                EventPrefix,
+                ESearchCase::IgnoreCase);
+        });
+}

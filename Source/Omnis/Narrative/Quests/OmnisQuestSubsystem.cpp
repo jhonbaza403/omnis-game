@@ -239,7 +239,7 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
                 100);
             NPC->CharacterState->RecordMemory(
                 Definition->FailureConsequenceId,
-                Definition->QuestId,
+                Definition->FailureReputationTargetId,
                 100);
             NPC->CharacterState->AdjustRelationship(
                 Definition->FailureReputationTargetId,
@@ -253,6 +253,10 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
                 It->CharacterState->RecordMemory(
                     FailureReason,
                     Definition->QuestId,
+                    80);
+                It->CharacterState->RecordMemory(
+                    Definition->FailureConsequenceId,
+                    Definition->FailureReputationTargetId,
                     80);
             }
         }

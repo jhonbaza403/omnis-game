@@ -28,13 +28,15 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
 
     OriginalState->SetRelationship(TEXT("Player"), -65);
     OriginalState->RecordMemory(TEXT("Quest.Failed"), TEXT("Quest.Escort"), 90);
+    OriginalState->RecordMemory(TEXT("Mission.Failure.PublicShame"), TEXT("Player"), 100);
     OriginalState->SimulateNeeds(10.0f, EOmnisCharacterLifeGoal::Work, false);
     const FOmnisCharacterLifeSnapshot LifeSnapshot = OriginalState->ExportSnapshot();
     RestoredState->ImportSnapshot(LifeSnapshot);
 
     TestEqual(TEXT("Relationship survives snapshot"), RestoredState->GetRelationship(TEXT("Player")), -65);
-    TestEqual(TEXT("Memory count survives snapshot"), RestoredState->GetMemories().Num(), 1);
+    TestEqual(TEXT("Memory count survives snapshot"), RestoredState->GetMemories().Num(), 2);
     TestTrue(TEXT("Mission failure memory survives snapshot"), RestoredState->HasMemory(TEXT("Quest.Failed")));
+    TestTrue(TEXT("Public shame rumor prefix survives snapshot"), RestoredState->HasMemoryPrefix(TEXT("Mission.Failure.")));
     TestTrue(TEXT("Hunger survives snapshot"), FMath::IsNearlyEqual(RestoredState->GetHunger(), OriginalState->GetHunger()));
     TestTrue(TEXT("Energy survives snapshot"), FMath::IsNearlyEqual(RestoredState->GetEnergy(), OriginalState->GetEnergy()));
 

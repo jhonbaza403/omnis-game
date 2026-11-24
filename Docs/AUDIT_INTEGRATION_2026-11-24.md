@@ -119,7 +119,7 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 - El ataque usa ServerAttack, valida alcance/daño y aplica daño únicamente desde autoridad.
 - Retirar una pieza de construcción usa ServerRemoveLastPiece; la lista de piezas construidas se replica y el servidor conserva el control del borrado.
 - La posesión de vehículos y aeronaves se solicita al servidor mediante RPC desde el PlayerController.
-- El estado de vida, recuerdos, necesidades y relaciones se replica mediante propiedades explícitas; las relaciones se transmiten como registros en array y se reconstruye el mapa local en clientes.
+- El estado de vida, recuerdos, necesidades y relaciones se replica mediante propiedades explícitas; las relaciones se transmiten como registros en array y se reconstruye el mapa local en clientes. Salud y muerte usan RepNotify para disparar delegados en el cliente, no solo actualizar floats.
 - Se reutiliza AOmnisReplicatedWorldStateActor como puente de lectura para misiones, consecuencias, reputación, facciones y contadores del mundo; emite OnNarrativeStateChanged al actualizarse.
 - Los NPC simulan necesidades y rutinas en autoridad y replican estado/movimiento a clientes.
 - Los identificadores persistentes de NPC ahora son explícitos; no se usa un nombre de actor generado en runtime como identidad duradera. El guardado falla de forma segura si falta o se duplica el ID.
@@ -131,7 +131,7 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 
 - Validación UHT/UBT de los RPC nuevos, ReplicatedUsing, arrays de structs y firmas de delegates.
 - Validar en servidor dedicado + dos clientes que interacción, daño, construcción, posesión y estado narrativo se ven correctamente.
-- Conectar HUD/diálogo al actor replicado y diseñar la difusión de rumores entre testigos con radio/decadencia.
+- Conectar HUD/diálogo al actor replicado y validar visualmente los delegados de actualización en cliente. La difusión de rumores acotada ya está implementada; falta validarla en multiplayer.
 - Asignar PersistentId a todos los NPC colocados y spawneados; comprobar IDs únicos en contenido de producción.
 - Cargar mundo/actores antes de LoadCurrentGame; hoy la carga aborta si el NPC guardado no está en la región/level activo.
 - Integrar autosave, selección de slots y migraciones adicionales; API manual ya disponible.
@@ -148,6 +148,7 @@ Resultado actualizado: los caminos principales de interacción, combate y constr
 - Los NPC del mapa persistente tienen horarios de trabajo y descanso distintos, así como destinos de trabajo independientes. Los dos NPC del bootstrap también reciben IDs deterministas.
 - La identidad y los datos biográficos del NPC se resuelven en el servidor y se replican en el actor para mostrarse en cada cliente.
 - La socialización descarta vehículos/objetos que también sean Pawn: solo considera jugadores y NPC. Cuando dos NPC socializan, ambos guardan el encuentro y elevan la relación; cuando participa un jugador, su memoria local recibe el encuentro.
+- Los recuerdos con prefijo Mission.Failure. se transmiten en encuentros sociales: 20 puntos menos de intensidad por contacto, umbral mínimo de 30, y deduplicación por evento en cada receptor. Los NPC que reciben el rumor pueden transmitirlo en encuentros posteriores; la pérdida de intensidad limita la cadena.
 
 ### Límites restantes de la simulación de vida
 
@@ -158,3 +159,19 @@ Resultado actualizado: los caminos principales de interacción, combate y constr
 - La persistencia de jugadores online sigue pendiente de enlazar el estado de cada usuario a su Net ID; actualmente se captura el jugador local 0 y el estado mundial autoritativo.
 
 Resultado actualizado: el mundo abierto tiene una población inicial de seis habitantes con identidad visible y horarios distintos, más el marco de Data Asset para ampliar cada vida. Las mutaciones de CharacterState, reputación, facciones, consecuencias y estado mundial se limitan a autoridad; NavMesh, streaming de población y certificación nativa siguen pendientes.
+
+## 11. Quinta integración — difusión social limitada de rumores
+
+- El fracaso de misión coloca el evento de consecuencia en la memoria de los testigos con referencia al sujeto reputacional (por defecto Player); el jugador también conserva el evento.
+- Durante los encuentros de socialización, los NPC solo comparten eventos Mission.Failure.*. Se excluyen vehículos y peones no sociales de la selección de interlocutor.
+- El rumor se transmite una sola vez por evento/personaje, pierde 20 puntos de importancia por intercambio y no se comparte por debajo de 30.
+- La relación con el sujeto del rumor disminuye otros 5 puntos en el receptor NPC; los recuerdos/relaciones son autoritativos y replicados.
+- El prompt de interacción de los NPC cambia a una respuesta contextual cuando conservan memoria de una consecuencia de misión fallida.
+
+Límite deliberado: esto es una red emergente de rumores entre personajes que llegan a socializar. Todavía no simula radio de prensa, redes sociales, difusión por ciudad, conversación contextual extensa ni reacciones automáticas de multitudes. Tampoco simula la propagación mientras una región está descargada.
+
+## 12. Quinta capa de replicación — salud, muerte y feedback de cliente
+
+- La salud actual usa RepNotify para emitir OnHealthChanged también en clientes cuando la propiedad replicada cambia.
+- El estado de muerte usa RepNotify para emitir OnDeath en cliente; el servidor sigue siendo el único que aplica daño, restaura salud o elimina al actor.
+- Los widgets/animaciones pueden suscribirse a los mismos delegates de salud y muerte en servidor/cliente; la integración de HUD visual se mantiene pendiente de prueba en Unreal.
