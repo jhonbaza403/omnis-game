@@ -51,7 +51,7 @@ class OMNIS_API UOmnisSaveGame : public USaveGame
 
 public:
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
-    int32 SchemaVersion = 3;
+    int32 SchemaVersion = 4;
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
     FDateTime SavedAtUtc;

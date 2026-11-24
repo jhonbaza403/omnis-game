@@ -71,7 +71,22 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     FailedQuest.State = EOmnisQuestState::Failed;
     FailedQuest.Attempts = 2;
     FailedQuest.RecoveryQuestId = TEXT("Quest.RepairReputation");
+    FailedQuest.FailureConsequenceId = TEXT("Mission.Failure.PublicShame");
     QuestSnapshots.Add(FailedQuest);
+
+    FOmnisQuestProgressSnapshot SecondFailedQuest;
+    SecondFailedQuest.QuestId = TEXT("Quest.Sabotage");
+    SecondFailedQuest.State = EOmnisQuestState::Failed;
+    SecondFailedQuest.Attempts = 1;
+    SecondFailedQuest.RecoveryQuestId = TEXT("Quest.RepairReputation");
+    SecondFailedQuest.FailureConsequenceId = TEXT("Mission.Failure.PublicShame");
+    QuestSnapshots.Add(SecondFailedQuest);
+
+    FOmnisQuestProgressSnapshot RecoveredQuest;
+    RecoveredQuest.QuestId = TEXT("Quest.Rescue");
+    RecoveredQuest.State = EOmnisQuestState::Recovered;
+    RecoveredQuest.Attempts = 1;
+    QuestSnapshots.Add(RecoveredQuest);
     OriginalQuests->ImportProgress(QuestSnapshots);
     RestoredQuests->ImportProgress(OriginalQuests->ExportProgress());
 
@@ -82,6 +97,21 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     TestTrue(
         TEXT("Recovery quest link survives snapshot"),
         RestoredQuests->GetRecoveryQuestId(TEXT("Quest.Escort")) == FName(TEXT("Quest.RepairReputation")));
+    TestTrue(
+        TEXT("Per-quest failure consequence survives snapshot"),
+        RestoredQuests->GetFailureConsequenceId(TEXT("Quest.Escort")) == FName(TEXT("Mission.Failure.PublicShame")));
+    TestTrue(
+        TEXT("Shared aggregate remains unresolved while either mission is failed"),
+        RestoredQuests->HasUnresolvedFailureUsingConsequence(TEXT("Mission.Failure.PublicShame")));
+    TestTrue(
+        TEXT("Second mission retains the same aggregate mapping independently"),
+        RestoredQuests->GetFailureConsequenceId(TEXT("Quest.Sabotage")) == FName(TEXT("Mission.Failure.PublicShame")));
+    TestTrue(
+        TEXT("Recovered state survives snapshot and is not counted as unresolved"),
+        RestoredQuests->GetQuestState(TEXT("Quest.Rescue")) == EOmnisQuestState::Recovered);
+    TestTrue(
+        TEXT("Recovered quest does not rebuild a failure consequence"),
+        RestoredQuests->GetFailureConsequenceId(TEXT("Quest.Rescue")).IsNone());
 
     UOmnisConsequenceSubsystem* OriginalConsequences =
         NewObject<UOmnisConsequenceSubsystem>();
@@ -106,7 +136,7 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     {
         return false;
     }
-    Save->SchemaVersion = 3;
+    Save->SchemaVersion = 4;
     Save->QuestProgress = RestoredQuests->ExportProgress();
     Save->ActiveConsequences = RestoredConsequences->ExportConsequences();
     FOmnisSavedCharacterState Character;
@@ -168,8 +198,8 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     Character.AbilityCooldowns = RestoredAbilities->ExportCooldowns();
     Save->Characters.Add(Character);
 
-    TestEqual(TEXT("Save schema version"), Save->SchemaVersion, 3);
-    TestEqual(TEXT("Saved quest count"), Save->QuestProgress.Num(), 1);
+    TestEqual(TEXT("Save schema version"), Save->SchemaVersion, 4);
+    TestEqual(TEXT("Saved quest count"), Save->QuestProgress.Num(), 3);
     TestEqual(TEXT("Saved character count"), Save->Characters.Num(), 1);
     TestEqual(TEXT("Saved inventory entries"), Save->Characters[0].InventoryItems.Num(), 2);
     TestEqual(TEXT("Saved equipped slots"), Save->Characters[0].EquippedItems.Num(), 1);

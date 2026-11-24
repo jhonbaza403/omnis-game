@@ -114,13 +114,14 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("Save->PermanentUpgradePoints", source)
         self.assertIn("Nexus->ImportProgression(Save->NexusProgression)", source)
 
-    def test_save_schema_three_keeps_legacy_zero_and_two_compatible(self):
+    def test_save_schema_four_keeps_legacy_zero_two_and_three_compatible(self):
         save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
         persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
-        self.assertIn("SchemaVersion = 3", save)
+        self.assertIn("SchemaVersion = 4", save)
         self.assertIn("Save->SchemaVersion != 0", persistence)
         self.assertIn("Save->SchemaVersion != 2", persistence)
-        self.assertIn("CurrentSaveSchemaVersion = 3", persistence)
+        self.assertIn("Save->SchemaVersion != 3", persistence)
+        self.assertIn("CurrentSaveSchemaVersion = 4", persistence)
 
     def test_authoritative_gameplay_uses_server_rpcs(self):
         interaction = (ROOT / "Source/Omnis/Gameplay/Interaction/OmnisInteractionComponent.cpp").read_text(encoding="utf-8")
@@ -328,6 +329,45 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("Memories.RemoveAll", state_cpp)
         self.assertIn("RemoveMemoriesByPrefix(RumorPrefix)", quest)
         self.assertIn("SpreadRumorsTo(SocialTarget)", npc)
+
+
+
+    def test_shared_failure_consequence_waits_for_all_linked_recoveries(self):
+        quest_h = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.h").read_text(encoding="utf-8")
+        quest_cpp = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.cpp").read_text(encoding="utf-8")
+        save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
+        persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        replicated = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.cpp").read_text(encoding="utf-8")
+        self.assertIn("FailureConsequenceByFailedQuest", quest_h)
+        self.assertIn("Recovered", quest_h)
+        self.assertIn("Snapshot.State == EOmnisQuestState::Failed", quest_cpp)
+        self.assertIn("EOmisQuestState::Recovered", quest_cpp)
+        self.assertIn("FailureConsequenceId", quest_h)
+        self.assertIn("BuildQuestScopedFailureConsequenceId", quest_cpp)
+        self.assertIn("HasUnresolvedFailureUsingConsequence(BaseConsequenceId)", quest_cpp)
+        self.assertIn("RestoreFailureConsequences", persistence)
+        self.assertIn("State.FailureConsequenceId = Progress.FailureConsequenceId", replicated)
+        self.assertIn("SchemaVersion = 4", save)
+
+
+
+    def test_per_quest_failure_consequences_are_scoped_saved_and_replicated(self):
+        quest_h = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.h").read_text(encoding="utf-8")
+        quest_cpp = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.cpp").read_text(encoding="utf-8")
+        persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        actor_h = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.h").read_text(encoding="utf-8")
+        actor_cpp = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.cpp").read_text(encoding="utf-8")
+        automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
+        self.assertIn("FailureConsequenceByFailedQuest", quest_h)
+        self.assertIn("FName FailureConsequenceId", quest_h)
+        self.assertIn("BuildQuestScopedFailureConsequenceId", quest_cpp)
+        self.assertIn("HasUnresolvedFailureUsingConsequence(BaseConsequenceId)", quest_cpp)
+        self.assertIn("RestoreFailureConsequences()", persistence)
+        self.assertIn("FName FailureConsequenceId", actor_h)
+        self.assertIn("State.FailureConsequenceId = Progress.FailureConsequenceId", actor_cpp)
+        self.assertIn("HasUnresolvedFailureUsingConsequence", automation)
+        self.assertIn("Quest.Sabotage", automation)
+        self.assertIn("SchemaVersion = 4", (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

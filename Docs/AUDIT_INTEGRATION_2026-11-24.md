@@ -247,3 +247,24 @@ El calendario es determinista y funcional para horarios, pero todavía no repres
 ### Límite restante
 
 El radio usa la posición del jugador como aproximación al lugar del suceso; las misiones deben poder pasar una posición explícita del evento para casos que ocurran lejos del jugador o en escenas de cinemática. Los testigos y rumores se simulan en los NPC cargados; la población de regiones descargadas aún no participa.
+
+## 18. Duodécima integración — consecuencias independientes por misión
+
+- Cada misión fallida conserva su ID base de consecuencia y una marca individual \`<ConsequenceId>.Quest.<QuestId>\`, además del marcador agregado usado por la interfaz previa.
+- El progreso serializado incluye \`FailureConsequenceId\` por misión. Así la carga puede reconstruir las marcas individuales y el agregado sin depender de cargar los Data Assets originales.
+- Una recuperación elimina la marca específica de cada misión vinculada. La marca agregada se mantiene mientras exista cualquier otro fallo no resuelto que use ese mismo tipo de consecuencia.
+- \`ConsequencesToRemoveOnCompletion\` también respeta las referencias de fallos pendientes y no puede borrar prematuramente una consecuencia que todavía pertenece a otra misión.
+- El estado de misión replicado a clientes incluye el ID base de consecuencia.
+- Se amplía el esquema de guardado a la versión 4. Los esquemas 0, 2 y 3 siguen aceptándose; para una misión fallida antigua que no llevaba este campo, se reconstruye el valor predeterminado \`Mission.Failure.PublicShame\`.
+
+### Límite de migración
+
+Las partidas anteriores al esquema 4 no almacenaban el ID personalizado de consecuencia por misión. En esas partidas, la migración usa el valor público predeterminado para misiones fallidas sin campo; los IDs personalizados antiguos no pueden reconstruirse si no estaban guardados por separado.
+
+## 19. Decimotercera integración — estado explícito de misión recuperada
+
+- Se añade \`EOmisQuestState::Recovered\` sin alterar los valores previos de los estados existentes.
+- Cuando una misión de recuperación resuelve un fallo vinculado, la misión original pasa de \`Failed\` a \`Recovered\`, se retira su asociación de recuperación y se elimina su ID de consecuencia individual.
+- Al cargar, solo los registros que siguen en estado \`Failed\` reconstruyen consecuencias pendientes. Un registro \`Recovered\` conserva el historial sin volver a activar la vergüenza.
+- Se amplía la Automation Test de snapshots para cubrir dos misiones fallidas que comparten una consecuencia agregada y una misión ya recuperada.
+

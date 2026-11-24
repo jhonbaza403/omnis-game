@@ -21,6 +21,9 @@ struct FOmnisReplicatedQuestState
 
     UPROPERTY(BlueprintReadOnly, Category="Omnis|World")
     FName RecoveryQuestId;
+
+    UPROPERTY(BlueprintReadOnly, Category="Omnis|World")
+    FName FailureConsequenceId;
 };
 
 USTRUCT(BlueprintType)

@@ -12,7 +12,8 @@ enum class EOmnisQuestState : uint8
     Inactive,
     Active,
     Completed,
-    Failed
+    Failed,
+    Recovered
 };
 
 USTRUCT(BlueprintType)
@@ -31,6 +32,9 @@ struct FOmnisQuestProgressSnapshot
 
     UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Quest")
     FName RecoveryQuestId;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Quest")
+    FName FailureConsequenceId;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
@@ -67,6 +71,15 @@ public:
     FName GetRecoveryQuestId(FName FailedQuestId) const;
 
     UFUNCTION(BlueprintPure, Category="Omnis|Quest")
+    FName GetFailureConsequenceId(FName FailedQuestId) const;
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Quest")
+    void RestoreFailureConsequences();
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Quest")
+    bool HasUnresolvedFailureUsingConsequence(FName ConsequenceId) const;
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Quest")
     TArray<FOmnisQuestProgressSnapshot> ExportProgress() const;
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Quest")
@@ -88,4 +101,7 @@ private:
 
     UPROPERTY(SaveGame)
     TMap<FName, FName> RecoveryQuestByFailedQuest;
+
+    UPROPERTY(SaveGame)
+    TMap<FName, FName> FailureConsequenceByFailedQuest;
 };

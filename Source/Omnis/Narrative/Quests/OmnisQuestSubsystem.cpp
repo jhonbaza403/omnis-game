@@ -22,6 +22,13 @@ namespace
             : FString::Printf(TEXT("Mission.Failure.%s.Attempt."), *QuestId.ToString());
     }
 
+    FName BuildQuestScopedFailureConsequenceId(FName ConsequenceId, FName QuestId)
+    {
+        return ConsequenceId.IsNone() || QuestId.IsNone()
+            ? NAME_None
+            : FName(*FString::Printf(TEXT("%s.Quest.%s"), *ConsequenceId.ToString(), *QuestId.ToString()));
+    }
+
     FName BuildMissionFailureRumorId(FName QuestId, int32 AttemptNumber)
     {
         const FString Prefix = BuildMissionFailureRumorPrefix(QuestId);
@@ -161,6 +168,13 @@ bool UOmnisQuestSubsystem::FailQuest(
             Definition->RecoveryQuestId);
     }
 
+    if (!Definition->FailureConsequenceId.IsNone())
+    {
+        FailureConsequenceByFailedQuest.Add(
+            Definition->QuestId,
+            Definition->FailureConsequenceId);
+    }
+
     ApplyFailureOutcome(Definition, ResolvedReason);
     RefreshNarrativeReplication(GetWorld());
     return true;
@@ -174,6 +188,58 @@ int32 UOmnisQuestSubsystem::GetQuestAttemptCount(FName QuestId) const
 FName UOmnisQuestSubsystem::GetRecoveryQuestId(FName FailedQuestId) const
 {
     return RecoveryQuestByFailedQuest.FindRef(FailedQuestId);
+}
+
+FName UOmnisQuestSubsystem::GetFailureConsequenceId(FName FailedQuestId) const
+{
+    return FailureConsequenceByFailedQuest.FindRef(FailedQuestId);
+}
+
+bool UOmnisQuestSubsystem::HasUnresolvedFailureUsingConsequence(FName ConsequenceId) const
+{
+    if (ConsequenceId.IsNone())
+    {
+        return false;
+    }
+
+    for (const TPair<FName, FName>& Pair : FailureConsequenceByFailedQuest)
+    {
+        if (Pair.Value == ConsequenceId)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void UOmnisQuestSubsystem::RestoreFailureConsequences()
+{
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
+
+    UGameInstance* GameInstance = GetGameInstance();
+    UOmnisConsequenceSubsystem* Consequences = GameInstance
+        ? GameInstance->GetSubsystem<UOmnisConsequenceSubsystem>()
+        : nullptr;
+    if (!Consequences)
+    {
+        return;
+    }
+
+    for (const TPair<FName, FName>& Pair : FailureConsequenceByFailedQuest)
+    {
+        if (Pair.Key.IsNone() || Pair.Value.IsNone())
+        {
+            continue;
+        }
+        Consequences->ApplyConsequence(Pair.Value);
+        Consequences->ApplyConsequence(
+            BuildQuestScopedFailureConsequenceId(Pair.Value, Pair.Key));
+    }
+
+    RefreshNarrativeReplication(GetWorld());
 }
 
 void UOmnisQuestSubsystem::ApplyFailureOutcome(
@@ -197,7 +263,12 @@ void UOmnisQuestSubsystem::ApplyFailureOutcome(
         if (UOmnisConsequenceSubsystem* Consequences =
             GameInstance->GetSubsystem<UOmnisConsequenceSubsystem>())
         {
+            // Keep the base ID as an aggregate for existing UI, plus a per-quest
+            // marker so resolving one failure cannot erase another's consequence.
             Consequences->ApplyConsequence(Definition->FailureConsequenceId);
+            Consequences->ApplyConsequence(BuildQuestScopedFailureConsequenceId(
+                Definition->FailureConsequenceId,
+                Definition->QuestId));
         }
     }
 
@@ -348,6 +419,7 @@ TArray<FOmnisQuestProgressSnapshot> UOmnisQuestSubsystem::ExportProgress() const
         Snapshot.State = Pair.Value;
         Snapshot.Attempts = QuestAttempts.FindRef(Pair.Key);
         Snapshot.RecoveryQuestId = RecoveryQuestByFailedQuest.FindRef(Pair.Key);
+        Snapshot.FailureConsequenceId = FailureConsequenceByFailedQuest.FindRef(Pair.Key);
         Result.Add(Snapshot);
     }
 
@@ -368,11 +440,12 @@ void UOmnisQuestSubsystem::ImportProgress(
     QuestStates.Reset();
     QuestAttempts.Reset();
     RecoveryQuestByFailedQuest.Reset();
+    FailureConsequenceByFailedQuest.Reset();
 
     for (const FOmnisQuestProgressSnapshot& Snapshot : Snapshots)
     {
         if (Snapshot.QuestId.IsNone() ||
-            static_cast<uint8>(Snapshot.State) > static_cast<uint8>(EOmnisQuestState::Failed))
+            static_cast<uint8>(Snapshot.State) > static_cast<uint8>(EOmnisQuestState::Recovered))
         {
             continue;
         }
@@ -383,7 +456,15 @@ void UOmnisQuestSubsystem::ImportProgress(
         {
             RecoveryQuestByFailedQuest.Add(Snapshot.QuestId, Snapshot.RecoveryQuestId);
         }
+        if (Snapshot.State == EOmnisQuestState::Failed)
+        {
+            const FName ConsequenceId = Snapshot.FailureConsequenceId.IsNone()
+                ? FName(TEXT("Mission.Failure.PublicShame"))
+                : Snapshot.FailureConsequenceId;
+            FailureConsequenceByFailedQuest.Add(Snapshot.QuestId, ConsequenceId);
+        }
     }
+    RefreshNarrativeReplication(GetWorld());
 }
 
 void UOmnisQuestSubsystem::ApplyCompletionOutcome(
@@ -406,7 +487,10 @@ void UOmnisQuestSubsystem::ApplyCompletionOutcome(
     {
         for (const FName ConsequenceId : Definition->ConsequencesToRemoveOnCompletion)
         {
-            Consequences->RemoveConsequence(ConsequenceId);
+            if (!HasUnresolvedFailureUsingConsequence(ConsequenceId))
+            {
+                Consequences->RemoveConsequence(ConsequenceId);
+            }
         }
     }
 
@@ -460,6 +544,45 @@ void UOmnisQuestSubsystem::ApplyCompletionOutcome(
         if (Pair.Value == Definition->QuestId)
         {
             FailedQuestIds.Add(Pair.Key);
+        }
+    }
+
+    // Remove scoped and aggregate markers only for failures linked to this
+    // recovery mission. The aggregate remains while any other failed quest uses it.
+    UOmnisConsequenceSubsystem* Consequences =
+        GameInstance->GetSubsystem<UOmnisConsequenceSubsystem>();
+    TSet<FName> CandidateAggregateConsequences;
+    for (const FName FailedQuestId : FailedQuestIds)
+    {
+        FName BaseConsequenceId = FailureConsequenceByFailedQuest.FindRef(FailedQuestId);
+        if (BaseConsequenceId.IsNone())
+        {
+            BaseConsequenceId = TEXT("Mission.Failure.PublicShame");
+        }
+
+        CandidateAggregateConsequences.Add(BaseConsequenceId);
+        if (Consequences)
+        {
+            Consequences->RemoveConsequence(
+                BuildQuestScopedFailureConsequenceId(BaseConsequenceId, FailedQuestId));
+        }
+
+        FailureConsequenceByFailedQuest.Remove(FailedQuestId);
+        RecoveryQuestByFailedQuest.Remove(FailedQuestId);
+        SetQuestStateInternal(
+            FailedQuestId,
+            EOmnisQuestState::Recovered,
+            TEXT("Quest.Recovered"));
+    }
+
+    if (Consequences)
+    {
+        for (const FName BaseConsequenceId : CandidateAggregateConsequences)
+        {
+            if (!HasUnresolvedFailureUsingConsequence(BaseConsequenceId))
+            {
+                Consequences->RemoveConsequence(BaseConsequenceId);
+            }
         }
     }
 
@@ -533,3 +656,4 @@ void UOmnisQuestSubsystem::ApplyCompletionOutcome(
         }
     }
 }
+

@@ -74,6 +74,7 @@ void AOmnisReplicatedWorldStateActor::RefreshNarrativeState()
             State.State = Progress.State;
             State.Attempts = Progress.Attempts;
             State.RecoveryQuestId = Progress.RecoveryQuestId;
+            State.FailureConsequenceId = Progress.FailureConsequenceId;
             QuestStates.Add(State);
         }
     }

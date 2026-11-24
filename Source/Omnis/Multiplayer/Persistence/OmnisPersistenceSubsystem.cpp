@@ -22,7 +22,7 @@
 
 namespace
 {
-    constexpr int32 CurrentSaveSchemaVersion = 3;
+    constexpr int32 CurrentSaveSchemaVersion = 4;
 
     bool IsValidSlotName(const FString& SlotName)
     {
@@ -221,6 +221,7 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
         UGameplayStatics::LoadGameFromSlot(SlotName, 0));
     if (!Save || (Save->SchemaVersion != 0 &&
         Save->SchemaVersion != 2 &&
+        Save->SchemaVersion != 3 &&
         Save->SchemaVersion != CurrentSaveSchemaVersion))
     {
         UE_LOG(LogTemp, Error,
@@ -299,6 +300,10 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
         GameInstance->GetSubsystem<UOmnisConsequenceSubsystem>())
     {
         Consequences->ImportConsequences(Save->ActiveConsequences);
+    }
+    if (UOmnisQuestSubsystem* Quests = GameInstance->GetSubsystem<UOmnisQuestSubsystem>())
+    {
+        Quests->RestoreFailureConsequences();
     }
     if (UOmnisReputationSubsystem* Reputation =
         GameInstance->GetSubsystem<UOmnisReputationSubsystem>())
