@@ -194,6 +194,34 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
 
         NPC->CharacterId = TEXT("NPC.Wanderer");
         NPC->PersistentId = FName(*FString::Printf(TEXT("NPC.Bootstrap.%02d"), Index + 1));
+        if (Index == 0)
+        {
+            NPC->CharacterDisplayName = FText::FromString(TEXT("Mara León"));
+            NPC->CharacterBiography = FText::FromString(
+                TEXT("Guía local que conoce los caminos del primer asentamiento y ayuda a los recién llegados."));
+            NPC->OccupationId = TEXT("Occupation.LocalGuide");
+            NPC->HomeLocationId = TEXT("Home.Bootstrap.Mara");
+            NPC->WorkLocationId = TEXT("Work.Bootstrap.WelcomePoint");
+            NPC->WorkLocationOffset = FVector(650.0f, 0.0f, 0.0f);
+            NPC->WorkStartHour = 7.0f;
+            NPC->WorkEndHour = 17.0f;
+            NPC->RestStartHour = 21.0f;
+            NPC->RestEndHour = 6.0f;
+        }
+        else
+        {
+            NPC->CharacterDisplayName = FText::FromString(TEXT("Tomás Herrera"));
+            NPC->CharacterBiography = FText::FromString(
+                TEXT("Técnico de campo que mantiene los equipos y las instalaciones del asentamiento."));
+            NPC->OccupationId = TEXT("Occupation.FieldTechnician");
+            NPC->HomeLocationId = TEXT("Home.Bootstrap.Tomas");
+            NPC->WorkLocationId = TEXT("Work.Bootstrap.Maintenance");
+            NPC->WorkLocationOffset = FVector(-650.0f, 0.0f, 0.0f);
+            NPC->WorkStartHour = 8.0f;
+            NPC->WorkEndHour = 18.0f;
+            NPC->RestStartHour = 22.0f;
+            NPC->RestEndHour = 6.0f;
+        }
         NPC->FinishSpawning(SpawnTransform);
     }
 

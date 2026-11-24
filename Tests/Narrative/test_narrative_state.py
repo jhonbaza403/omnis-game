@@ -120,6 +120,14 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("WorkLocationId", source)
         self.assertIn("CharacterBiography", source)
 
+
+    def test_bootstrap_npcs_have_individual_profiles(self):
+        source = (ROOT / "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem.cpp").read_text(encoding="utf-8")
+        for identity in ("Mara León", "Tomás Herrera", "Occupation.LocalGuide", "Occupation.FieldTechnician", "NPC.Bootstrap.%02d"):
+            self.assertIn(identity, source)
+        self.assertIn("NPC->CharacterBiography", source)
+        self.assertIn("NPC->WorkLocationOffset", source)
+
     def test_npc_identity_and_persona_are_replicated(self):
         header = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
         source = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")

@@ -145,7 +145,7 @@ Resultado actualizado: los caminos principales de interacción, combate y constr
 - Se usan identidades por individuo y arquetipos separados (CharacterId); varios civiles pueden compartir arquetipo sin colisionar al guardar.
 - UOmnisCharacterDefinition ahora define biografía, nombre visible, ocupación, hogar, lugar de trabajo, malla opcional, salud máxima, horario de trabajo/descanso, umbrales de hambre/energía/social, radio de exploración/socialización y velocidad.
 - AOmnisNPCCharacter aplica el Data Asset al iniciar y puede mostrar una respuesta contextual cuando recuerda la consecuencia Mission.Failure.PublicShame.
-- Los NPC del mapa persistente tienen horarios de trabajo y descanso distintos, así como destinos de trabajo independientes. Los dos NPC del bootstrap también reciben IDs deterministas.
+- Los NPC del mapa persistente tienen horarios de trabajo y descanso distintos, así como destinos de trabajo independientes. Los dos NPC del bootstrap también reciben IDs deterministas, nombre, biografía, ocupación y horario propios (Mara León y Tomás Herrera).
 - La identidad y los datos biográficos del NPC se resuelven en el servidor y se replican en el actor para mostrarse en cada cliente.
 - La socialización descarta vehículos/objetos que también sean Pawn: solo considera jugadores y NPC. Cuando dos NPC socializan, ambos guardan el encuentro y elevan la relación; cuando participa un jugador, su memoria local recibe el encuentro.
 - Los recuerdos con prefijo Mission.Failure. se transmiten en encuentros sociales: 20 puntos menos de intensidad por contacto, umbral mínimo de 30, y deduplicación por evento en cada receptor. Los NPC que reciben el rumor pueden transmitirlo en encuentros posteriores; la pérdida de intensidad limita la cadena.
