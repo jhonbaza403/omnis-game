@@ -19,12 +19,12 @@ struct FOmnisCycleState
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Cycle")
+    UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly, Category="Cycle")
     int32 CycleIndex = 0;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Cycle")
+    UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly, Category="Cycle")
     EOmnisCyclePhase Phase = EOmnisCyclePhase::Awakening;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Cycle")
+    UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly, Category="Cycle")
     float WorldAge = 0.0f;
 };

@@ -7,10 +7,25 @@ void UOmnisFactionSubsystem::AdjustStanding(FName FactionId, int32 Delta)
         return;
     }
 
-    Standings.FindOrAdd(FactionId) = FMath::Clamp(Standings.FindRef(FactionId) + Delta, -100, 100);
+    Standings.FindOrAdd(FactionId) = FMath::Clamp(
+        Standings.FindRef(FactionId) + Delta,
+        -100,
+        100);
 }
 
 int32 UOmnisFactionSubsystem::GetStanding(FName FactionId) const
 {
     return FMath::Clamp(Standings.FindRef(FactionId), -100, 100);
+}
+
+void UOmnisFactionSubsystem::ImportStandings(const TMap<FName, int32>& Values)
+{
+    Standings.Reset();
+    for (const TPair<FName, int32>& Pair : Values)
+    {
+        if (!Pair.Key.IsNone())
+        {
+            Standings.Add(Pair.Key, FMath::Clamp(Pair.Value, -100, 100));
+        }
+    }
 }

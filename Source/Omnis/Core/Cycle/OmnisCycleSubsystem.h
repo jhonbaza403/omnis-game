@@ -28,6 +28,9 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Cycle")
     FOmnisCycleState GetCycleState() const { return State; }
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Cycle")
+    void RestoreCycleState(const FOmnisCycleState& SavedState);
+
     UPROPERTY(BlueprintAssignable, Category="Omnis|Cycle")
     FOnOmnisCyclePhaseChanged OnPhaseChanged;
 

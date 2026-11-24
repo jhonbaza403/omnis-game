@@ -21,3 +21,10 @@ bool UOmnisNexusSubsystem::PurchaseVitalityUpgrade()
     ++Progression.PermanentVitalityLevel;
     return true;
 }
+
+void UOmnisNexusSubsystem::ImportProgression(
+    const FOmnisNexusProgression& SavedProgression)
+{
+    Progression.PermanentUpgradePoints = FMath::Max(0, SavedProgression.PermanentUpgradePoints);
+    Progression.PermanentVitalityLevel = FMath::Max(0, SavedProgression.PermanentVitalityLevel);
+}

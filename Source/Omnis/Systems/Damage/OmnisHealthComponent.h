@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "OmnisHealthComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOmnisHealthChanged, float, NewHealth, float, Delta);
@@ -15,11 +16,19 @@ class OMNIS_API UOmnisHealthComponent : public UActorComponent
 public:
     UOmnisHealthComponent();
 
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     UFUNCTION(BlueprintCallable, Category="Omnis|Health")
     void Restore(float Amount);
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Health")
     void SetMaxHealth(float NewMaxHealth);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Health")
+    void SetDeadState(bool bNewDead);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Health")
+    void RestoreSavedState(float SavedHealth, float SavedMaxHealth, bool bSavedDead);
 
     UFUNCTION(BlueprintPure, Category="Omnis|Health")
     float GetHealth() const { return Health; }
@@ -27,10 +36,12 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Health")
     float GetMaxHealth() const { return MaxHealth; }
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Health")
+    UFUNCTION(BlueprintPure, Category="Omnis|Health")
+    bool IsDead() const { return bDead; }
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category="Omnis|Health")
     float MaxHealth = 100.0f;
 
-    // NPCs can remain in the world as a persistent dead state; players keep the default despawn.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Health")
     bool bDestroyOwnerOnDeath = true;
 
@@ -47,9 +58,9 @@ private:
     UFUNCTION()
     void HandleDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
-    UPROPERTY()
+    UPROPERTY(SaveGame, Replicated)
     float Health = 100.0f;
 
-    UPROPERTY()
+    UPROPERTY(SaveGame, Replicated)
     bool bDead = false;
 };

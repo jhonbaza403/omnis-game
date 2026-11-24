@@ -16,7 +16,13 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Factions")
     int32 GetStanding(FName FactionId) const;
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Factions")
+    TMap<FName, int32> ExportStandings() const { return Standings; }
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Factions")
+    void ImportStandings(const TMap<FName, int32>& Values);
+
 private:
-    UPROPERTY()
+    UPROPERTY(SaveGame)
     TMap<FName, int32> Standings;
 };

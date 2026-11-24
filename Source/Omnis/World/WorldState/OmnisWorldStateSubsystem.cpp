@@ -21,3 +21,15 @@ void UOmnisWorldStateSubsystem::IncrementState(FName Key, int32 Delta)
         Values.FindOrAdd(Key) += Delta;
     }
 }
+
+void UOmnisWorldStateSubsystem::ImportStates(const TMap<FName, int32>& NewValues)
+{
+    Values.Reset();
+    for (const TPair<FName, int32>& Pair : NewValues)
+    {
+        if (!Pair.Key.IsNone())
+        {
+            Values.Add(Pair.Key, Pair.Value);
+        }
+    }
+}

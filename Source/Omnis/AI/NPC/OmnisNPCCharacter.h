@@ -10,6 +10,7 @@ class UOmnisHealthComponent;
 class UOmnisProceduralAnimationComponent;
 class UOmnisCharacterStateComponent;
 class UOmnisPerceptionComponent;
+struct FOmnisCharacterLifeSnapshot;
 
 UCLASS()
 class OMNIS_API AOmnisNPCCharacter : public ACharacter, public IOmnisInteractableInterface
@@ -22,10 +23,17 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
     virtual void Interact_Implementation(AActor* Interactor) override;
-    virtual FText GetInteractionPrompt_Implementation() const override { return InteractionPrompt; }
+    virtual FText GetInteractionPrompt_Implementation() const override;
+
+    void RestorePersistentState(const FTransform& SavedTransform, const FOmnisCharacterLifeSnapshot& SavedLifeState);
+    FName GetPersistentId() const;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|NPC")
     FName CharacterId = TEXT("NPC.Wanderer");
+
+    // Assign explicitly to dynamically spawned NPCs; placed NPCs use a stable actor path fallback.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|NPC")
+    FName PersistentId;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|NPC")
     FText InteractionPrompt;

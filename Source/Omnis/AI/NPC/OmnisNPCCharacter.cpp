@@ -14,7 +14,10 @@
 AOmnisNPCCharacter::AOmnisNPCCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
-    PrimaryActorTick.TickInterval = 0.25f;
+    PrimaryActorTick.TickInterval = 1.0f;
+    SetReplicates(true);
+    SetReplicateMovement(true);
+    NetUpdateFrequency = 2.0f;
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
     AIControllerClass = AAIController::StaticClass();
 
@@ -75,6 +78,12 @@ void AOmnisNPCCharacter::BeginPlay()
 void AOmnisNPCCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
+    // The server owns schedules, needs and navigation; clients only consume replicated state.
+    if (!HasAuthority())
+    {
+        return;
+    }
 
     if (!CharacterState || !CharacterState->IsAlive())
     {
@@ -206,8 +215,21 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
 
     if (Goal == EOmnisCharacterLifeGoal::Socialize && SocialTarget && bReachedGoal)
     {
-        CharacterState->RecordMemory(TEXT("NPC.SocialEncounter"), SocialTarget->GetFName(), 5);
-        CharacterState->AdjustRelationship(SocialTarget->GetFName(), 1);
+        FName SocialTargetId = SocialTarget->GetFName();
+        if (Cast<AOmnisPlayerCharacter>(SocialTarget))
+        {
+            SocialTargetId = TEXT("Player");
+        }
+        else if (AOmnisNPCCharacter* OtherNPC = Cast<AOmnisNPCCharacter>(SocialTarget))
+        {
+            SocialTargetId = OtherNPC->GetPersistentId();
+            if (SocialTargetId.IsNone())
+            {
+                SocialTargetId = OtherNPC->CharacterId;
+            }
+        }
+        CharacterState->RecordMemory(TEXT("NPC.SocialEncounter"), SocialTargetId, 5);
+        CharacterState->AdjustRelationship(SocialTargetId, 1);
     }
 
     CharacterState->SimulateNeeds(DeltaSeconds, Goal, bReachedGoal);
@@ -223,9 +245,18 @@ void AOmnisNPCCharacter::MoveToLifeDestination(
     }
 }
 
+FText AOmnisNPCCharacter::GetInteractionPrompt_Implementation() const
+{
+    if (CharacterState && CharacterState->HasMemory(TEXT("Mission.Failure.PublicShame")))
+    {
+        return FText::FromString(TEXT("No olvido lo que ocurrió"));
+    }
+    return InteractionPrompt;
+}
+
 void AOmnisNPCCharacter::Interact_Implementation(AActor* Interactor)
 {
-    if (!Interactor || !CharacterState || !CharacterState->IsAlive())
+    if (!HasAuthority() || !Interactor || !CharacterState || !CharacterState->IsAlive())
     {
         return;
     }
@@ -275,4 +306,53 @@ void AOmnisNPCCharacter::HandleNPCDeath()
     }
 
     Tags.Add(TEXT("Omnis.Dead"));
+}
+
+FName AOmnisNPCCharacter::GetPersistentId() const
+{
+    return PersistentId;
+}
+
+void AOmnisNPCCharacter::RestorePersistentState(
+    const FTransform& SavedTransform,
+    const FOmnisCharacterLifeSnapshot& SavedLifeState)
+{
+    SetActorTransform(
+        SavedTransform,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics);
+
+    if (CharacterState)
+    {
+        CharacterState->ImportSnapshot(SavedLifeState);
+    }
+
+    if (Health)
+    {
+        Health->SetDeadState(!SavedLifeState.bAlive);
+    }
+
+    if (!SavedLifeState.bAlive)
+    {
+        Tags.AddUnique(TEXT("Omnis.Dead"));
+        if (AAIController* AIController = Cast<AAIController>(GetController()))
+        {
+            AIController->StopMovement();
+        }
+        if (GetCharacterMovement())
+        {
+            GetCharacterMovement()->DisableMovement();
+        }
+    }
+    else
+    {
+        Tags.Remove(TEXT("Omnis.Dead"));
+        if (GetCharacterMovement())
+        {
+            GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+        }
+        CurrentDestination = GetActorLocation();
+        bHasLifeDestination = true;
+    }
 }

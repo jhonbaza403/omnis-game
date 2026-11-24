@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "OmnisCharacterStateComponent.generated.h"
 
 UENUM(BlueprintType)
@@ -21,14 +22,53 @@ struct FOmnisCharacterMemoryEntry
 {
     GENERATED_BODY()
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
     FName EventId;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
     FName RelatedCharacterId;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
     int32 Importance = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FOmnisCharacterLifeSnapshot
+{
+    GENERATED_BODY()
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    bool bAlive = true;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    TMap<FName, int32> Relationships;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    TArray<FOmnisCharacterMemoryEntry> Memories;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    EOmnisCharacterLifeGoal CurrentGoal = EOmnisCharacterLifeGoal::Idle;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    float Hunger = 0.0f;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    float Energy = 100.0f;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Omnis|Life")
+    float SocialNeed = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOmnisReplicatedRelationship
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FName SubjectId;
+
+    UPROPERTY()
+    int32 Value = 0;
 };
 
 UCLASS(ClassGroup=(Omnis), meta=(BlueprintSpawnableComponent))
@@ -38,6 +78,8 @@ class OMNIS_API UOmnisCharacterStateComponent : public UActorComponent
 
 public:
     UOmnisCharacterStateComponent();
+
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Life")
     void SetAlive(bool bNewAlive);
@@ -75,28 +117,47 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Life")
     float GetSocialNeed() const { return SocialNeed; }
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Life")
+    FOmnisCharacterLifeSnapshot ExportSnapshot() const;
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Life")
+    void ImportSnapshot(const FOmnisCharacterLifeSnapshot& Snapshot);
+
     const TArray<FOmnisCharacterMemoryEntry>& GetMemories() const { return Memories; }
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Life")
+    bool HasMemory(FName EventId) const;
+
 private:
-    UPROPERTY()
+    UFUNCTION()
+    void OnRep_Alive();
+
+    UFUNCTION()
+    void OnRep_Relationships();
+
+    void SyncRelationshipsForReplication();
+
+    UPROPERTY(SaveGame, ReplicatedUsing=OnRep_Alive)
     bool bAlive = true;
 
-    UPROPERTY()
+    UPROPERTY(SaveGame)
     TMap<FName, int32> Relationships;
 
-    UPROPERTY()
+    UPROPERTY(ReplicatedUsing=OnRep_Relationships)
+    TArray<FOmnisReplicatedRelationship> ReplicatedRelationships;
+
+    UPROPERTY(SaveGame, Replicated)
     TArray<FOmnisCharacterMemoryEntry> Memories;
 
-    UPROPERTY()
+    UPROPERTY(SaveGame, Replicated)
     EOmnisCharacterLifeGoal CurrentGoal = EOmnisCharacterLifeGoal::Idle;
 
-    // Hunger and social need rise over time; energy falls while active.
-    UPROPERTY()
+    UPROPERTY(SaveGame, Replicated)
     float Hunger = 0.0f;
 
-    UPROPERTY()
+    UPROPERTY(SaveGame, Replicated)
     float Energy = 100.0f;
 
-    UPROPERTY()
+    UPROPERTY(SaveGame, Replicated)
     float SocialNeed = 0.0f;
 };

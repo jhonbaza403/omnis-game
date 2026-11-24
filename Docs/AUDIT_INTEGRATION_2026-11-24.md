@@ -52,10 +52,10 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 
 ## 4. Limitaciones que no deben declararse resueltas
 
-1. **Persistencia real:** los nuevos estados todavía no están conectados a una rutina de serialización/guardado/carga de slots. El sistema de memoria funciona durante la sesión; no se garantiza que sobreviva al reinicio del juego o a la descarga de una región.
+1. **Persistencia real:** ya existe una API versionada de guardado/carga y snapshots de NPC, pero no está certificada en Unreal 5.8. Todavía no restaura NPC ausentes en regiones no cargadas ni simula vida/economía mientras la aplicación está cerrada.
 2. **Contenido autorado:** cada NPC colocado necesita un \`CharacterId\` único, hogar y \`WorkLocationOffset\` revisados; cada misión necesita un Data Asset configurado con testigos, facciones y consecuencias. No se crean personajes narrativos ni diálogos personalizados automáticamente.
-3. **Navegación:** las rutinas dependen de un AIController y de Navigation Mesh válido. Sin NavMesh, la decisión de objetivo existe pero el desplazamiento puede no completarse.
-4. **Vergüenza social completa:** se registran consecuencia, penalización de reputación, recuerdos de testigos y relación negativa; la difusión de rumores, reacciones de multitudes, cambios de diálogo por contexto y UI de reputación todavía requieren integración.
+3. **NPCs de vida y navegación:** agenda/objetivos, necesidades y memoria existen en cada componente, pero dependen de NavMesh válido y de un PersistentId único asignado a cada instancia. Sin NavMesh, el movimiento puede no completarse.
+4. **Vergüenza social completa:** los testigos guardan el ID de consecuencia como recuerdo y su prompt de interacción puede reaccionar a Mission.Failure.PublicShame; el actor de mundo replica consecuencias y puntuaciones. La propagación emergente de rumores, reacciones de multitudes y ramificación de diálogo más rica todavía requieren diseño e integración.
 5. **Calendario:** el reloj es relativo al tiempo transcurrido (una hora de juego por 60 segundos simulados, con escala 1). No es todavía un calendario persistente con estaciones, días y eventos globales.
 6. **Plugins:** no se duplicaron los sistemas en los plugins vacíos. Una extracción futura requiere mover propiedad de código en un único cambio controlado.
 7. **Arte:** es obligatorio hidratar Git LFS y materializar/guardar assets y mapa desde Unreal Engine 5.8 real.
@@ -88,3 +88,53 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 - No se integra a producción hasta cerrar evidencia de los gates anteriores.
 
 **Resultado:** auditoría e integración inicial de gameplay en rama de revisión. No es todavía una certificación de juego completo ni de build Unreal.
+
+## 8. Segunda integración — persistencia de partida y reparación de consecuencias
+
+**Código añadido en la revisión posterior de la misma PR:**
+
+- \`UOmnisSaveGame\` usa esquema versionado 2 y almacena fecha UTC, ciclo, Nexo, reloj de mundo, progreso/intent os de misión, consecuencias activas, reputación, facciones, estado global, variables persistentes y snapshots de personajes.
+- \`UOmnisPersistenceSubsystem\` incorpora \`SaveCurrentGame\` y \`LoadCurrentGame\` usando los slots estándar de Unreal. El guardado/carga se rechaza en clientes de red; la autoridad del servidor mantiene el control del estado compartido.
+- Los snapshots de personajes contienen identidad persistente, transform, necesidades, relaciones, recuerdos, estado vital y salud actual/máxima.
+- Los NPC colocados usan como clave fallback su ruta de actor estable; los NPC generados dinámicamente deben recibir un \`PersistentId\` explícito y único. \`CharacterId\` continúa siendo el tipo/arquetipo narrativo.
+- Se agregan exportación/importación versionada para progreso de misiones, consecuencias, reputación, facciones, Nexo, ciclo y reloj.
+- Una misión de recuperación puede retirar consecuencias concretas, restituir reputación y facción, revertir contadores del mundo con límite inferior cero y recuperar relaciones de testigos.
+- Se incorporan pruebas de Automation para ida/vuelta de snapshots y pruebas estáticas de los contratos de guardado/carga.
+
+### Lo que esta integración todavía no certifica
+
+1. El código de SaveGame aún no se ha ejecutado dentro de Unreal 5.8; falta comprobar escritura real en disco, lectura, migraciones y compatibilidad de serialización.
+2. El guardado manual expone API BlueprintCallable, pero falta conectarlo a menú/HUD, autosave, selección de slots y política de respaldo.
+3. El mundo compartido se guarda desde autoridad, pero la persistencia de identidades de cuenta multijugador y restauración de sesiones de varios jugadores exige enlazar IDs online estables.
+4. Los NPC colocados necesitan IDs únicos y NavMesh válido. Los NPC dinámicos requieren asignación explícita de PersistentId por su spawner.
+5. El reloj se conserva entre sesiones; la simulación offline de necesidades, economía, población y eventos mientras el juego está cerrado todavía no está implementada.
+6. El sistema social no difunde rumores de forma emergente a toda una población. En este corte, testigos explícitos recuerdan el hecho y ajustan su relación.
+7. Los Automation Tests C++ son nuevos, pero requieren ejecutarse con Unreal Engine 5.8 para considerarse aprobados.
+
+**Estado actualizado:** persistencia de snapshots y reparación de consecuencias implementadas en código de la rama candidata; pruebas nativas y certificación real siguen pendientes.
+
+## 9. Tercera integración — autoridad, replicación y lectura de consecuencias en clientes
+
+- La interacción deja de ejecutarse en el cliente local: el componente replica y solicita ServerInteract; el servidor vuelve a trazar, limita distancia y ejecuta la interfaz del objetivo.
+- El ataque usa ServerAttack, valida alcance/daño y aplica daño únicamente desde autoridad.
+- Retirar una pieza de construcción usa ServerRemoveLastPiece; la lista de piezas construidas se replica y el servidor conserva el control del borrado.
+- La posesión de vehículos y aeronaves se solicita al servidor mediante RPC desde el PlayerController.
+- El estado de vida, recuerdos, necesidades y relaciones se replica mediante propiedades explícitas; las relaciones se transmiten como registros en array y se reconstruye el mapa local en clientes.
+- Se reutiliza AOmnisReplicatedWorldStateActor como puente de lectura para misiones, consecuencias, reputación, facciones y contadores del mundo; emite OnNarrativeStateChanged al actualizarse.
+- Los NPC simulan necesidades y rutinas en autoridad y replican estado/movimiento a clientes.
+- Los identificadores persistentes de NPC ahora son explícitos; no se usa un nombre de actor generado en runtime como identidad duradera. El guardado falla de forma segura si falta o se duplica el ID.
+- Se acepta el esquema legado 0 y se migra el campo de puntos permanentes al esquema 2; otros esquemas desconocidos se rechazan antes de modificar el estado de partida.
+- Los dos NPC creados por el mundo bootstrap reciben `NPC.Bootstrap.01` y `.02` antes de `BeginPlay`; NPC adicionales deben recibir un `PersistentId` único explícito.
+- Reputación y facciones se acotan a [-100, 100], también al importar un guardado. El estado de jugadores online sigue necesitando un identificador de cuenta estable por jugador; la instantánea de jugador actual corresponde al índice local 0.
+
+### Aún pendiente antes de certificación
+
+- Validación UHT/UBT de los RPC nuevos, ReplicatedUsing, arrays de structs y firmas de delegates.
+- Validar en servidor dedicado + dos clientes que interacción, daño, construcción, posesión y estado narrativo se ven correctamente.
+- Conectar HUD/diálogo al actor replicado y diseñar la difusión de rumores entre testigos con radio/decadencia.
+- Asignar PersistentId a todos los NPC colocados y spawneados; comprobar IDs únicos en contenido de producción.
+- Cargar mundo/actores antes de LoadCurrentGame; hoy la carga aborta si el NPC guardado no está en la región/level activo.
+- Integrar autosave, selección de slots y migraciones adicionales; API manual ya disponible.
+- Ejecutar pruebas Python y Automation C++ en CI/UE5.8; estática no equivale a runtime.
+
+Resultado actualizado: los caminos principales de interacción, combate y construcción se encaminan a autoridad de servidor; persistencia y estado narrativo replicado ya están en la rama candidata. Todavía no se certifica multiplayer ni build Unreal.

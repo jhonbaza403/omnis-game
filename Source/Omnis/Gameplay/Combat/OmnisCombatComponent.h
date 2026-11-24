@@ -25,4 +25,10 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category="Omnis|Combat")
     FOnOmnisAttackResolved OnAttackResolved;
+
+private:
+    UFUNCTION(Server, Reliable)
+    void ServerAttack();
+
+    bool PerformAttackOnAuthority();
 };

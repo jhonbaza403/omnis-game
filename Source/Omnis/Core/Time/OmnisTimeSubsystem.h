@@ -23,6 +23,9 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Time")
     float GetElapsedSeconds() const { return ElapsedSeconds; }
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Time")
+    void RestoreElapsedSeconds(float NewElapsedSeconds);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Time")
     float GetTimeScale() const { return TimeScale; }
 

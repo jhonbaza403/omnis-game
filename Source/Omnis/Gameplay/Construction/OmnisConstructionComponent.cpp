@@ -5,11 +5,19 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Net/UnrealNetwork.h"
 
 UOmnisConstructionComponent::UOmnisConstructionComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
     SetIsReplicatedByDefault(true);
+}
+
+void UOmnisConstructionComponent::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(UOmnisConstructionComponent, BuiltPieces);
 }
 
 FVector UOmnisConstructionComponent::SnapLocation(const FVector& Location) const
@@ -26,12 +34,26 @@ void UOmnisConstructionComponent::ServerConstructForward_Implementation()
     ConstructForward();
 }
 
+void UOmnisConstructionComponent::ServerRemoveLastPiece_Implementation()
+{
+    RemoveLastPiece();
+}
+
 AActor* UOmnisConstructionComponent::ConstructForward()
 {
     AActor* Owner = GetOwner();
     UWorld* World = GetWorld();
 
-    if (!Owner || !World || !Owner->HasAuthority() || BuiltPieces.Num() >= MaxPieces)
+    if (!Owner || !World)
+    {
+        return nullptr;
+    }
+    if (!Owner->HasAuthority())
+    {
+        ServerConstructForward();
+        return nullptr;
+    }
+    if (BuiltPieces.Num() >= FMath::Max(0, MaxPieces))
     {
         return nullptr;
     }
@@ -106,6 +128,17 @@ AActor* UOmnisConstructionComponent::ConstructForward()
 
 bool UOmnisConstructionComponent::RemoveLastPiece()
 {
+    AActor* Owner = GetOwner();
+    if (!Owner)
+    {
+        return false;
+    }
+    if (!Owner->HasAuthority())
+    {
+        ServerRemoveLastPiece();
+        return true;
+    }
+
     while (BuiltPieces.Num() > 0)
     {
         TObjectPtr<AActor> Piece = BuiltPieces.Pop();

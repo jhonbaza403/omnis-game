@@ -21,6 +21,8 @@
 AOmnisPlayerCharacter::AOmnisPlayerCharacter()
 {
     PrimaryActorTick.bCanEverTick = false;
+    SetReplicates(true);
+    SetReplicateMovement(true);
 
     GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
     bUseControllerRotationYaw = false;

@@ -181,9 +181,20 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
     }
 
     const TArray<FVector> NPCs = {FVector(280,520,115),FVector(-360,-360,115)};
-    for (const FVector& Location : NPCs)
+    for (int32 Index = 0; Index < NPCs.Num(); ++Index)
     {
-        World->SpawnActor<AOmnisNPCCharacter>(Location,FRotator::ZeroRotator);
+        const FTransform SpawnTransform(FRotator::ZeroRotator, NPCs[Index]);
+        AOmnisNPCCharacter* NPC = World->SpawnActorDeferred<AOmnisNPCCharacter>(
+            AOmnisNPCCharacter::StaticClass(),
+            SpawnTransform);
+        if (!NPC)
+        {
+            continue;
+        }
+
+        NPC->CharacterId = TEXT("NPC.Wanderer");
+        NPC->PersistentId = FName(*FString::Printf(TEXT("NPC.Bootstrap.%02d"), Index + 1));
+        NPC->FinishSpawning(SpawnTransform);
     }
 
     bWorldBuilt = true;

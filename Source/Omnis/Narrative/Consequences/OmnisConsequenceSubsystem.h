@@ -19,7 +19,13 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Narrative")
     bool HasConsequence(FName ConsequenceId) const;
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Narrative")
+    TArray<FName> ExportConsequences() const;
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Narrative")
+    void ImportConsequences(const TArray<FName>& Consequences);
+
 private:
-    UPROPERTY()
+    UPROPERTY(SaveGame)
     TSet<FName> ActiveConsequences;
 };

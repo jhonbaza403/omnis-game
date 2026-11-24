@@ -16,7 +16,13 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Reputation")
     int32 GetReputation(FName SubjectId) const;
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Reputation")
+    TMap<FName, int32> ExportReputation() const { return Reputation; }
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Reputation")
+    void ImportReputation(const TMap<FName, int32>& Values);
+
 private:
-    UPROPERTY()
+    UPROPERTY(SaveGame)
     TMap<FName, int32> Reputation;
 };

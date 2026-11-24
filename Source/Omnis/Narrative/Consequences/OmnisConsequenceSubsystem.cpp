@@ -17,3 +17,22 @@ bool UOmnisConsequenceSubsystem::HasConsequence(FName ConsequenceId) const
 {
     return ActiveConsequences.Contains(ConsequenceId);
 }
+
+TArray<FName> UOmnisConsequenceSubsystem::ExportConsequences() const
+{
+    TArray<FName> Result = ActiveConsequences.Array();
+    Result.Sort([](const FName& A, const FName& B) { return A.Compare(B) < 0; });
+    return Result;
+}
+
+void UOmnisConsequenceSubsystem::ImportConsequences(const TArray<FName>& Consequences)
+{
+    ActiveConsequences.Reset();
+    for (const FName ConsequenceId : Consequences)
+    {
+        if (!ConsequenceId.IsNone())
+        {
+            ActiveConsequences.Add(ConsequenceId);
+        }
+    }
+}
