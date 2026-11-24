@@ -22,8 +22,18 @@ void UOmnisCharacterStateComponent::GetLifetimeReplicatedProps(
     DOREPLIFETIME(UOmnisCharacterStateComponent, SocialNeed);
 }
 
+bool UOmnisCharacterStateComponent::HasMutationAuthority() const
+{
+    const AActor* Owner = GetOwner();
+    return !Owner || Owner->HasAuthority();
+}
+
 void UOmnisCharacterStateComponent::SetAlive(bool bNewAlive)
 {
+    if (!HasMutationAuthority())
+    {
+        return;
+    }
     bAlive = bNewAlive;
     if (!bAlive)
     {
@@ -33,6 +43,10 @@ void UOmnisCharacterStateComponent::SetAlive(bool bNewAlive)
 
 void UOmnisCharacterStateComponent::SetRelationship(FName SubjectId, int32 Value)
 {
+    if (!HasMutationAuthority())
+    {
+        return;
+    }
     if (!SubjectId.IsNone())
     {
         Relationships.Add(SubjectId, FMath::Clamp(Value, -100, 100));
@@ -42,6 +56,10 @@ void UOmnisCharacterStateComponent::SetRelationship(FName SubjectId, int32 Value
 
 void UOmnisCharacterStateComponent::AdjustRelationship(FName SubjectId, int32 Delta)
 {
+    if (!HasMutationAuthority())
+    {
+        return;
+    }
     if (!SubjectId.IsNone() && Delta != 0)
     {
         Relationships.FindOrAdd(SubjectId) = FMath::Clamp(
@@ -57,7 +75,7 @@ void UOmnisCharacterStateComponent::RecordMemory(
     FName RelatedCharacterId,
     int32 Importance)
 {
-    if (EventId.IsNone())
+    if (!HasMutationAuthority() || EventId.IsNone())
     {
         return;
     }
@@ -77,6 +95,10 @@ void UOmnisCharacterStateComponent::RecordMemory(
 
 void UOmnisCharacterStateComponent::SetCurrentGoal(EOmnisCharacterLifeGoal NewGoal)
 {
+    if (!HasMutationAuthority())
+    {
+        return;
+    }
     CurrentGoal = bAlive ? NewGoal : EOmnisCharacterLifeGoal::Idle;
 }
 
@@ -85,7 +107,7 @@ void UOmnisCharacterStateComponent::SimulateNeeds(
     EOmnisCharacterLifeGoal Goal,
     bool bReachedGoal)
 {
-    if (!bAlive || !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
+    if (!HasMutationAuthority() || !bAlive || !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
     {
         return;
     }
@@ -131,6 +153,10 @@ FOmnisCharacterLifeSnapshot UOmnisCharacterStateComponent::ExportSnapshot() cons
 void UOmnisCharacterStateComponent::ImportSnapshot(
     const FOmnisCharacterLifeSnapshot& Snapshot)
 {
+    if (!HasMutationAuthority())
+    {
+        return;
+    }
     bAlive = Snapshot.bAlive;
     Relationships.Reset();
     for (const TPair<FName, int32>& Pair : Snapshot.Relationships)

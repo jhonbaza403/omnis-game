@@ -136,6 +136,7 @@ private:
     void OnRep_Relationships();
 
     void SyncRelationshipsForReplication();
+    bool HasMutationAuthority() const;
 
     UPROPERTY(SaveGame, ReplicatedUsing=OnRep_Alive)
     bool bAlive = true;

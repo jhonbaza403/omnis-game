@@ -2,6 +2,10 @@
 
 void UOmnisReputationSubsystem::AddReputation(FName SubjectId, int32 Amount)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     if (SubjectId.IsNone() || Amount == 0)
     {
         return;
@@ -20,6 +24,10 @@ int32 UOmnisReputationSubsystem::GetReputation(FName SubjectId) const
 
 void UOmnisReputationSubsystem::ImportReputation(const TMap<FName, int32>& Values)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     Reputation.Reset();
     for (const TPair<FName, int32>& Pair : Values)
     {

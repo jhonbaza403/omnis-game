@@ -2,6 +2,10 @@
 
 void UOmnisFactionSubsystem::AdjustStanding(FName FactionId, int32 Delta)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     if (FactionId.IsNone() || Delta == 0)
     {
         return;
@@ -20,6 +24,10 @@ int32 UOmnisFactionSubsystem::GetStanding(FName FactionId) const
 
 void UOmnisFactionSubsystem::ImportStandings(const TMap<FName, int32>& Values)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     Standings.Reset();
     for (const TPair<FName, int32>& Pair : Values)
     {

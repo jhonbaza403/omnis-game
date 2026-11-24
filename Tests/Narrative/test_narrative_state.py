@@ -92,6 +92,57 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("ServerToggleNearestVehicle();", controller)
         self.assertIn("ServerToggleNearestAircraft();", controller)
 
+    def test_character_profile_drives_routine_and_identity(self):
+        definition = (ROOT / "Source/Omnis/Data/Characters/OmnisCharacterDefinition.h").read_text(encoding="utf-8")
+        npc_h = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
+        npc_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        for field in ("Biography", "OccupationId", "HomeLocationId", "WorkLocationId", "WorkStartHour", "RestStartHour", "HungerThreshold", "ExploreRadius", "VisualMesh"):
+            self.assertIn(field, definition)
+        self.assertIn("CharacterDefinition", npc_h)
+        self.assertIn("ApplyCharacterDefinition", npc_cpp)
+        self.assertIn("IsWithinHourWindow", npc_cpp)
+        self.assertIn("CharacterDisplayName", npc_cpp)
+
+    def test_production_world_spawns_stable_citizens(self):
+        source = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
+        for citizen in ("Citizen.OpenWorld.Civilian.001", "Citizen.OpenWorld.Shopkeeper.001", "Citizen.OpenWorld.Police.001", "Citizen.OpenWorld.Medic.001", "Citizen.OpenWorld.Pilot.001"):
+            self.assertIn(citizen, source)
+        self.assertIn("SpawnActorDeferred<AOmnisNPCCharacter>", source)
+        self.assertIn("NPC->PersistentId = StableId", source)
+
+
+    def test_production_citizens_have_distinct_names_and_biographies(self):
+        source = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
+        for identity in ("Elena Ríos", "Mateo Cruz", "Lucía Navarro", "Daniel Vega", "Sara Molina", "Andrés Salas"):
+            self.assertIn(identity, source)
+        self.assertIn("OccupationId", source)
+        self.assertIn("HomeLocationId", source)
+        self.assertIn("WorkLocationId", source)
+        self.assertIn("CharacterBiography", source)
+
+    def test_npc_identity_and_persona_are_replicated(self):
+        header = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
+        source = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        for field in ("CharacterId", "PersistentId", "CharacterDisplayName", "CharacterBiography", "OccupationId", "HomeLocationId", "WorkLocationId"):
+            self.assertIn(f"DOREPLIFETIME(AOmnisNPCCharacter, {field})", source)
+        for field in ("CharacterId", "PersistentId", "CharacterDisplayName", "CharacterBiography", "OccupationId", "HomeLocationId", "WorkLocationId"):
+            self.assertIn("Replicated", header)
+            self.assertIn(field, header)
+
+    def test_state_and_economic_mutations_are_server_authoritative(self):
+        state = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.cpp").read_text(encoding="utf-8")
+        reputation = (ROOT / "Source/Omnis/Narrative/Reputation/OmnisReputationSubsystem.cpp").read_text(encoding="utf-8")
+        factions = (ROOT / "Source/Omnis/Narrative/Factions/OmnisFactionSubsystem.cpp").read_text(encoding="utf-8")
+        consequences = (ROOT / "Source/Omnis/Narrative/Consequences/OmnisConsequenceSubsystem.cpp").read_text(encoding="utf-8")
+        world = (ROOT / "Source/Omnis/World/WorldState/OmnisWorldStateSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("HasMutationAuthority", state)
+        npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        self.assertIn("NPC.SocialEncounter", npc)
+        self.assertIn("Player.SocialEncounter", npc)
+        self.assertIn("!Cast<AOmnisPlayerCharacter>(SocialTarget)", npc)
+        for source in (reputation, factions, consequences, world):
+            self.assertIn("GetNetMode() == NM_Client", source)
+
     def test_mission_state_is_replicated_through_existing_world_actor(self):
         actor_h = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.h").read_text(encoding="utf-8")
         actor_cpp = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.cpp").read_text(encoding="utf-8")

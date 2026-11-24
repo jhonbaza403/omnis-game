@@ -290,6 +290,10 @@ TArray<FOmnisQuestProgressSnapshot> UOmnisQuestSubsystem::ExportProgress() const
 void UOmnisQuestSubsystem::ImportProgress(
     const TArray<FOmnisQuestProgressSnapshot>& Snapshots)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     QuestStates.Reset();
     QuestAttempts.Reset();
     RecoveryQuestByFailedQuest.Reset();

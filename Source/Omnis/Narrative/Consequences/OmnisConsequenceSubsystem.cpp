@@ -2,6 +2,10 @@
 
 void UOmnisConsequenceSubsystem::ApplyConsequence(FName ConsequenceId)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     if (!ConsequenceId.IsNone())
     {
         ActiveConsequences.Add(ConsequenceId);
@@ -10,6 +14,10 @@ void UOmnisConsequenceSubsystem::ApplyConsequence(FName ConsequenceId)
 
 void UOmnisConsequenceSubsystem::RemoveConsequence(FName ConsequenceId)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     ActiveConsequences.Remove(ConsequenceId);
 }
 
@@ -27,6 +35,10 @@ TArray<FName> UOmnisConsequenceSubsystem::ExportConsequences() const
 
 void UOmnisConsequenceSubsystem::ImportConsequences(const TArray<FName>& Consequences)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     ActiveConsequences.Reset();
     for (const FName ConsequenceId : Consequences)
     {

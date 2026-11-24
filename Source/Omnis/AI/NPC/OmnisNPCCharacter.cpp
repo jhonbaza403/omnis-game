@@ -8,8 +8,10 @@
 #include "Gameplay/Character/OmnisProceduralAnimationComponent.h"
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
+#include "Data/Characters/OmnisCharacterDefinition.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
 
 AOmnisNPCCharacter::AOmnisNPCCharacter()
 {
@@ -62,6 +64,10 @@ AOmnisNPCCharacter::AOmnisNPCCharacter()
 void AOmnisNPCCharacter::BeginPlay()
 {
     Super::BeginPlay();
+    if (HasAuthority())
+    {
+        ApplyCharacterDefinition();
+    }
 
     HomeLocation = GetActorLocation();
     WorkLocation = HomeLocation + WorkLocationOffset;
@@ -73,6 +79,19 @@ void AOmnisNPCCharacter::BeginPlay()
         CharacterState->SetAlive(true);
         CharacterState->RecordMemory(TEXT("NPC.Spawned"), CharacterId, 10);
     }
+}
+
+void AOmnisNPCCharacter::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(AOmnisNPCCharacter, CharacterId);
+    DOREPLIFETIME(AOmnisNPCCharacter, PersistentId);
+    DOREPLIFETIME(AOmnisNPCCharacter, CharacterDisplayName);
+    DOREPLIFETIME(AOmnisNPCCharacter, CharacterBiography);
+    DOREPLIFETIME(AOmnisNPCCharacter, OccupationId);
+    DOREPLIFETIME(AOmnisNPCCharacter, HomeLocationId);
+    DOREPLIFETIME(AOmnisNPCCharacter, WorkLocationId);
 }
 
 void AOmnisNPCCharacter::Tick(float DeltaSeconds)
@@ -102,6 +121,52 @@ void AOmnisNPCCharacter::Tick(float DeltaSeconds)
     SimulateLife(Elapsed);
 }
 
+void AOmnisNPCCharacter::ApplyCharacterDefinition()
+{
+    UOmnisCharacterDefinition* Definition = CharacterDefinition.LoadSynchronous();
+    if (!Definition)
+    {
+        return;
+    }
+
+    if (!Definition->CharacterId.IsNone())
+    {
+        CharacterId = Definition->CharacterId;
+    }
+    CharacterDisplayName = Definition->DisplayName;
+    CharacterBiography = Definition->Biography;
+    OccupationId = Definition->OccupationId;
+    HomeLocationId = Definition->HomeLocationId;
+    WorkLocationId = Definition->WorkLocationId;
+    WorkLocationOffset = Definition->WorkLocationOffset;
+    LifeUpdateInterval = FMath::Clamp(Definition->LifeUpdateInterval, 1.0f, 20.0f);
+    WorkStartHour = FMath::Fmod(FMath::Max(0.0f, Definition->WorkStartHour), 24.0f);
+    WorkEndHour = FMath::Fmod(FMath::Max(0.0f, Definition->WorkEndHour), 24.0f);
+    RestStartHour = FMath::Fmod(FMath::Max(0.0f, Definition->RestStartHour), 24.0f);
+    RestEndHour = FMath::Fmod(FMath::Max(0.0f, Definition->RestEndHour), 24.0f);
+    HungerThreshold = FMath::Clamp(Definition->HungerThreshold, 0.0f, 100.0f);
+    EnergyThreshold = FMath::Clamp(Definition->EnergyThreshold, 0.0f, 100.0f);
+    SocialThreshold = FMath::Clamp(Definition->SocialThreshold, 0.0f, 100.0f);
+    ExploreRadius = FMath::Clamp(Definition->ExploreRadius, 100.0f, 5000.0f);
+    SocialRadius = FMath::Clamp(Definition->SocialRadius, 100.0f, 5000.0f);
+
+    if (GetCharacterMovement())
+    {
+        GetCharacterMovement()->MaxWalkSpeed = FMath::Clamp(Definition->WalkSpeed, 50.0f, 800.0f);
+    }
+    if (Health)
+    {
+        Health->SetMaxHealth(FMath::Max(1.0f, Definition->MaxHealth));
+    }
+    if (UStaticMesh* DefinitionMesh = Definition->VisualMesh.LoadSynchronous())
+    {
+        if (Visual)
+        {
+            Visual->SetStaticMesh(DefinitionMesh);
+        }
+    }
+}
+
 void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
 {
     if (!CharacterState || !CharacterState->IsAlive())
@@ -122,31 +187,47 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
     const EOmnisCharacterLifeGoal PreviousGoal = CharacterState->GetCurrentGoal();
     EOmnisCharacterLifeGoal Goal = EOmnisCharacterLifeGoal::Explore;
 
-    if (CharacterState->GetHunger() >= 65.0f)
+    if (CharacterState->GetHunger() >= FMath::Clamp(HungerThreshold, 0.0f, 100.0f))
     {
         Goal = EOmnisCharacterLifeGoal::Eat;
     }
-    else if (CharacterState->GetEnergy() <= 25.0f)
+    else if (CharacterState->GetEnergy() <= FMath::Clamp(EnergyThreshold, 0.0f, 100.0f))
     {
         Goal = EOmnisCharacterLifeGoal::Rest;
     }
-    else if (CharacterState->GetSocialNeed() >= 75.0f)
+    else if (CharacterState->GetSocialNeed() >= FMath::Clamp(SocialThreshold, 0.0f, 100.0f))
     {
         Goal = EOmnisCharacterLifeGoal::Socialize;
     }
-    else if (GameHour >= 7.0f && GameHour < 18.0f)
+    else
     {
-        Goal = EOmnisCharacterLifeGoal::Work;
-    }
-    else if (GameHour >= 21.0f || GameHour < 6.0f)
-    {
-        Goal = EOmnisCharacterLifeGoal::Rest;
+        const auto IsWithinHourWindow = [](float Hour, float StartHour, float EndHour)
+        {
+            return StartHour <= EndHour
+                ? Hour >= StartHour && Hour < EndHour
+                : Hour >= StartHour || Hour < EndHour;
+        };
+
+        if (IsWithinHourWindow(GameHour, WorkStartHour, WorkEndHour))
+        {
+            Goal = EOmnisCharacterLifeGoal::Work;
+        }
+        else if (IsWithinHourWindow(GameHour, RestStartHour, RestEndHour))
+        {
+            Goal = EOmnisCharacterLifeGoal::Rest;
+        }
     }
 
     AActor* SocialTarget = nullptr;
     if (Goal == EOmnisCharacterLifeGoal::Socialize && Perception)
     {
-        SocialTarget = Perception->SenseClosest(1800.0f);
+        SocialTarget = Perception->SenseClosest(FMath::Clamp(SocialRadius, 100.0f, 5000.0f));
+        if (SocialTarget &&
+            !Cast<AOmnisPlayerCharacter>(SocialTarget) &&
+            !Cast<AOmnisNPCCharacter>(SocialTarget))
+        {
+            SocialTarget = nullptr;
+        }
         if (!SocialTarget)
         {
             Goal = EOmnisCharacterLifeGoal::Explore;
@@ -181,8 +262,8 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
                 FVector::DistSquared(GetActorLocation(), CurrentDestination) < FMath::Square(150.0f))
             {
                 CurrentDestination = HomeLocation + FVector(
-                    FMath::FRandRange(-1800.0f, 1800.0f),
-                    FMath::FRandRange(-1800.0f, 1800.0f),
+                    FMath::FRandRange(-FMath::Clamp(ExploreRadius, 100.0f, 5000.0f), FMath::Clamp(ExploreRadius, 100.0f, 5000.0f)),
+                    FMath::FRandRange(-FMath::Clamp(ExploreRadius, 100.0f, 5000.0f), FMath::Clamp(ExploreRadius, 100.0f, 5000.0f)),
                     0.0f);
                 bNewExploreDestination = true;
             }
@@ -230,6 +311,28 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds)
         }
         CharacterState->RecordMemory(TEXT("NPC.SocialEncounter"), SocialTargetId, 5);
         CharacterState->AdjustRelationship(SocialTargetId, 1);
+
+        if (AOmnisNPCCharacter* OtherNPC = Cast<AOmnisNPCCharacter>(SocialTarget))
+        {
+            if (OtherNPC->CharacterState)
+            {
+                OtherNPC->CharacterState->RecordMemory(
+                    TEXT("NPC.SocialEncounter"),
+                    GetPersistentId(),
+                    5);
+                OtherNPC->CharacterState->AdjustRelationship(GetPersistentId(), 1);
+            }
+        }
+        else if (AOmnisPlayerCharacter* Player = Cast<AOmnisPlayerCharacter>(SocialTarget))
+        {
+            if (Player->CharacterState)
+            {
+                Player->CharacterState->RecordMemory(
+                    TEXT("Player.SocialEncounter"),
+                    GetPersistentId(),
+                    5);
+            }
+        }
     }
 
     CharacterState->SimulateNeeds(DeltaSeconds, Goal, bReachedGoal);
@@ -249,8 +352,16 @@ FText AOmnisNPCCharacter::GetInteractionPrompt_Implementation() const
 {
     if (CharacterState && CharacterState->HasMemory(TEXT("Mission.Failure.PublicShame")))
     {
-        return FText::FromString(TEXT("No olvido lo que ocurrió"));
+        return NSLOCTEXT("Omnis", "PublicShamePrompt", "No olvido lo que ocurrió");
     }
+
+    if (!CharacterDisplayName.IsEmpty())
+    {
+        return FText::Format(
+            NSLOCTEXT("Omnis", "TalkToNamedCharacter", "Hablar con {0}"),
+            CharacterDisplayName);
+    }
+
     return InteractionPrompt;
 }
 
@@ -317,6 +428,11 @@ void AOmnisNPCCharacter::RestorePersistentState(
     const FTransform& SavedTransform,
     const FOmnisCharacterLifeSnapshot& SavedLifeState)
 {
+    if (!HasAuthority())
+    {
+        return;
+    }
+
     SetActorTransform(
         SavedTransform,
         false,

@@ -138,3 +138,23 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 - Ejecutar pruebas Python y Automation C++ en CI/UE5.8; estática no equivale a runtime.
 
 Resultado actualizado: los caminos principales de interacción, combate y construcción se encaminan a autoridad de servidor; persistencia y estado narrativo replicado ya están en la rama candidata. Todavía no se certifica multiplayer ni build Unreal.
+
+## 10. Cuarta integración — población persistente y perfiles individuales
+
+- El mapa de producción ya no omite la población civil cuando es Omnis_OpenWorld: se crean seis NPC con PersistentId explícito antes de BeginPlay. Sus perfiles iniciales ya tienen nombre visible, ocupación, hogar/trabajo, biografía breve y turnos diferenciados.
+- Se usan identidades por individuo y arquetipos separados (CharacterId); varios civiles pueden compartir arquetipo sin colisionar al guardar.
+- UOmnisCharacterDefinition ahora define biografía, nombre visible, ocupación, hogar, lugar de trabajo, malla opcional, salud máxima, horario de trabajo/descanso, umbrales de hambre/energía/social, radio de exploración/socialización y velocidad.
+- AOmnisNPCCharacter aplica el Data Asset al iniciar y puede mostrar una respuesta contextual cuando recuerda la consecuencia Mission.Failure.PublicShame.
+- Los NPC del mapa persistente tienen horarios de trabajo y descanso distintos, así como destinos de trabajo independientes. Los dos NPC del bootstrap también reciben IDs deterministas.
+- La identidad y los datos biográficos del NPC se resuelven en el servidor y se replican en el actor para mostrarse en cada cliente.
+- La socialización descarta vehículos/objetos que también sean Pawn: solo considera jugadores y NPC. Cuando dos NPC socializan, ambos guardan el encuentro y elevan la relación; cuando participa un jugador, su memoria local recibe el encuentro.
+
+### Límites restantes de la simulación de vida
+
+- Los puntos de hogar y trabajo se derivan de posición inicial + offset; todavía no hay un sistema central de viviendas/puestos de trabajo reservables ni asignación dinámica de empleo.
+- El NPC no conserva todavía relaciones familiares, finanzas propias, inventario cotidiano, rutina de transporte, agenda de eventos, personalidad psicológica ni historia larga fuera del buffer de 32 recuerdos; esos son sistemas posteriores que deberán consumir los perfiles.
+- La navegación real depende de NavMesh/World Partition y debe validarse en el mapa nativo de Unreal 5.8. El movimiento no debe declararse certificado por la sola presencia de AIController.
+- Los seis perfiles iniciales usan arquetipos y propiedades de runtime; aún faltan Data Assets de producción con nombres, biografías, mallas y localizaciones finales creadas dentro del editor.
+- La persistencia de jugadores online sigue pendiente de enlazar el estado de cada usuario a su Net ID; actualmente se captura el jugador local 0 y el estado mundial autoritativo.
+
+Resultado actualizado: el mundo abierto tiene una población inicial de seis habitantes con identidad visible y horarios distintos, más el marco de Data Asset para ampliar cada vida. Las mutaciones de CharacterState, reputación, facciones, consecuencias y estado mundial se limitan a autoridad; NavMesh, streaming de población y certificación nativa siguen pendientes.

@@ -38,6 +38,10 @@ namespace
 
 void UOmnisPersistenceSubsystem::ImportPersistentInts(const TMap<FName, int32>& Values)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     PersistentInts.Reset();
     for (const TPair<FName, int32>& Pair : Values)
     {
@@ -50,6 +54,10 @@ void UOmnisPersistenceSubsystem::ImportPersistentInts(const TMap<FName, int32>& 
 
 void UOmnisPersistenceSubsystem::SetPersistentInt(FName Key, int32 Value)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     if (!Key.IsNone())
     {
         PersistentInts.Add(Key, Value);
