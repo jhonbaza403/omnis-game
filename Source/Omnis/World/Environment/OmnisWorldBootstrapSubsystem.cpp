@@ -11,6 +11,7 @@
 #include "Materials/MaterialInterface.h"
 #include "Gameplay/Interaction/OmnisInteractiveActor.h"
 #include "AI/NPC/OmnisNPCCharacter.h"
+#include "AI/NPC/OmnisCharacterLifeSubsystem.h"
 #include "World/Environment/OmnisNexusVisualActor.h"
 #include "World/Environment/OmnisVFXActor.h"
 #include "World/Environment/OmnisDynamicLightingActor.h"
@@ -222,6 +223,21 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
             NPC->RestStartHour = 22.0f;
             NPC->RestEndHour = 6.0f;
         }
+        if (UOmnisCharacterLifeSubsystem* Life =
+            World->GetSubsystem<UOmnisCharacterLifeSubsystem>())
+        {
+            const FVector WorkPosition = NPCs[Index] + NPC->WorkLocationOffset;
+            if (!Life->RegisterLocation(NPC->HomeLocationId, NPCs[Index]) ||
+                !Life->RegisterLocation(NPC->WorkLocationId, WorkPosition))
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("OMNIS bootstrap NPC '%s' could not register home/work locations."),
+                    *NPC->PersistentId.ToString());
+                NPC->Destroy();
+                continue;
+            }
+        }
+
         NPC->FinishSpawning(SpawnTransform);
     }
 

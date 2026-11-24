@@ -263,5 +263,21 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("SetIsReplicatedByDefault(true)", source)
 
 
+
+    def test_npc_named_home_and_work_locations_resolve_to_world_positions(self):
+        life_h = (ROOT / "Source/Omnis/AI/NPC/OmnisCharacterLifeSubsystem.h").read_text(encoding="utf-8")
+        life_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisCharacterLifeSubsystem.cpp").read_text(encoding="utf-8")
+        npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        world = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
+        bootstrap = (ROOT / "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("RegisterLocation(FName LocationId", life_h)
+        self.assertIn("ResolveLocation(FName LocationId", life_h)
+        self.assertIn("NamedLocations.Add(LocationId, WorldLocation)", life_cpp)
+        self.assertIn("Life->ResolveLocation(HomeLocationId", npc)
+        self.assertIn("Life->ResolveLocation(WorkLocationId", npc)
+        self.assertIn("RegisterLocation(FName(Seed.HomeLocationId)", world)
+        self.assertIn("RegisterLocation(NPC->HomeLocationId", bootstrap)
+
+
 if __name__ == "__main__":
     unittest.main()

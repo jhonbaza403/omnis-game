@@ -25,6 +25,9 @@ public:
         RETURN_QUICK_DECLARE_CYCLE_STAT(UOmnisCharacterLifeSubsystem, STATGROUP_Tickables);
     }
 
+    bool RegisterLocation(FName LocationId, const FVector& WorldLocation);
+    FVector ResolveLocation(FName LocationId, const FVector& Fallback) const;
+
     void RegisterNPC(AOmnisNPCCharacter* NPC);
     void UnregisterNPC(AOmnisNPCCharacter* NPC);
 
@@ -34,6 +37,7 @@ private:
     static constexpr int32 MaxNPCUpdatesPerTick = 128;
     static constexpr float NavigationSimulationRadius = 6000.0f;
 
+    TMap<FName, FVector> NamedLocations;
     TArray<FOmnisRegisteredNPCEntry> RegisteredNPCs;
     int32 NextNPCIndex = 0;
 };

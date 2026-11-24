@@ -212,3 +212,14 @@ Resultado actualizado: la vida de los NPC tiene un gestor central de presupuesto
 - La ejecución de pruebas C++ sigue pendiente en Unreal Engine 5.8; las comprobaciones estáticas no demuestran el comportamiento de los RPC ni la serialización en disco.
 
 Resultado actualizado: inventario, equipo y una primera vía de activación de habilidades están integrados con autoridad y replicación; el catálogo de objetos, los efectos de habilidades y la integración con economía/misiones continúan abiertos.
+
+## 15. Novena integración — ubicaciones nominales para rutinas de NPC
+
+- Se reutiliza \`UOmnisCharacterLifeSubsystem\` como registro central de ubicaciones nominales. Cada \`HomeLocationId\` y \`WorkLocationId\` se resuelve a coordenadas del mundo.
+- El generador del mundo abierto registra los puntos de vivienda y trabajo para sus seis ciudadanos antes de finalizar el spawn; el generador del asentamiento registra las posiciones de vivienda y trabajo de sus dos personajes bootstrap.
+- \`AOmnisNPCCharacter\` resuelve hogar y trabajo desde esos IDs al iniciar, conservando el desplazamiento local como fallback para perfiles de datos que aún no tengan ubicación registrada.
+- Si un mismo ID se registra dos veces con coordenadas incompatibles, el sistema informa error y rechaza la colisión; no sobrescribe silenciosamente el destino anterior.
+
+### Límite restante
+
+El registro cubre las ubicaciones del mundo de inicio; aún falta conectar todas las casas, comercios, trabajos y servicios de la ciudad con una capa persistente de localizaciones y navegación, además de validar destinos contra NavMesh en UE 5.8.

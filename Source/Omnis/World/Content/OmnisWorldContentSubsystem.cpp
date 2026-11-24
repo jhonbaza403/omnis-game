@@ -1,6 +1,7 @@
 #include "World/Content/OmnisWorldContentSubsystem.h"
 
 #include "AI/NPC/OmnisNPCCharacter.h"
+#include "AI/NPC/OmnisCharacterLifeSubsystem.h"
 
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
@@ -37,6 +38,20 @@ namespace
         }
 
         const FName StableId(Seed.PersistentId);
+        UOmnisCharacterLifeSubsystem* Life =
+            World->GetSubsystem<UOmnisCharacterLifeSubsystem>();
+        const FVector HomePosition = Seed.Location;
+        const FVector WorkPosition = Seed.Location + Seed.WorkOffset;
+        if (!Life ||
+            !Life->RegisterLocation(FName(Seed.HomeLocationId), HomePosition) ||
+            !Life->RegisterLocation(FName(Seed.WorkLocationId), WorkPosition))
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("OMNIS citizen '%s' could not register home/work locations."),
+                Seed.PersistentId);
+            return;
+        }
+
         for (TActorIterator<AOmnisNPCCharacter> It(World); It; ++It)
         {
             if (*It && (*It)->GetPersistentId() == StableId)

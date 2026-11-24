@@ -71,6 +71,15 @@ void AOmnisNPCCharacter::BeginPlay()
 
     HomeLocation = GetActorLocation();
     WorkLocation = HomeLocation + WorkLocationOffset;
+
+    if (UOmnisCharacterLifeSubsystem* Life = GetWorld()
+        ? GetWorld()->GetSubsystem<UOmnisCharacterLifeSubsystem>()
+        : nullptr)
+    {
+        HomeLocation = Life->ResolveLocation(HomeLocationId, HomeLocation);
+        WorkLocation = Life->ResolveLocation(WorkLocationId, WorkLocation);
+    }
+
     CurrentDestination = HomeLocation;
     bHasLifeDestination = true;
 

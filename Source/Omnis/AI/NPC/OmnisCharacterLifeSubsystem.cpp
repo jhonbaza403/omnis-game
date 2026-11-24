@@ -7,6 +7,43 @@
 #include "Gameplay/Character/OmnisPlayerCharacter.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 
+bool UOmnisCharacterLifeSubsystem::RegisterLocation(
+    FName LocationId,
+    const FVector& WorldLocation)
+{
+    if (LocationId.IsNone() || WorldLocation.ContainsNaN())
+    {
+        return false;
+    }
+
+    if (const FVector* Existing = NamedLocations.Find(LocationId))
+    {
+        if (FVector::DistSquared(*Existing, WorldLocation) > 1.0f)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("OMNIS location ID '%s' was registered with conflicting coordinates."),
+                *LocationId.ToString());
+            return false;
+        }
+        return true;
+    }
+
+    NamedLocations.Add(LocationId, WorldLocation);
+    return true;
+}
+
+FVector UOmnisCharacterLifeSubsystem::ResolveLocation(
+    FName LocationId,
+    const FVector& Fallback) const
+{
+    if (const FVector* Found = NamedLocations.Find(LocationId))
+    {
+        return *Found;
+    }
+    return Fallback;
+}
+
+
 bool UOmnisCharacterLifeSubsystem::IsTickable() const
 {
     const UWorld* World = GetWorld();
