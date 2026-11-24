@@ -28,6 +28,7 @@ namespace
         float WorkEndHour;
         float RestStartHour;
         float RestEndHour;
+        int32 WorkDaysMask;
     };
 
     void SpawnProductionCitizen(UWorld* World, const FOmnisProductionCitizenSeed& Seed)
@@ -81,18 +82,19 @@ namespace
         NPC->WorkEndHour = Seed.WorkEndHour;
         NPC->RestStartHour = Seed.RestStartHour;
         NPC->RestEndHour = Seed.RestEndHour;
+        NPC->WorkDaysMask = Seed.WorkDaysMask;
         NPC->FinishSpawning(SpawnTransform);
     }
 
     void SpawnProductionPopulation(UWorld* World)
     {
         static const FOmnisProductionCitizenSeed Citizens[] = {
-            {TEXT("Citizen.OpenWorld.Civilian.001"), TEXT("NPC.Civilian"), TEXT("Elena Ríos"), TEXT("Residente del barrio norte; conoce a los comerciantes y ayuda a coordinar las actividades vecinales."), TEXT("Occupation.CommunityVolunteer"), TEXT("Home.NorthQuarter.001"), TEXT("Work.CommunityCenter"), FVector(-2600.0f, -900.0f, 115.0f), FVector(900.0f, 0.0f, 0.0f), 7.0f, 17.0f, 21.0f, 6.0f},
-            {TEXT("Citizen.OpenWorld.Civilian.002"), TEXT("NPC.Civilian"), TEXT("Mateo Cruz"), TEXT("Trabaja en mantenimiento urbano; suele recorrer el distrito para reparar servicios y mobiliario."), TEXT("Occupation.MaintenanceWorker"), TEXT("Home.EastQuarter.002"), TEXT("Work.MunicipalDepot"), FVector(-1200.0f, 1500.0f, 115.0f), FVector(0.0f, 1000.0f, 0.0f), 8.0f, 18.0f, 22.0f, 6.0f},
-            {TEXT("Citizen.OpenWorld.Shopkeeper.001"), TEXT("NPC.Shopkeeper"), TEXT("Lucía Navarro"), TEXT("Comerciante local; abre temprano, atiende a los vecinos y conoce los movimientos del mercado."), TEXT("Occupation.Shopkeeper"), TEXT("Home.MarketQuarter.001"), TEXT("Work.Market.Store.001"), FVector(500.0f, -1400.0f, 115.0f), FVector(1000.0f, 200.0f, 0.0f), 6.0f, 16.0f, 22.0f, 5.0f},
-            {TEXT("Citizen.OpenWorld.Police.001"), TEXT("NPC.PoliceOfficer"), TEXT("Daniel Vega"), TEXT("Agente de patrulla encargado de mantener la seguridad del sector y responder a incidentes."), TEXT("Occupation.PoliceOfficer"), TEXT("Home.CivicQuarter.001"), TEXT("Work.PoliceStation"), FVector(1900.0f, 700.0f, 115.0f), FVector(-900.0f, 0.0f, 0.0f), 6.0f, 18.0f, 23.0f, 6.0f},
-            {TEXT("Citizen.OpenWorld.Medic.001"), TEXT("NPC.Medic"), TEXT("Sara Molina"), TEXT("Personal sanitario del hospital; atiende emergencias y cubre turnos de guardia."), TEXT("Occupation.Medic"), TEXT("Home.HospitalQuarter.001"), TEXT("Work.Hospital.Emergency"), FVector(3200.0f, -1700.0f, 115.0f), FVector(0.0f, -900.0f, 0.0f), 7.0f, 19.0f, 23.0f, 7.0f},
-            {TEXT("Citizen.OpenWorld.Pilot.001"), TEXT("NPC.Pilot"), TEXT("Andrés Salas"), TEXT("Piloto civil que realiza vuelos de transporte y revisa las aeronaves antes de cada jornada."), TEXT("Occupation.Pilot"), TEXT("Home.AirportQuarter.001"), TEXT("Work.Airport.Hangar"), FVector(4200.0f, 1900.0f, 115.0f), FVector(900.0f, 500.0f, 0.0f), 5.0f, 15.0f, 20.0f, 5.0f}
+            {TEXT("Citizen.OpenWorld.Civilian.001"), TEXT("NPC.Civilian"), TEXT("Elena Ríos"), TEXT("Residente del barrio norte; conoce a los comerciantes y ayuda a coordinar las actividades vecinales."), TEXT("Occupation.CommunityVolunteer"), TEXT("Home.NorthQuarter.001"), TEXT("Work.CommunityCenter"), FVector(-2600.0f, -900.0f, 115.0f), FVector(900.0f, 0.0f, 0.0f), 7.0f, 17.0f, 21.0f, 6.0f, 0x1F},
+            {TEXT("Citizen.OpenWorld.Civilian.002"), TEXT("NPC.Civilian"), TEXT("Mateo Cruz"), TEXT("Trabaja en mantenimiento urbano; suele recorrer el distrito para reparar servicios y mobiliario."), TEXT("Occupation.MaintenanceWorker"), TEXT("Home.EastQuarter.002"), TEXT("Work.MunicipalDepot"), FVector(-1200.0f, 1500.0f, 115.0f), FVector(0.0f, 1000.0f, 0.0f), 8.0f, 18.0f, 22.0f, 6.0f, 0x3F},
+            {TEXT("Citizen.OpenWorld.Shopkeeper.001"), TEXT("NPC.Shopkeeper"), TEXT("Lucía Navarro"), TEXT("Comerciante local; abre temprano, atiende a los vecinos y conoce los movimientos del mercado."), TEXT("Occupation.Shopkeeper"), TEXT("Home.MarketQuarter.001"), TEXT("Work.Market.Store.001"), FVector(500.0f, -1400.0f, 115.0f), FVector(1000.0f, 200.0f, 0.0f), 6.0f, 16.0f, 22.0f, 5.0f, 0x3F},
+            {TEXT("Citizen.OpenWorld.Police.001"), TEXT("NPC.PoliceOfficer"), TEXT("Daniel Vega"), TEXT("Agente de patrulla encargado de mantener la seguridad del sector y responder a incidentes."), TEXT("Occupation.PoliceOfficer"), TEXT("Home.CivicQuarter.001"), TEXT("Work.PoliceStation"), FVector(1900.0f, 700.0f, 115.0f), FVector(-900.0f, 0.0f, 0.0f), 6.0f, 18.0f, 23.0f, 6.0f, 0x7F},
+            {TEXT("Citizen.OpenWorld.Medic.001"), TEXT("NPC.Medic"), TEXT("Sara Molina"), TEXT("Personal sanitario del hospital; atiende emergencias y cubre turnos de guardia."), TEXT("Occupation.Medic"), TEXT("Home.HospitalQuarter.001"), TEXT("Work.Hospital.Emergency"), FVector(3200.0f, -1700.0f, 115.0f), FVector(0.0f, -900.0f, 0.0f), 7.0f, 19.0f, 23.0f, 7.0f, 0x7F},
+            {TEXT("Citizen.OpenWorld.Pilot.001"), TEXT("NPC.Pilot"), TEXT("Andrés Salas"), TEXT("Piloto civil que realiza vuelos de transporte y revisa las aeronaves antes de cada jornada."), TEXT("Occupation.Pilot"), TEXT("Home.AirportQuarter.001"), TEXT("Work.Airport.Hangar"), FVector(4200.0f, 1900.0f, 115.0f), FVector(900.0f, 500.0f, 0.0f), 5.0f, 15.0f, 20.0f, 5.0f, 0x1F}
         };
 
         for (const FOmnisProductionCitizenSeed& Citizen : Citizens)

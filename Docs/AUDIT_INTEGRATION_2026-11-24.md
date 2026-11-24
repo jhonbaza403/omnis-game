@@ -223,3 +223,15 @@ Resultado actualizado: inventario, equipo y una primera vía de activación de h
 ### Límite restante
 
 El registro cubre las ubicaciones del mundo de inicio; aún falta conectar todas las casas, comercios, trabajos y servicios de la ciudad con una capa persistente de localizaciones y navegación, además de validar destinos contra NavMesh en UE 5.8.
+
+## 16. Décima integración — calendario de mundo y jornadas individuales
+
+- Se expone \`FOmnisWorldCalendarDate\` desde el reloj existente: año, estación, día del año, día de estación, día de semana, hora y minuto.
+- El calendario usa cuatro estaciones de 30 días, año de 120 días y semana de siete días. El primer día es lunes; las estaciones son primavera, verano, otoño e invierno.
+- El ritmo conserva el reloj existente: un minuto de juego por segundo simulado a escala 1, por lo que un día dura 24 minutos reales a escala 1. La fecha se deriva de \`ElapsedSeconds\`, que ya entra en los guardados, por lo que no necesita un segundo estado persistente.
+- Los perfiles de personaje incorporan \`WorkDaysMask\`: bits 0–4 para jornadas de lunes a viernes (\`0x1F\`), 0–5 para lunes a sábado (\`0x3F\`) y 0–6 para toda la semana (\`0x7F\`).
+- Los seis ciudadanos del mundo abierto y los dos del asentamiento reciben máscaras de jornada por perfil. La rutina solo los manda a trabajar cuando el día y el horario coinciden; hambre, energía y necesidad social mantienen prioridad.
+
+### Límite restante
+
+El calendario es determinista y funcional para horarios, pero todavía no representa feriados, fechas históricas, eventos estacionales, clima por estación ni ciclos económicos. La simulación offline de los NPC en regiones descargadas sigue pendiente.

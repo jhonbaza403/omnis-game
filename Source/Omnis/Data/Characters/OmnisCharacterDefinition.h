@@ -51,6 +51,10 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Life", meta=(ClampMin="0.0", ClampMax="24.0"))
     float RestEndHour = 6.0f;
 
+    // Bit 0 = Monday, bit 6 = Sunday. 0x7F means every day.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Life", meta=(ClampMin="0", ClampMax="127"))
+    int32 WorkDaysMask = 0x7F;
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Life", meta=(ClampMin="0.0", ClampMax="100.0"))
     float HungerThreshold = 65.0f;
 

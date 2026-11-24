@@ -3,6 +3,7 @@
 #include "Misc/AutomationTest.h"
 
 #include "Core/Save/OmnisSaveGame.h"
+#include "Core/Time/OmnisTimeSubsystem.h"
 #include "Gameplay/Abilities/OmnisAbilityComponent.h"
 #include "Gameplay/Equipment/OmnisEquipmentComponent.h"
 #include "Gameplay/Inventory/OmnisInventoryComponent.h"
@@ -162,6 +163,40 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     TestEqual(TEXT("Saved equipped slots"), Save->Characters[0].EquippedItems.Num(), 1);
     TestEqual(TEXT("Saved cooldowns"), Save->Characters[0].AbilityCooldowns.Num(), 1);
 
+    return true;
+}
+
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FOmnisWorldCalendarBoundaries,
+    "Omnis.Time.CalendarBoundaries",
+    EAutomationTestFlags::ApplicationContextMask |
+    EAutomationTestFlags::SmokeFilter)
+
+bool FOmnisWorldCalendarBoundaries::RunTest(const FString& Parameters)
+{
+    FOmnisWorldCalendarDate Date = UOmnisTimeSubsystem::BuildCalendarDate(0.0f);
+    TestEqual(TEXT("Calendar starts in year one"), Date.Year, 1);
+    TestTrue(TEXT("Calendar starts in spring"), Date.Season == EOmnisWorldSeason::Spring);
+    TestEqual(TEXT("First day of year"), Date.DayOfYear, 1);
+    TestEqual(TEXT("Monday is day zero"), Date.DayOfWeek, 0);
+    TestEqual(TEXT("Midnight hour"), Date.Hour, 0);
+
+    Date = UOmnisTimeSubsystem::BuildCalendarDate(60.0f);
+    TestEqual(TEXT("Sixty simulated seconds advance one game hour"), Date.Hour, 1);
+
+    Date = UOmnisTimeSubsystem::BuildCalendarDate(24.0f * 60.0f);
+    TestEqual(TEXT("A full game day advances the date"), Date.DayOfYear, 2);
+    TestEqual(TEXT("The weekday advances"), Date.DayOfWeek, 1);
+
+    Date = UOmnisTimeSubsystem::BuildCalendarDate(30.0f * 24.0f * 60.0f);
+    TestTrue(TEXT("Thirty days advance the season"), Date.Season == EOmnisWorldSeason::Summer);
+    TestEqual(TEXT("First day of summer"), Date.DayOfSeason, 1);
+
+    Date = UOmnisTimeSubsystem::BuildCalendarDate(120.0f * 24.0f * 60.0f);
+    TestEqual(TEXT("Four seasons advance the year"), Date.Year, 2);
+    TestTrue(TEXT("New year returns to spring"), Date.Season == EOmnisWorldSeason::Spring);
+    TestEqual(TEXT("New year begins at day one"), Date.DayOfYear, 1);
     return true;
 }
 

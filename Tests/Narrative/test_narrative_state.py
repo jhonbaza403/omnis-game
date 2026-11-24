@@ -279,5 +279,54 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("RegisterLocation(NPC->HomeLocationId", bootstrap)
 
 
+
+    def test_calendar_and_per_character_weekly_work_schedule(self):
+        time_h = (ROOT / "Source/Omnis/Core/Time/OmnisTimeSubsystem.h").read_text(encoding="utf-8")
+        time_cpp = (ROOT / "Source/Omnis/Core/Time/OmnisTimeSubsystem.cpp").read_text(encoding="utf-8")
+        definition = (ROOT / "Source/Omnis/Data/Characters/OmnisCharacterDefinition.h").read_text(encoding="utf-8")
+        npc_h = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
+        npc_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        world = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
+        bootstrap = (ROOT / "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem.cpp").read_text(encoding="utf-8")
+        automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
+        self.assertIn("FOmnisWorldCalendarDate GetCalendarDate() const", time_h)
+        self.assertIn("DaysPerSeason = 30", time_cpp)
+        self.assertIn("DaysPerYear = DaysPerSeason * 4", time_cpp)
+        self.assertIn("Date.DayOfWeek = static_cast<int32>(TotalDays % 7)", time_cpp)
+        self.assertIn("int32 WorkDaysMask = 0x7F", definition)
+        self.assertIn("int32 WorkDaysMask = 0x7F", npc_h)
+        self.assertIn("Time->GetCalendarDate()", npc_cpp)
+        self.assertIn("bIsScheduledWorkday &&", npc_cpp)
+        self.assertIn("NPC->WorkDaysMask = Seed.WorkDaysMask", world)
+        for mask in ("0x1F", "0x3F", "0x7F"):
+            self.assertIn(mask, world + bootstrap)
+        self.assertIn("Omnis.Time.CalendarBoundaries", automation)
+
+
+
+    def test_calendar_and_per_character_weekly_work_schedule(self):
+        time_h = (ROOT / "Source/Omnis/Core/Time/OmnisTimeSubsystem.h").read_text(encoding="utf-8")
+        time_cpp = (ROOT / "Source/Omnis/Core/Time/OmnisTimeSubsystem.cpp").read_text(encoding="utf-8")
+        definition = (ROOT / "Source/Omnis/Data/Characters/OmnisCharacterDefinition.h").read_text(encoding="utf-8")
+        npc_h = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.h").read_text(encoding="utf-8")
+        npc_cpp = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")
+        world = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
+        bootstrap = (ROOT / "Source/Omnis/World/Environment/OmnisWorldBootstrapSubsystem.cpp").read_text(encoding="utf-8")
+        automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
+        self.assertIn("FOmnisWorldCalendarDate GetCalendarDate() const", time_h)
+        self.assertIn("BuildCalendarDate(float ElapsedGameSeconds)", time_h)
+        self.assertIn("DaysPerSeason = 30", time_cpp)
+        self.assertIn("DaysPerYear = DaysPerSeason * 4", time_cpp)
+        self.assertIn("Date.DayOfWeek = static_cast<int32>(TotalDays % 7)", time_cpp)
+        self.assertIn("int32 WorkDaysMask = 0x7F", definition)
+        self.assertIn("int32 WorkDaysMask = 0x7F", npc_h)
+        self.assertIn("Time->GetCalendarDate()", npc_cpp)
+        self.assertIn("bIsScheduledWorkday &&", npc_cpp)
+        self.assertIn("NPC->WorkDaysMask = Seed.WorkDaysMask", world)
+        for mask in ("0x1F", "0x3F", "0x7F"):
+            self.assertIn(mask, world + bootstrap)
+        self.assertIn("Omnis.Time.CalendarBoundaries", automation)
+
+
 if __name__ == "__main__":
     unittest.main()

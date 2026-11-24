@@ -208,6 +208,7 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
             NPC->WorkEndHour = 17.0f;
             NPC->RestStartHour = 21.0f;
             NPC->RestEndHour = 6.0f;
+            NPC->WorkDaysMask = 0x3F;
         }
         else
         {
@@ -222,6 +223,7 @@ void UOmnisWorldBootstrapSubsystem::BuildInitialWorld()
             NPC->WorkEndHour = 18.0f;
             NPC->RestStartHour = 22.0f;
             NPC->RestEndHour = 6.0f;
+            NPC->WorkDaysMask = 0x1F;
         }
         if (UOmnisCharacterLifeSubsystem* Life =
             World->GetSubsystem<UOmnisCharacterLifeSubsystem>())

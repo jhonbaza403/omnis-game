@@ -141,6 +141,7 @@ void AOmnisNPCCharacter::ApplyCharacterDefinition()
     WorkLocationId = Definition->WorkLocationId;
     WorkLocationOffset = Definition->WorkLocationOffset;
     LifeUpdateInterval = FMath::Clamp(Definition->LifeUpdateInterval, 1.0f, 20.0f);
+    WorkDaysMask = FMath::Clamp(Definition->WorkDaysMask, 0, 0x7F);
     WorkStartHour = FMath::Fmod(FMath::Max(0.0f, Definition->WorkStartHour), 24.0f);
     WorkEndHour = FMath::Fmod(FMath::Max(0.0f, Definition->WorkEndHour), 24.0f);
     RestStartHour = FMath::Fmod(FMath::Max(0.0f, Definition->RestStartHour), 24.0f);
@@ -189,14 +190,19 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds, bool bAllowNavigation)
     }
 
     float GameHour = 12.0f;
+    int32 DayOfWeek = 0;
     if (UWorld* World = GetWorld())
     {
         if (UOmnisTimeSubsystem* Time = World->GetSubsystem<UOmnisTimeSubsystem>())
         {
-            // One in-game hour equals sixty simulated seconds at time scale 1.
-            GameHour = FMath::Fmod(Time->GetElapsedSeconds() / 60.0f, 24.0f);
+            const FOmnisWorldCalendarDate Date = Time->GetCalendarDate();
+            GameHour = static_cast<float>(Date.Hour) +
+                (static_cast<float>(Date.Minute) / 60.0f);
+            DayOfWeek = FMath::Clamp(Date.DayOfWeek, 0, 6);
         }
     }
+    const bool bIsScheduledWorkday =
+        (FMath::Clamp(WorkDaysMask, 0, 0x7F) & (1 << DayOfWeek)) != 0;
 
     const EOmnisCharacterLifeGoal PreviousGoal = CharacterState->GetCurrentGoal();
     EOmnisCharacterLifeGoal Goal = EOmnisCharacterLifeGoal::Explore;
@@ -222,7 +228,8 @@ void AOmnisNPCCharacter::SimulateLife(float DeltaSeconds, bool bAllowNavigation)
                 : Hour >= StartHour || Hour < EndHour;
         };
 
-        if (IsWithinHourWindow(GameHour, WorkStartHour, WorkEndHour))
+        if (bIsScheduledWorkday &&
+            IsWithinHourWindow(GameHour, WorkStartHour, WorkEndHour))
         {
             Goal = EOmnisCharacterLifeGoal::Work;
         }
