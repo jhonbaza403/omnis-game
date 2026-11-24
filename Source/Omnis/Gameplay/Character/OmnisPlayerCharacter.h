@@ -15,6 +15,7 @@ class UOmnisAbilityComponent;
 class UOmnisInventoryComponent;
 class UOmnisEquipmentComponent;
 class UOmnisHealthComponent;
+class UOmnisCharacterStateComponent;
 class UOmnisProceduralAnimationComponent;
 class UStaticMeshComponent;
 class UInputComponent;
@@ -62,6 +63,9 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Gameplay")
     TObjectPtr<UOmnisHealthComponent> Health;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
+    TObjectPtr<UOmnisCharacterStateComponent> CharacterState;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Animation")
     TObjectPtr<UOmnisProceduralAnimationComponent> ProceduralAnimation;

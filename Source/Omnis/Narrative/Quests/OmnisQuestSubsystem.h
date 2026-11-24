@@ -4,6 +4,8 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "OmnisQuestSubsystem.generated.h"
 
+class UOmnisQuestDefinition;
+
 UENUM(BlueprintType)
 enum class EOmnisQuestState : uint8
 {
@@ -12,6 +14,12 @@ enum class EOmnisQuestState : uint8
     Completed,
     Failed
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+    FOmnisQuestStateChanged,
+    FName, QuestId,
+    EOmnisQuestState, NewState,
+    FName, Reason);
 
 UCLASS()
 class OMNIS_API UOmnisQuestSubsystem : public UGameInstanceSubsystem
@@ -25,7 +33,34 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|Quest")
     EOmnisQuestState GetQuestState(FName QuestId) const;
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Quest")
+    bool StartQuest(const UOmnisQuestDefinition* Definition);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Quest")
+    bool CompleteQuest(const UOmnisQuestDefinition* Definition);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Quest")
+    bool FailQuest(const UOmnisQuestDefinition* Definition, FName FailureReason);
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Quest")
+    int32 GetQuestAttemptCount(FName QuestId) const;
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Quest")
+    FName GetRecoveryQuestId(FName FailedQuestId) const;
+
+    UPROPERTY(BlueprintAssignable, Category="Omnis|Quest")
+    FOmnisQuestStateChanged OnQuestStateChanged;
+
 private:
+    void SetQuestStateInternal(FName QuestId, EOmnisQuestState State, FName Reason);
+    void ApplyFailureOutcome(const UOmnisQuestDefinition* Definition, FName FailureReason);
+
     UPROPERTY()
     TMap<FName, EOmnisQuestState> QuestStates;
+
+    UPROPERTY()
+    TMap<FName, int32> QuestAttempts;
+
+    UPROPERTY()
+    TMap<FName, FName> RecoveryQuestByFailedQuest;
 };

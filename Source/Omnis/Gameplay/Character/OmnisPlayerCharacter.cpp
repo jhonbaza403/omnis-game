@@ -14,6 +14,7 @@
 #include "Gameplay/Player/OmnisGameMode.h"
 #include "Gameplay/Traversal/OmnisTraversalComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -69,6 +70,7 @@ AOmnisPlayerCharacter::AOmnisPlayerCharacter()
     Equipment = CreateDefaultSubobject<UOmnisEquipmentComponent>(TEXT("Equipment"));
     Health = CreateDefaultSubobject<UOmnisHealthComponent>(TEXT("Health"));
     ProceduralAnimation = CreateDefaultSubobject<UOmnisProceduralAnimationComponent>(TEXT("ProceduralAnimation"));
+    CharacterState = CreateDefaultSubobject<UOmnisCharacterStateComponent>(TEXT("CharacterState"));
 }
 
 void AOmnisPlayerCharacter::BeginPlay()
@@ -90,6 +92,12 @@ void AOmnisPlayerCharacter::BeginPlay()
     }
 
     ApplyAvatarVisuals();
+
+    if (CharacterState)
+    {
+        CharacterState->SetAlive(true);
+        CharacterState->RecordMemory(TEXT("Player.Spawned"), TEXT("Player"), 10);
+    }
 
     if (Health)
     {
@@ -206,6 +214,11 @@ void AOmnisPlayerCharacter::ApplyAvatarVisuals()
 
 void AOmnisPlayerCharacter::HandlePlayerDeath()
 {
+    if (CharacterState)
+    {
+        CharacterState->SetAlive(false);
+        CharacterState->RecordMemory(TEXT("Player.Death"), TEXT("Player"), 100);
+    }
     if (AOmnisGameMode* GameMode =
         GetWorld() ? GetWorld()->GetAuthGameMode<AOmnisGameMode>() : nullptr)
     {

@@ -30,6 +30,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Health")
     float MaxHealth = 100.0f;
 
+    // NPCs can remain in the world as a persistent dead state; players keep the default despawn.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Health")
+    bool bDestroyOwnerOnDeath = true;
+
     UPROPERTY(BlueprintAssignable, Category="Omnis|Health")
     FOnOmnisHealthChanged OnHealthChanged;
 

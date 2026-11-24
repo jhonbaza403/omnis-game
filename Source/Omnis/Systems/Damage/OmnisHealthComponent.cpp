@@ -32,7 +32,10 @@ void UOmnisHealthComponent::HandleDamage(AActor* DamagedActor, float Damage, con
     {
         bDead = true;
         OnDeath.Broadcast();
-        DamagedActor->SetLifeSpan(0.2f);
+        if (bDestroyOwnerOnDeath && DamagedActor)
+        {
+            DamagedActor->SetLifeSpan(0.2f);
+        }
     }
 }
 

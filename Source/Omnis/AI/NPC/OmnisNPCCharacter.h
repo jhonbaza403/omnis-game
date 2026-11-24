@@ -8,6 +8,8 @@
 class UStaticMeshComponent;
 class UOmnisHealthComponent;
 class UOmnisProceduralAnimationComponent;
+class UOmnisCharacterStateComponent;
+class UOmnisPerceptionComponent;
 
 UCLASS()
 class OMNIS_API AOmnisNPCCharacter : public ACharacter, public IOmnisInteractableInterface
@@ -17,6 +19,7 @@ class OMNIS_API AOmnisNPCCharacter : public ACharacter, public IOmnisInteractabl
 public:
     AOmnisNPCCharacter();
 
+    virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
     virtual void Interact_Implementation(AActor* Interactor) override;
     virtual FText GetInteractionPrompt_Implementation() const override { return InteractionPrompt; }
@@ -27,16 +30,38 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|NPC")
     FText InteractionPrompt;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Life")
+    FVector WorkLocationOffset = FVector(1200.0f, 0.0f, 0.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Life", meta=(ClampMin="1.0"))
+    float LifeUpdateInterval = 3.0f;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|NPC")
     TObjectPtr<UOmnisHealthComponent> Health;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
+    TObjectPtr<UOmnisCharacterStateComponent> CharacterState;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Life")
+    TObjectPtr<UOmnisPerceptionComponent> Perception;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Omnis|Animation")
     TObjectPtr<UOmnisProceduralAnimationComponent> ProceduralAnimation;
 
+protected:
+    UFUNCTION()
+    void HandleNPCDeath();
+
 private:
+    void SimulateLife(float DeltaSeconds);
+    void MoveToLifeDestination(const FVector& Destination, float AcceptanceRadius = 100.0f);
+
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> Visual;
 
-    float RoutineClock = 0.0f;
-    FVector RoutineOrigin = FVector::ZeroVector;
+    FVector HomeLocation = FVector::ZeroVector;
+    FVector WorkLocation = FVector::ZeroVector;
+    FVector CurrentDestination = FVector::ZeroVector;
+    float LifeUpdateClock = 0.0f;
+    bool bHasLifeDestination = false;
 };
