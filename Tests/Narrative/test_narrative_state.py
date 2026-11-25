@@ -122,16 +122,17 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("Save->PermanentUpgradePoints", source)
         self.assertIn("Nexus->ImportProgression(Save->NexusProgression)", source)
 
-    def test_save_schema_six_keeps_legacy_zero_two_three_four_and_five_compatible(self):
+    def test_save_schema_seven_keeps_legacy_zero_two_three_four_five_and_six_compatible(self):
         save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
         persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
-        self.assertIn("SchemaVersion = 6", save)
+        self.assertIn("SchemaVersion = 7", save)
         self.assertIn("Save->SchemaVersion != 0", persistence)
         self.assertIn("Save->SchemaVersion != 2", persistence)
         self.assertIn("Save->SchemaVersion != 3", persistence)
         self.assertIn("Save->SchemaVersion != 4", persistence)
         self.assertIn("Save->SchemaVersion != 5", persistence)
-        self.assertIn("CurrentSaveSchemaVersion = 6", persistence)
+        self.assertIn("Save->SchemaVersion != 6", persistence)
+        self.assertIn("CurrentSaveSchemaVersion = 7", persistence)
 
     def test_authoritative_gameplay_uses_server_rpcs(self):
         interaction = (ROOT / "Source/Omnis/Gameplay/Interaction/OmnisInteractionComponent.cpp").read_text(encoding="utf-8")
@@ -357,7 +358,7 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("HasUnresolvedFailureUsingConsequence(BaseConsequenceId)", quest_cpp)
         self.assertIn("RestoreFailureConsequences", persistence)
         self.assertIn("State.FailureConsequenceId = Progress.FailureConsequenceId", replicated)
-        self.assertIn("SchemaVersion = 6", save)
+        self.assertIn("SchemaVersion = 7", save)
 
 
 
@@ -377,7 +378,7 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("State.FailureConsequenceId = Progress.FailureConsequenceId", actor_cpp)
         self.assertIn("HasUnresolvedFailureUsingConsequence", automation)
         self.assertIn("Quest.Sabotage", automation)
-        self.assertIn("SchemaVersion = 6", (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8"))
+        self.assertIn("SchemaVersion = 7", (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8"))
 
 
 
@@ -416,7 +417,7 @@ class PersistenceContractTests(unittest.TestCase):
         economy = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.cpp").read_text(encoding="utf-8")
         actor_h = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.h").read_text(encoding="utf-8")
         actor_cpp = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.cpp").read_text(encoding="utf-8")
-        self.assertIn("SchemaVersion = 6", save)
+        self.assertIn("SchemaVersion = 7", save)
         self.assertIn("FOmnisEconomySnapshot EconomyState", save)
         self.assertIn("StructuralDamageSnapshots", save)
         self.assertIn("Damage->ExportSnapshots()", persistence)
