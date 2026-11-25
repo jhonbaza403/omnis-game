@@ -5,6 +5,7 @@
 #include "Data/Quests/OmnisQuestDefinition.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Narrative/Quests/OmnisQuestSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     FOmnisCharacterLifeStateAutomation,
@@ -25,6 +26,11 @@ bool FOmnisCharacterLifeStateAutomation::RunTest(const FString& Parameters)
     TestTrue(TEXT("Hunger increases over time"), State->GetHunger() > 0.0f);
     TestTrue(TEXT("Social need increases over time"), State->GetSocialNeed() > 0.0f);
     TestTrue(TEXT("Energy decreases while active"), State->GetEnergy() < 100.0f);
+
+    const float HungerBeforeRelief = State->GetHunger();
+    State->RestoreSurvivalNeeds(0.2f, 20.0f);
+    TestTrue(TEXT("Consuming food relieves hunger"), State->GetHunger() < HungerBeforeRelief);
+    TestEqual(TEXT("Survival restoration clamps energy"), State->GetEnergy(), 100.0f);
 
     State->SimulateNeeds(10.0f, EOmnisCharacterLifeGoal::Rest, true);
     TestEqual(TEXT("Rest restores energy"), State->GetEnergy(), 100.0f);
@@ -86,3 +92,42 @@ bool FOmnisQuestFailureAutomation::RunTest(const FString& Parameters)
 }
 
 #endif
+
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FOmnisAutonomousRegionalEconomyAutomation,
+    "Omnis.Economy.AutonomousRegionalProduction",
+    EAutomationTestFlags::ApplicationContextMask |
+    EAutomationTestFlags::SmokeFilter)
+
+bool FOmnisAutonomousRegionalEconomyAutomation::RunTest(const FString& Parameters)
+{
+    UOmnisEconomySubsystem* Economy = NewObject<UOmnisEconomySubsystem>();
+    TestNotNull(TEXT("Economy subsystem"), Economy);
+    if (!Economy)
+    {
+        return false;
+    }
+
+    Economy->RegisterVenezuelaTriangleMarkets(1);
+    const FOmnisMarketQuote Before =
+        Economy->GetQuote(TEXT("Market.Caracas.Formal"), TEXT("Item.Food"));
+    TestTrue(TEXT("Caracas food market is seeded"), Before.bAvailable);
+    TestEqual(TEXT("Initial Caracas food stock"), Before.StockQuantity, 300);
+
+    Economy->AdvanceAutonomousDay(1);
+    const FOmnisMarketQuote After =
+        Economy->GetQuote(TEXT("Market.Caracas.Formal"), TEXT("Item.Food"));
+    TestEqual(TEXT("Daily consumption reduces stock"), After.StockQuantity, 285);
+    TestTrue(TEXT("Scarcity raises the market quote"), After.UnitPriceMinorUnits > Before.UnitPriceMinorUnits);
+
+    const FOmnisMarketQuote RuralBefore =
+        Economy->GetQuote(TEXT("Market.Caucagua.Rural"), TEXT("Item.AgriculturalProduce"));
+    Economy->AdvanceAutonomousDay(2);
+    const FOmnisMarketQuote RuralAfter =
+        Economy->GetQuote(TEXT("Market.Caucagua.Rural"), TEXT("Item.AgriculturalProduce"));
+    TestEqual(TEXT("Rural production replenishes stock"), RuralAfter.StockQuantity,
+        RuralBefore.StockQuantity + 80);
+
+    return true;
+}
