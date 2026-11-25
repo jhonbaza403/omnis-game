@@ -18,6 +18,9 @@ class PersistenceContractTests(unittest.TestCase):
             "WorldStateValues",
             "ReputationValues",
             "FactionStandings",
+            "FactionTerritoryStates",
+            "TerrainDeformationSnapshots",
+            "Vehicles",
             "WorldElapsedSeconds",
             "SavedAtUtc",
             "Health",
@@ -36,7 +39,8 @@ class PersistenceContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("SaveCurrentGame", source)
         self.assertIn("LoadCurrentGame", source)
-        self.assertIn("CurrentSaveSchemaVersion = 6", source)
+        self.assertIn("CurrentSaveSchemaVersion = 7", source)
+        self.assertIn("Save->SchemaVersion != 6", source)
         self.assertIn("Save->SchemaVersion != 2", source)
         self.assertIn("SaveGameToSlot", source)
         self.assertIn("LoadGameFromSlot", source)
@@ -47,6 +51,9 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("Inventory->ImportItems", source)
         self.assertIn("Equipment->ImportEquipment", source)
         self.assertIn("Abilities->ImportCooldowns", source)
+        self.assertIn("ImportTerritoryStates", source)
+        self.assertIn("ImportDeformationSnapshots", source)
+        self.assertIn("ImportVehicleCondition", source)
 
     def test_npc_identity_is_not_the_archetype_name(self):
         npc = (ROOT / "Source/Omnis/AI/NPC/OmnisNPCCharacter.cpp").read_text(encoding="utf-8")

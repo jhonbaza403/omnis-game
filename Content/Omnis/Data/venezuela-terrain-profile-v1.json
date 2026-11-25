@@ -1,0 +1,373 @@
+{
+  "schema_version": 1,
+  "catalog_id": "omnis.venezuela.terrain.profile.v1",
+  "engine_target": "Unreal Engine 5.8",
+  "coordinate_space": "Altitudes are metres above sea level. Route progress is a normalized design parameter, not GPS distance or surveyed geometry. Convert metres to Unreal centimetres only when baking a Landscape/ spline.",
+  "status": "data_contract_ready_landscape_assets_and_world_partition_cells_pending",
+  "profiles": [
+    {
+      "id": "Profile.WarairaRepano.Ridge",
+      "route_id": "Route.Caracas.Ridge",
+      "purpose": "Panoramic ridge crest above Caracas valley",
+      "samples": [
+        {
+          "progress": 0,
+          "altitude_m": 900,
+          "label": "Caracas valley"
+        },
+        {
+          "progress": 0.22,
+          "altitude_m": 1450,
+          "label": "Lower mountain"
+        },
+        {
+          "progress": 0.55,
+          "altitude_m": 2700,
+          "label": "Waraira Repano crest"
+        },
+        {
+          "progress": 0.78,
+          "altitude_m": 1500,
+          "label": "Mountain descent"
+        },
+        {
+          "progress": 1,
+          "altitude_m": 900,
+          "label": "Valley return"
+        }
+      ]
+    },
+    {
+      "id": "Profile.Caracas-LaGuaira.TunnelHighway",
+      "route_id": "Route.Caracas-LaGuaira.TunnelHighway",
+      "purpose": "Abrupt descent from the Caracas plateau through tunnel/viaduct corridor to sea level",
+      "samples": [
+        {
+          "progress": 0,
+          "altitude_m": 900,
+          "label": "Caracas valley"
+        },
+        {
+          "progress": 0.18,
+          "altitude_m": 1120,
+          "label": "High approach"
+        },
+        {
+          "progress": 0.38,
+          "altitude_m": 860,
+          "label": "Tunnel approach"
+        },
+        {
+          "progress": 0.58,
+          "altitude_m": 520,
+          "label": "Coastal mountain descent"
+        },
+        {
+          "progress": 0.82,
+          "altitude_m": 160,
+          "label": "Viaduct and coastal shelf"
+        },
+        {
+          "progress": 1,
+          "altitude_m": 0,
+          "label": "La Guaira coast"
+        }
+      ]
+    },
+    {
+      "id": "Profile.CaracasEast-Barlovento",
+      "route_id": "Route.CaracasEast-Guarenas-Guatire-Caucagua",
+      "purpose": "Gradual transition from Caracas high valley to Barlovento lowland",
+      "samples": [
+        {
+          "progress": 0,
+          "altitude_m": 900,
+          "label": "Caracas Este"
+        },
+        {
+          "progress": 0.18,
+          "altitude_m": 760,
+          "label": "Guarenas approach"
+        },
+        {
+          "progress": 0.34,
+          "altitude_m": 520,
+          "label": "Guarenas-Guatire pass"
+        },
+        {
+          "progress": 0.52,
+          "altitude_m": 260,
+          "label": "Guatire low corridor"
+        },
+        {
+          "progress": 0.72,
+          "altitude_m": 90,
+          "label": "Caucagua plain"
+        },
+        {
+          "progress": 1,
+          "altitude_m": 45,
+          "label": "Barlovento alluvial plain"
+        }
+      ]
+    },
+    {
+      "id": "Profile.Barlovento.RioChico-Higuerote",
+      "route_id": "Route.Caucagua-RioChico-Higuerote",
+      "purpose": "Nearly level alluvial and coastal plain",
+      "samples": [
+        {
+          "progress": 0,
+          "altitude_m": 45,
+          "label": "Caucagua"
+        },
+        {
+          "progress": 0.35,
+          "altitude_m": 28,
+          "label": "River channels"
+        },
+        {
+          "progress": 0.68,
+          "altitude_m": 12,
+          "label": "Río Chico wetlands"
+        },
+        {
+          "progress": 1,
+          "altitude_m": 3,
+          "label": "Higuerote coast"
+        }
+      ]
+    }
+  ],
+  "biomes": [
+    {
+      "id": "Biome.Caracas.UrbanValley",
+      "regions": [
+        "Region.Caracas",
+        "Caracas.CentralBusiness",
+        "Caracas.East"
+      ],
+      "surfaces": [
+        "Surface.WornAsphalt",
+        "Surface.Concrete",
+        "Surface.ExposedBrick"
+      ],
+      "vegetation": "mountain_north",
+      "shader_profile": "Shader.Caracas.Urban",
+      "weather_profile": "Weather.MountainSeasonal"
+    },
+    {
+      "id": "Biome.Caracas.Hillside",
+      "regions": [
+        "Caracas.Hillside"
+      ],
+      "surfaces": [
+        "Surface.Concrete",
+        "Surface.ExposedBrick",
+        "Surface.RoughTrack"
+      ],
+      "vegetation": "steep_hillside_mountain",
+      "shader_profile": "Shader.Caracas.Hillside",
+      "weather_profile": "Weather.MountainSeasonal"
+    },
+    {
+      "id": "Biome.LaGuaira.AridTropicalCoast",
+      "regions": [
+        "Region.LaGuaira",
+        "LaGuaira.Port",
+        "LaGuaira.Airport",
+        "Naiguata"
+      ],
+      "surfaces": [
+        "Surface.CoastalRock",
+        "Surface.SaltConcrete",
+        "Surface.WornAsphalt",
+        "Surface.Sand"
+      ],
+      "vegetation": "dry_coastal_scrub",
+      "shader_profile": "Shader.LaGuaira.Coast",
+      "weather_profile": "Weather.Marine"
+    },
+    {
+      "id": "Biome.Barlovento.HumidWetland",
+      "regions": [
+        "Region.Barlovento",
+        "Caucagua",
+        "RioChico",
+        "Higuerote"
+      ],
+      "surfaces": [
+        "Surface.WetAsphalt",
+        "Surface.Gravel",
+        "Surface.DeepMud",
+        "Surface.MangroveSoil",
+        "Surface.Sand"
+      ],
+      "vegetation": "mangrove_cacao_tropical_forest",
+      "shader_profile": "Shader.Barlovento.Wetland",
+      "weather_profile": "Weather.TropicalRain"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "Surface.WornAsphalt",
+      "base_grip": 0.88,
+      "wet_grip_multiplier": 0.72,
+      "rolling_resistance": 0.025,
+      "mud_deformation_rate": 0,
+      "corrosion_rate_per_hour": 0.001,
+      "visual_parameters": {
+        "roughness": 0.82,
+        "wetness_response": 0.65,
+        "salt_mask": 0
+      }
+    },
+    {
+      "id": "Surface.Concrete",
+      "base_grip": 0.92,
+      "wet_grip_multiplier": 0.78,
+      "rolling_resistance": 0.018,
+      "mud_deformation_rate": 0,
+      "corrosion_rate_per_hour": 0.001,
+      "visual_parameters": {
+        "roughness": 0.68,
+        "wetness_response": 0.55,
+        "salt_mask": 0
+      }
+    },
+    {
+      "id": "Surface.ExposedBrick",
+      "base_grip": 0.68,
+      "wet_grip_multiplier": 0.62,
+      "rolling_resistance": 0.11,
+      "mud_deformation_rate": 0.002,
+      "corrosion_rate_per_hour": 0.001,
+      "visual_parameters": {
+        "roughness": 0.9,
+        "wetness_response": 0.7,
+        "salt_mask": 0
+      }
+    },
+    {
+      "id": "Surface.CoastalRock",
+      "base_grip": 0.78,
+      "wet_grip_multiplier": 0.58,
+      "rolling_resistance": 0.09,
+      "mud_deformation_rate": 0.001,
+      "corrosion_rate_per_hour": 0.012,
+      "visual_parameters": {
+        "roughness": 0.95,
+        "wetness_response": 0.45,
+        "salt_mask": 0.9
+      }
+    },
+    {
+      "id": "Surface.SaltConcrete",
+      "base_grip": 0.86,
+      "wet_grip_multiplier": 0.68,
+      "rolling_resistance": 0.025,
+      "mud_deformation_rate": 0,
+      "corrosion_rate_per_hour": 0.018,
+      "visual_parameters": {
+        "roughness": 0.72,
+        "wetness_response": 0.72,
+        "salt_mask": 1
+      }
+    },
+    {
+      "id": "Surface.Sand",
+      "base_grip": 0.52,
+      "wet_grip_multiplier": 0.66,
+      "rolling_resistance": 0.24,
+      "mud_deformation_rate": 0.006,
+      "corrosion_rate_per_hour": 0.008,
+      "visual_parameters": {
+        "roughness": 0.94,
+        "wetness_response": 0.65,
+        "salt_mask": 0.3
+      }
+    },
+    {
+      "id": "Surface.WetAsphalt",
+      "base_grip": 0.84,
+      "wet_grip_multiplier": 0.7,
+      "rolling_resistance": 0.045,
+      "mud_deformation_rate": 0.001,
+      "corrosion_rate_per_hour": 0.004,
+      "visual_parameters": {
+        "roughness": 0.85,
+        "wetness_response": 1,
+        "salt_mask": 0.15
+      }
+    },
+    {
+      "id": "Surface.Gravel",
+      "base_grip": 0.62,
+      "wet_grip_multiplier": 0.78,
+      "rolling_resistance": 0.16,
+      "mud_deformation_rate": 0.003,
+      "corrosion_rate_per_hour": 0.002,
+      "visual_parameters": {
+        "roughness": 0.98,
+        "wetness_response": 0.6,
+        "salt_mask": 0
+      }
+    },
+    {
+      "id": "Surface.DeepMud",
+      "base_grip": 0.38,
+      "wet_grip_multiplier": 0.82,
+      "rolling_resistance": 0.48,
+      "mud_deformation_rate": 0.018,
+      "corrosion_rate_per_hour": 0.003,
+      "visual_parameters": {
+        "roughness": 1,
+        "wetness_response": 1,
+        "salt_mask": 0
+      }
+    },
+    {
+      "id": "Surface.MangroveSoil",
+      "base_grip": 0.32,
+      "wet_grip_multiplier": 0.78,
+      "rolling_resistance": 0.56,
+      "mud_deformation_rate": 0.022,
+      "corrosion_rate_per_hour": 0.004,
+      "visual_parameters": {
+        "roughness": 1,
+        "wetness_response": 1,
+        "salt_mask": 0
+      }
+    }
+  ],
+  "reveal_gates": [
+    {
+      "region_id": "Region.LaGuaira",
+      "events": [
+        "WorldGate.CaracasLaGuaira.TunnelExit",
+        "WorldGate.WarairaRepano.Crest"
+      ]
+    },
+    {
+      "region_id": "LaGuaira.Port",
+      "events": [
+        "WorldGate.CaracasLaGuaira.TunnelExit"
+      ]
+    },
+    {
+      "region_id": "LaGuaira.Airport",
+      "events": [
+        "WorldGate.CaracasLaGuaira.TunnelExit"
+      ]
+    }
+  ],
+  "runtime_targets": {
+    "altitude_interpolation": "linear_between_authored_samples",
+    "elevation_to_ue": "1 metre = 100 Unreal centimetres; origin offset and vertical scale are map-authoring settings",
+    "landscape": "heightmap_and_landscape_splines_not_materialized",
+    "streaming": "World Partition/Data Layer cells and HLOD required; reveal_gates are visibility criteria only",
+    "deformation": "cell-based rut state is gameplay data; actual Landscape deformation or RVT render-target shader remains asset/material work",
+    "marine_corrosion": "accumulate condition damage from exposure time; runtime accumulator is implemented separately",
+    "foliage": "biome masks are authoring inputs; foliage instances and Nanite assets remain pending"
+  }
+}

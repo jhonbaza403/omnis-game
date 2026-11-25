@@ -85,6 +85,7 @@ jobs:
           node CI/World/validate_venezuela_triangle.mjs
           node CI/Mods/validate_mod_manifest.mjs
           node CI/World/validate_building_interiors.mjs
+          node CI/World/validate_venezuela_simulation.mjs
 
       - name: Check shell-script syntax
         shell: bash

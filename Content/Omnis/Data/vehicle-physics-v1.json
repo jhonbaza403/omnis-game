@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "catalog_id": "omnis.venezuela.vehicle-profiles.v1",
+  "status": "vehicle_condition_layer_data_ready_full_chaos_vehicle_rigs_pending",
+  "units": {
+    "mass": "kg",
+    "fuel": "litres",
+    "speed": "km/h",
+    "temperature": "C"
+  },
+  "shared_condition_parts": [
+    "engine",
+    "transmission",
+    "suspension",
+    "brakes",
+    "tires",
+    "cooling_system",
+    "fuel_tank"
+  ],
+  "vehicles": [
+    {
+      "id": "Vehicle.Motorcycle150_200",
+      "category": "motorcycle",
+      "displacement_cc": [
+        150,
+        200
+      ],
+      "fuel_capacity_l": 14,
+      "base_consumption_l_per_hour": 2.8,
+      "load_capacity_kg": 110,
+      "drivetrain": "rear_wheel",
+      "surface_grip": {
+        "asphalt": 0.9,
+        "gravel": 0.55,
+        "deep_mud": 0.22
+      },
+      "handling_tags": [
+        "narrow_corridor",
+        "low_mass",
+        "high_agility"
+      ],
+      "limitations": [
+        "no_enclosed_protection",
+        "mud_traction_sensitive"
+      ],
+      "physics_target": "single_track_balance_and_suspension_rig_required"
+    },
+    {
+      "id": "Vehicle.ClassicSedan",
+      "category": "sedan",
+      "fuel_capacity_l": 52,
+      "base_consumption_l_per_hour": 7.5,
+      "load_capacity_kg": 380,
+      "drivetrain": "rear_or_front_wheel",
+      "surface_grip": {
+        "asphalt": 0.88,
+        "gravel": 0.5,
+        "deep_mud": 0.18
+      },
+      "handling_tags": [
+        "generic_repair_parts",
+        "engine_swap_torque_tuning"
+      ],
+      "limitations": [
+        "low_clearance",
+        "pothole_sensitive"
+      ],
+      "physics_target": "four_wheel_suspension_and_alignment_required"
+    },
+    {
+      "id": "Vehicle.Rustic4x4",
+      "category": "4x4",
+      "fuel_capacity_l": 82,
+      "base_consumption_l_per_hour": 12.5,
+      "load_capacity_kg": 620,
+      "drivetrain": "selectable_4wd",
+      "low_range_ratio": 2.4,
+      "differential_lock": true,
+      "snorkel_fording_depth_cm": 75,
+      "surface_grip": {
+        "asphalt": 0.82,
+        "gravel": 0.76,
+        "deep_mud": 0.68
+      },
+      "handling_tags": [
+        "4h",
+        "4l",
+        "differential_lock",
+        "high_clearance"
+      ],
+      "limitations": [
+        "high_fuel_use",
+        "high_center_of_gravity"
+      ],
+      "physics_target": "chaos_wheeled_vehicle_setup_and_rollover_validation_required"
+    },
+    {
+      "id": "Vehicle.Peñero",
+      "category": "boat",
+      "fuel_capacity_l": 95,
+      "base_consumption_l_per_hour": 9.5,
+      "draft_cm": 35,
+      "engine_count": 1,
+      "surface_grip": {
+        "water": 1
+      },
+      "handling_tags": [
+        "shallow_draft",
+        "narrow_channels"
+      ],
+      "limitations": [
+        "open_sea_wave_limit",
+        "low_freeboard"
+      ],
+      "physics_target": "chaos_buoyancy_or_custom_hull_rig_required"
+    },
+    {
+      "id": "Vehicle.FastBoat",
+      "category": "boat",
+      "fuel_capacity_l": 220,
+      "base_consumption_l_per_hour": 22,
+      "draft_cm": 70,
+      "engine_count": 2,
+      "surface_grip": {
+        "water": 1
+      },
+      "handling_tags": [
+        "twin_engine",
+        "open_coast"
+      ],
+      "limitations": [
+        "high_fuel_use",
+        "storm_visibility"
+      ],
+      "physics_target": "multi_point_buoyancy_wave_and_motor_rig_required"
+    }
+  ],
+  "simulation_contract": {
+    "fuel_formula": "time_rate * throttle_factor * engine_load_factor * cargo_mass_factor",
+    "brake_fade_temperature_c": 420,
+    "severe_brake_temperature_c": 600,
+    "engine_derate_temperature_c": 105,
+    "engine_damage_temperature_c": 125,
+    "impact_damage": "impact_speed_and_component_exposure; all integrity values clamped 0..100",
+    "persistence": "stable vehicle PersistentId plus schema-7 condition snapshot",
+    "note": "The condition component models wear and vehicle multipliers. Real suspension geometry, wheel torque distribution, differential lock, buoyancy, waves and rollover need Chaos vehicle/water rigs and native tuning."
+  }
+}

@@ -11,6 +11,9 @@
 #include "Narrative/Quests/OmnisQuestSubsystem.h"
 #include "World/Economy/OmnisEconomySubsystem.h"
 #include "World/Destruction/OmnisStructuralDamageComponent.h"
+#include "Narrative/Factions/OmnisFactionSubsystem.h"
+#include "Gameplay/Vehicle/OmnisVehicleConditionComponent.h"
+#include "World/Terrain/OmnisVenezuelaTerrainSubsystem.h"
 #include "OmnisSaveGame.generated.h"
 
 USTRUCT(BlueprintType)
@@ -46,6 +49,21 @@ struct FOmnisSavedCharacterState
     TArray<FOmnisSavedAbilityCooldown> AbilityCooldowns;
 };
 
+USTRUCT(BlueprintType)
+struct FOmnisSavedVehicleState
+{
+    GENERATED_BODY()
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
+    FName PersistentId;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
+    FTransform Transform = FTransform::Identity;
+
+    UPROPERTY(SaveGame, BlueprintReadWrite, Category="Save")
+    FOmnisVehicleConditionSnapshot Condition;
+};
+
 UCLASS()
 class OMNIS_API UOmnisSaveGame : public USaveGame
 {
@@ -53,7 +71,7 @@ class OMNIS_API UOmnisSaveGame : public USaveGame
 
 public:
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
-    int32 SchemaVersion = 6;
+    int32 SchemaVersion = 7;
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
     FDateTime SavedAtUtc;
@@ -99,4 +117,13 @@ public:
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
     TArray<FOmnisStructuralDamageSnapshot> StructuralDamageSnapshots;
+
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisTerrainDeformationSnapshot> TerrainDeformationSnapshots;
+
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisFactionTerritorySnapshot> FactionTerritoryStates;
+
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisSavedVehicleState> Vehicles;
 };

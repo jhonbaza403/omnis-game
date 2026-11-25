@@ -198,17 +198,41 @@ void UOmnisWorldContentSubsystem::BuildProductionWorld()
 
     if (AOmnisVehiclePawn* Sedan = World->SpawnActor<AOmnisVehiclePawn>(FVector(-800,-500,1), FRotator::ZeroRotator))
     {
+        Sedan->VehiclePersistentId = TEXT("Vehicle.OpenWorld.Sedan.Player");
+        Sedan->ConfigureVehicleArchetype(EOmnisVehicleArchetype::Sedan);
         Sedan->ConfigureVehicle(AssetPath(TEXT("Vehicles"),TEXT("Omnis_Sedan")));
     }
 
     if (AOmnisVehiclePawn* Police = World->SpawnActor<AOmnisVehiclePawn>(FVector(-5000,3300,1), FRotator::ZeroRotator))
     {
+        Police->VehiclePersistentId = TEXT("Vehicle.OpenWorld.Police.001");
+        Police->ConfigureVehicleArchetype(EOmnisVehicleArchetype::Sedan);
         Police->ConfigureVehicle(AssetPath(TEXT("Vehicles"),TEXT("Omnis_Police_Car")));
     }
 
     if (AOmnisVehiclePawn* Ambulance = World->SpawnActor<AOmnisVehiclePawn>(FVector(2500,-2200,1), FRotator::ZeroRotator))
     {
+        Ambulance->VehiclePersistentId = TEXT("Vehicle.OpenWorld.Ambulance.001");
+        Ambulance->ConfigureVehicleArchetype(EOmnisVehicleArchetype::Sedan);
         Ambulance->ConfigureVehicle(AssetPath(TEXT("Vehicles"),TEXT("Omnis_Ambulance")));
+    }
+
+    if (AOmnisVehiclePawn* Motorcycle = World->SpawnActor<AOmnisVehiclePawn>(FVector(-1200,900,1), FRotator::ZeroRotator))
+    {
+        Motorcycle->VehiclePersistentId = TEXT("Vehicle.OpenWorld.Motorcycle.001");
+        Motorcycle->ConfigureVehicleArchetype(EOmnisVehicleArchetype::Motorcycle);
+        Motorcycle->ConfigureVehicle(AssetPath(TEXT("Vehicles"),TEXT("Omnis_Motorcycle")));
+    }
+
+    if (AOmnisVehiclePawn* Rustic = World->SpawnActor<AOmnisVehiclePawn>(FVector(900,-2800,1), FRotator::ZeroRotator))
+    {
+        Rustic->VehiclePersistentId = TEXT("Vehicle.OpenWorld.Rustic4x4.001");
+        Rustic->ConfigureVehicleArchetype(EOmnisVehicleArchetype::FourByFour);
+        if (Rustic->VehicleCondition)
+        {
+            Rustic->VehicleCondition->SetDriveMode(EOmnisVehicleDriveMode::FourWheelDriveHigh);
+        }
+        Rustic->ConfigureVehicle(AssetPath(TEXT("Vehicles"),TEXT("Omnis_SUV")));
     }
 
     if (AOmnisAircraftPawn* Commercial = World->SpawnActor<AOmnisAircraftPawn>(FVector(0,11000,1400), FRotator::ZeroRotator))

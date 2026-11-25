@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "catalog_id": "omnis.venezuela.factions.v1",
+  "status": "fictional_gameplay_design_catalog",
+  "factions": [
+    {
+      "id": "Faction.EstibadoresLitoral",
+      "name": "Los Estibadores del Litoral",
+      "region": "La Guaira",
+      "interests": [
+        "port_logistics",
+        "cargo_records",
+        "marine_routes"
+      ],
+      "gameplay": [
+        "negotiate_access",
+        "resolve_customs_dispute",
+        "obtain_local_contact",
+        "rent_generic_boat_service"
+      ]
+    },
+    {
+      "id": "Faction.ColectivosCota",
+      "name": "Los Colectivos de la Cota",
+      "region": "Caracas hillside districts",
+      "interests": [
+        "neighborhood_control",
+        "local_workshops",
+        "vertical_routes"
+      ],
+      "gameplay": [
+        "enter_with_local_contact",
+        "use_unmarked_safe_hub",
+        "earn_trust_through_local_tasks"
+      ]
+    },
+    {
+      "id": "Faction.FirmaFinanciera",
+      "name": "La Firma Financiera",
+      "region": "Caracas valley",
+      "interests": [
+        "formal_business",
+        "property",
+        "contracts",
+        "auctions"
+      ],
+      "gameplay": [
+        "negotiate_business_contract",
+        "complete_audit_or_delivery",
+        "unlock_property_services"
+      ]
+    },
+    {
+      "id": "Faction.SenoresCacaoRio",
+      "name": "Los Señores del Cacao y el Río",
+      "region": "Barlovento",
+      "interests": [
+        "agriculture",
+        "river_trade",
+        "rural_warehouses"
+      ],
+      "gameplay": [
+        "earn_rural_trust",
+        "help_local_producers",
+        "unlock_river_transport_services"
+      ]
+    },
+    {
+      "id": "Faction.FuerzasSeguridad",
+      "name": "Fuerzas de Seguridad",
+      "region": "All regions",
+      "interests": [
+        "public_order",
+        "incident_response",
+        "route_control"
+      ],
+      "gameplay": [
+        "response_tier_from_heat",
+        "mobile_checkpoints",
+        "on_foot_search_in_rough_terrain"
+      ]
+    }
+  ],
+  "territories": [
+    {
+      "id": "Territory.LaGuaira.Port",
+      "region_id": "Region.LaGuaira",
+      "dominant_faction": "Faction.EstibadoresLitoral",
+      "access_standing_threshold": 15,
+      "requires_local_contact": true,
+      "territory_tags": [
+        "port",
+        "customs",
+        "marine"
+      ]
+    },
+    {
+      "id": "Territory.Caracas.Hillside",
+      "region_id": "Caracas.Hillside",
+      "dominant_faction": "Faction.ColectivosCota",
+      "access_standing_threshold": 20,
+      "requires_local_contact": true,
+      "territory_tags": [
+        "steep",
+        "vertical",
+        "dense_urban"
+      ]
+    },
+    {
+      "id": "Territory.Caracas.Valley",
+      "region_id": "Caracas.CentralBusiness",
+      "dominant_faction": "Faction.FirmaFinanciera",
+      "access_standing_threshold": 10,
+      "requires_local_contact": false,
+      "territory_tags": [
+        "financial",
+        "civic",
+        "commercial"
+      ]
+    },
+    {
+      "id": "Territory.Barlovento.River",
+      "region_id": "Region.Barlovento",
+      "dominant_faction": "Faction.SenoresCacaoRio",
+      "access_standing_threshold": 15,
+      "requires_local_contact": true,
+      "territory_tags": [
+        "wetland",
+        "river",
+        "agriculture"
+      ]
+    }
+  ],
+  "response_thresholds": {
+    "none_below": 15,
+    "patrol_from": 15,
+    "mobile_units_from": 40,
+    "coordinated_response_from": 70
+  },
+  "heat_rules": {
+    "minimum": 0,
+    "maximum": 100,
+    "unwitnessed_incident_scale": 0.5,
+    "manual_decay_per_call": 8,
+    "automatic_time_decay": "not_implemented"
+  },
+  "note": "Fictional factions and abstract game mechanics. They do not represent real organizations or provide real-world evasion instructions."
+}

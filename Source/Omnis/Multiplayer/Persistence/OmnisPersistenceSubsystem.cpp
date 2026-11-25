@@ -12,6 +12,7 @@
 #include "Gameplay/Abilities/OmnisAbilityComponent.h"
 #include "Gameplay/Equipment/OmnisEquipmentComponent.h"
 #include "Gameplay/Inventory/OmnisInventoryComponent.h"
+#include "Gameplay/Vehicle/OmnisVehiclePawn.h"
 #include "Kismet/GameplayStatics.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Narrative/Consequences/OmnisConsequenceSubsystem.h"
@@ -22,10 +23,11 @@
 #include "World/WorldState/OmnisWorldStateSubsystem.h"
 #include "World/Economy/OmnisEconomySubsystem.h"
 #include "World/Destruction/OmnisStructuralDamageSubsystem.h"
+#include "World/Terrain/OmnisVenezuelaTerrainSubsystem.h"
 
 namespace
 {
-    constexpr int32 CurrentSaveSchemaVersion = 6;
+    constexpr int32 CurrentSaveSchemaVersion = 7;
 
     bool IsValidSlotName(const FString& SlotName)
     {
@@ -105,6 +107,11 @@ bool UOmnisPersistenceSubsystem::SaveCurrentGame(const FString& SlotName)
     {
         Save->StructuralDamageSnapshots = Damage->ExportSnapshots();
     }
+    if (UOmnisVenezuelaTerrainSubsystem* Terrain =
+        World->GetSubsystem<UOmnisVenezuelaTerrainSubsystem>())
+    {
+        Save->TerrainDeformationSnapshots = Terrain->ExportDeformationSnapshots();
+    }
 
     if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
     {
@@ -133,6 +140,7 @@ bool UOmnisPersistenceSubsystem::SaveCurrentGame(const FString& SlotName)
         GameInstance->GetSubsystem<UOmnisFactionSubsystem>())
     {
         Save->FactionStandings = Factions->ExportStandings();
+        Save->FactionTerritoryStates = Factions->ExportTerritoryStates();
     }
     if (UOmnisWorldStateSubsystem* WorldState =
         World->GetSubsystem<UOmnisWorldStateSubsystem>())
@@ -215,6 +223,30 @@ bool UOmnisPersistenceSubsystem::SaveCurrentGame(const FString& SlotName)
         SavedCharacterIds.Add(Character.PersistentId);
     }
 
+    TSet<FName> SavedVehicleIds;
+    for (TActorIterator<AOmnisVehiclePawn> It(World); It; ++It)
+    {
+        AOmnisVehiclePawn* Vehicle = *It;
+        if (!Vehicle || Vehicle->VehiclePersistentId.IsNone())
+        {
+            continue;
+        }
+        if (SavedVehicleIds.Contains(Vehicle->VehiclePersistentId))
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("OMNIS save aborted: duplicate vehicle PersistentId '%s'."),
+                *Vehicle->VehiclePersistentId.ToString());
+            return false;
+        }
+
+        FOmnisSavedVehicleState SavedVehicle;
+        SavedVehicle.PersistentId = Vehicle->VehiclePersistentId;
+        SavedVehicle.Transform = Vehicle->GetActorTransform();
+        SavedVehicle.Condition = Vehicle->ExportVehicleCondition();
+        Save->Vehicles.Add(SavedVehicle);
+        SavedVehicleIds.Add(SavedVehicle.PersistentId);
+    }
+
     return UGameplayStatics::SaveGameToSlot(Save, SlotName, 0);
 }
 
@@ -236,6 +268,7 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
         Save->SchemaVersion != 3 &&
         Save->SchemaVersion != 4 &&
         Save->SchemaVersion != 5 &&
+        Save->SchemaVersion != 6 &&
         Save->SchemaVersion != CurrentSaveSchemaVersion))
     {
         UE_LOG(LogTemp, Error,
@@ -296,6 +329,39 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
         }
     }
 
+    TMap<FName, AOmnisVehiclePawn*> VehiclesById;
+    for (TActorIterator<AOmnisVehiclePawn> It(World); It; ++It)
+    {
+        AOmnisVehiclePawn* Vehicle = *It;
+        if (!Vehicle || Vehicle->VehiclePersistentId.IsNone())
+        {
+            continue;
+        }
+        if (VehiclesById.Contains(Vehicle->VehiclePersistentId))
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("OMNIS load aborted: duplicate live vehicle PersistentId '%s'."),
+                *Vehicle->VehiclePersistentId.ToString());
+            return false;
+        }
+        VehiclesById.Add(Vehicle->VehiclePersistentId, Vehicle);
+    }
+
+    TSet<FName> LoadedVehicleIds;
+    for (const FOmnisSavedVehicleState& SavedVehicle : Save->Vehicles)
+    {
+        if (SavedVehicle.PersistentId.IsNone() ||
+            LoadedVehicleIds.Contains(SavedVehicle.PersistentId) ||
+            !VehiclesById.Contains(SavedVehicle.PersistentId))
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("OMNIS load aborted: saved vehicle '%s' is missing or duplicated in the loaded world."),
+                *SavedVehicle.PersistentId.ToString());
+            return false;
+        }
+        LoadedVehicleIds.Add(SavedVehicle.PersistentId);
+    }
+
     ImportPersistentInts(Save->PersistentInts);
 
     if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
@@ -328,6 +394,7 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
         GameInstance->GetSubsystem<UOmnisFactionSubsystem>())
     {
         Factions->ImportStandings(Save->FactionStandings);
+        Factions->ImportTerritoryStates(Save->FactionTerritoryStates);
     }
     if (UOmnisWorldStateSubsystem* WorldState =
         World->GetSubsystem<UOmnisWorldStateSubsystem>())
@@ -341,6 +408,24 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
     if (UOmnisStructuralDamageSubsystem* Damage = World->GetSubsystem<UOmnisStructuralDamageSubsystem>())
     {
         Damage->ImportSnapshots(Save->StructuralDamageSnapshots);
+    }
+    if (UOmnisVenezuelaTerrainSubsystem* Terrain =
+        World->GetSubsystem<UOmnisVenezuelaTerrainSubsystem>())
+    {
+        Terrain->ImportDeformationSnapshots(Save->TerrainDeformationSnapshots);
+    }
+
+    for (const FOmnisSavedVehicleState& SavedVehicle : Save->Vehicles)
+    {
+        if (AOmnisVehiclePawn** FoundVehicle = VehiclesById.Find(SavedVehicle.PersistentId))
+        {
+            (*FoundVehicle)->SetActorTransform(
+                SavedVehicle.Transform,
+                false,
+                nullptr,
+                ETeleportType::TeleportPhysics);
+            (*FoundVehicle)->ImportVehicleCondition(SavedVehicle.Condition);
+        }
     }
 
     if (UOmnisTimeSubsystem* Time = World->GetSubsystem<UOmnisTimeSubsystem>())
