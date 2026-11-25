@@ -160,7 +160,7 @@ void UOmnisVehicleConditionComponent::TickComponent(
         AmbientTemperatureC,
         180.0f);
 
-    const float BrakeHeat = BrakeInput * (SpeedKph / 100.0f) * 3.2f;
+    const float BrakeHeat = BrakeInput * SpeedKph * (1.55f + CargoFactor * 0.12f);
     const float BrakeCooling = (0.08f + SpeedKph * 0.003f) *
         FMath::Max(0.0f, BrakeTemperatureC - AmbientTemperatureC);
     BrakeTemperatureC = FMath::Clamp(

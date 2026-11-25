@@ -1,5 +1,8 @@
 #include "Narrative/Factions/OmnisFactionSubsystem.h"
 
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
@@ -79,19 +82,20 @@ bool UOmnisFactionSubsystem::LoadTerritoryCatalog()
         }
     }
 
-    TSharedPtr<FJsonObject> Thresholds;
-    if (Root->TryGetObjectField(TEXT("response_thresholds"), Thresholds) && Thresholds.IsValid())
+    const TSharedPtr<FJsonObject>* Thresholds = nullptr;
+    if (Root->TryGetObjectField(TEXT("response_thresholds"), Thresholds) &&
+        Thresholds && Thresholds->IsValid())
     {
         double Number = 0.0;
-        if (Thresholds->TryGetNumberField(TEXT("patrol_from"), Number))
+        if ((*Thresholds)->TryGetNumberField(TEXT("patrol_from"), Number))
         {
             PatrolResponseThreshold = FMath::Clamp(static_cast<int32>(Number), 1, 100);
         }
-        if (Thresholds->TryGetNumberField(TEXT("mobile_units_from"), Number))
+        if ((*Thresholds)->TryGetNumberField(TEXT("mobile_units_from"), Number))
         {
             MobileResponseThreshold = FMath::Clamp(static_cast<int32>(Number), PatrolResponseThreshold + 1, 100);
         }
-        if (Thresholds->TryGetNumberField(TEXT("coordinated_response_from"), Number))
+        if ((*Thresholds)->TryGetNumberField(TEXT("coordinated_response_from"), Number))
         {
             CoordinatedResponseThreshold = FMath::Clamp(static_cast<int32>(Number), MobileResponseThreshold + 1, 100);
         }
