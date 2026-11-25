@@ -35,6 +35,15 @@ class EmergentSystemContractTests(unittest.TestCase):
         self.assertIn("GetNetMode() != NM_Client", scheduler_cpp)
         self.assertIn("AdvanceAutonomousDay(DaysToCatchUp)", scheduler_cpp)
         self.assertIn("SecondsPerGameDay = 86400.0", scheduler_h)
+        interaction_h = (ROOT / "Source/Omnis/Gameplay/Interaction/OmnisInteractiveActor.h").read_text(encoding="utf-8")
+        interaction_cpp = (ROOT / "Source/Omnis/Gameplay/Interaction/OmnisInteractiveActor.cpp").read_text(encoding="utf-8")
+        self.assertIn("bOneShot = true", interaction_h)
+        self.assertIn("InteractionCooldownSeconds", interaction_h)
+        self.assertIn("bConsumed", interaction_cpp)
+        self.assertIn("HasAuthority()", interaction_cpp)
+        self.assertIn("bRewardClaimed", interaction_cpp)
+        self.assertIn("OnInteractionActivated.Broadcast", interaction_cpp)
+        self.assertIn("DOREPLIFETIME(AOmnisInteractiveActor, bActivated)", interaction_cpp)
         for forbidden in ("ExecuteTrade", "AddItem", "SetRelationship", "CompleteMission"):
             self.assertNotIn(forbidden, source)
 
