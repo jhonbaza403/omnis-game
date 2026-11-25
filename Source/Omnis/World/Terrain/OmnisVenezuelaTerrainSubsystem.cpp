@@ -253,6 +253,38 @@ bool UOmnisVenezuelaTerrainSubsystem::GetAltitudeMeters(
     return true;
 }
 
+
+bool UOmnisVenezuelaTerrainSubsystem::GetGradePercent(
+    FName ProfileId,
+    float StartProgress,
+    float EndProgress,
+    float HorizontalDistanceMeters,
+    float& OutGradePercent) const
+{
+    if (!FMath::IsFinite(StartProgress) ||
+        !FMath::IsFinite(EndProgress) ||
+        !FMath::IsFinite(HorizontalDistanceMeters) ||
+        HorizontalDistanceMeters <= KINDA_SMALL_NUMBER ||
+        EndProgress <= StartProgress)
+    {
+        return false;
+    }
+
+    float StartAltitudeMeters = 0.0f;
+    float EndAltitudeMeters = 0.0f;
+    if (!GetAltitudeMeters(ProfileId, StartProgress, StartAltitudeMeters) ||
+        !GetAltitudeMeters(ProfileId, EndProgress, EndAltitudeMeters))
+    {
+        return false;
+    }
+
+    OutGradePercent = FMath::Clamp(
+        ((EndAltitudeMeters - StartAltitudeMeters) / HorizontalDistanceMeters) * 100.0f,
+        -60.0f,
+        60.0f);
+    return true;
+}
+
 bool UOmnisVenezuelaTerrainSubsystem::GetBiomeForRegion(
     FName RegionId,
     FName& OutBiomeId) const

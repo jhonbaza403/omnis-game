@@ -24,6 +24,19 @@ class VenezuelaSimulationCatalogTests(unittest.TestCase):
   categories = [x["category"] for x in load("Content/Omnis/Data/vehicle-physics-v1.json")["vehicles"]]
   for category in ("motorcycle", "sedan", "4x4", "boat"): self.assertIn(category, categories)
   self.assertGreaterEqual(categories.count("boat"), 2)
+ def test_altitude_grade_query_feeds_vehicle_brake_and_engine_heat(self):
+  terrain_h = (ROOT / "Source/Omnis/World/Terrain/OmnisVenezuelaTerrainSubsystem.h").read_text(encoding="utf-8")
+  terrain_cpp = (ROOT / "Source/Omnis/World/Terrain/OmnisVenezuelaTerrainSubsystem.cpp").read_text(encoding="utf-8")
+  vehicle_h = (ROOT / "Source/Omnis/Gameplay/Vehicle/OmnisVehicleConditionComponent.h").read_text(encoding="utf-8")
+  vehicle_cpp = (ROOT / "Source/Omnis/Gameplay/Vehicle/OmnisVehicleConditionComponent.cpp").read_text(encoding="utf-8")
+  pawn_cpp = (ROOT / "Source/Omnis/Gameplay/Vehicle/OmnisVehiclePawn.cpp").read_text(encoding="utf-8")
+  self.assertIn("GetGradePercent", terrain_h)
+  self.assertIn("EndAltitudeMeters - StartAltitudeMeters", terrain_cpp)
+  self.assertIn("SetRoadGradePercent", vehicle_h)
+  self.assertIn("DownhillBrakeLoad", vehicle_cpp)
+  self.assertIn("UphillLoadFactor", vehicle_cpp)
+  self.assertIn("VehicleCondition->SetRoadGradePercent(RoadGradePercent)", pawn_cpp)
+
  def test_mission_graph_and_persistence_targets(self):
   mission = load("Content/Omnis/Data/Missions/operation-cargo-echo-v1.json"); ids = {x["id"] for x in mission["phases"]}
   for step in mission["phases"]:

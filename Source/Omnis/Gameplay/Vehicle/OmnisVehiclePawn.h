@@ -30,6 +30,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Vehicle|Environment")
     void SetWaterImmersion(float ImmersionFraction);
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Vehicle|Environment")
+    void SetRoadGradePercent(float GradePercent);
+
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Omnis|Vehicle|Persistence")
     FName VehiclePersistentId;
 
@@ -74,4 +77,5 @@ private:
     float TerrainRainIntensity = 0.0f;
     float TerrainSaltExposure = 0.0f;
     float AmbientTemperatureC = 25.0f;
+    float RoadGradePercent = 0.0f;
 };

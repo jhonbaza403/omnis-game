@@ -62,6 +62,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|World|Terrain")
     bool GetAltitudeMeters(FName ProfileId, float Progress, float& OutAltitudeMeters) const;
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|World|Terrain")
+    bool GetGradePercent(
+        FName ProfileId,
+        float StartProgress,
+        float EndProgress,
+        float HorizontalDistanceMeters,
+        float& OutGradePercent) const;
+
     UFUNCTION(BlueprintPure, Category="Omnis|World|Terrain")
     bool GetBiomeForRegion(FName RegionId, FName& OutBiomeId) const;
 

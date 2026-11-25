@@ -108,6 +108,9 @@ public:
     void SetEngineLoadFactor(float LoadFactor);
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Vehicle|Condition")
+    void SetRoadGradePercent(float GradePercent);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Vehicle|Condition")
     void SetImmersionFraction(float Fraction);
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Vehicle|Condition")
@@ -216,6 +219,7 @@ private:
     float AmbientTemperatureC = 25.0f;
     float SaltExposure = 0.0f;
     float EngineLoadFactor = 1.0f;
+    float RoadGradePercent = 0.0f;
     float ImmersionFraction = 0.0f;
     float ThrottleInput = 0.0f;
     float BrakeInput = 0.0f;

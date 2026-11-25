@@ -105,6 +105,14 @@ void UOmnisVehicleConditionComponent::SetEngineLoadFactor(float LoadFactor)
         2.5f);
 }
 
+void UOmnisVehicleConditionComponent::SetRoadGradePercent(float GradePercent)
+{
+    RoadGradePercent = FMath::Clamp(
+        FMath::IsFinite(GradePercent) ? GradePercent : 0.0f,
+        -35.0f,
+        35.0f);
+}
+
 float UOmnisVehicleConditionComponent::Refuel(float RequestedLiters)
 {
     if ((GetOwner() && GetOwner()->GetNetMode() == NM_Client) ||
@@ -143,7 +151,12 @@ void UOmnisVehicleConditionComponent::TickComponent(
         : 0.0f;
     const float Throttle = FMath::Abs(ThrottleInput);
     const float CargoFactor = 1.0f + FMath::Clamp(CargoLoadKg / 1000.0f, 0.0f, 1.5f);
-    const float Load = FMath::Clamp(EngineLoadFactor * CargoFactor, 0.5f, 3.5f);
+    const float UphillLoadFactor = 1.0f +
+        (FMath::Clamp(RoadGradePercent, 0.0f, 35.0f) / 100.0f) * 1.5f;
+    const float Load = FMath::Clamp(
+        EngineLoadFactor * CargoFactor * UphillLoadFactor,
+        0.5f,
+        3.5f);
 
     const float FuelRate = BaseFuelConsumptionLitersPerHour *
         (0.12f + (0.88f * Throttle * Throttle)) *
@@ -160,7 +173,9 @@ void UOmnisVehicleConditionComponent::TickComponent(
         AmbientTemperatureC,
         180.0f);
 
-    const float BrakeHeat = BrakeInput * SpeedKph * (1.55f + CargoFactor * 0.12f);
+    const float DownhillBrakeLoad = FMath::Max(0.0f, -RoadGradePercent) / 100.0f;
+    const float BrakeHeat = BrakeInput * SpeedKph *
+        (1.55f + CargoFactor * 0.12f + DownhillBrakeLoad * 3.0f);
     const float BrakeCooling = (0.08f + SpeedKph * 0.003f) *
         FMath::Max(0.0f, BrakeTemperatureC - AmbientTemperatureC);
     BrakeTemperatureC = FMath::Clamp(

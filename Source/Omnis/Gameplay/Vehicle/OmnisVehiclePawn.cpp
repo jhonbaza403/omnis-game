@@ -45,6 +45,18 @@ void AOmnisVehiclePawn::SetTerrainContext(
     AmbientTemperatureC = FMath::Clamp(AmbientTemperature, -20.0f, 55.0f);
 }
 
+void AOmnisVehiclePawn::SetRoadGradePercent(float GradePercent)
+{
+    RoadGradePercent = FMath::Clamp(
+        FMath::IsFinite(GradePercent) ? GradePercent : 0.0f,
+        -35.0f,
+        35.0f);
+    if (VehicleCondition)
+    {
+        VehicleCondition->SetRoadGradePercent(RoadGradePercent);
+    }
+}
+
 void AOmnisVehiclePawn::SetWaterImmersion(float ImmersionFraction)
 {
     if (VehicleCondition)
@@ -83,6 +95,7 @@ void AOmnisVehiclePawn::Tick(float DeltaSeconds)
     {
         VehicleCondition->SetDriverInputs(ThrottleInput, BrakeInputValue);
         VehicleCondition->SetAmbientConditions(AmbientTemperatureC, TerrainSaltExposure);
+        VehicleCondition->SetRoadGradePercent(RoadGradePercent);
     }
 
     if (UOmnisVenezuelaTerrainSubsystem* Terrain =

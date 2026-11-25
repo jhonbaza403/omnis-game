@@ -29,3 +29,8 @@ operation-cargo-echo-v1 describe una operación de envío disputado: interacció
 
 ## 8. Puente LLM recibido
 El ejemplo HTTP adjunto no se copia literalmente: exponer ApiKey en propiedades públicas y permitir que el modelo devuelva ReputationDelta o acciones de juego le concede autoridad indebida. La arquitectura OMNIS permite al LLM proponer diálogo e intención conversacional enumerada, pero las mutaciones del mundo siguen siendo deterministas y validadas en servidor; faltan moderación, rate limits, cancelación, cache, circuit breaker y fallback probado.
+
+
+## 9. Pendiente de ruta y temperatura de frenos
+
+El subsistema de terreno calcula el porcentaje de pendiente entre dos progresos del perfil cuando el caller aporta la distancia horizontal real del tramo, procedente de la spline/geometría de ruta. El Pawn expone `SetRoadGradePercent`: una subida aumenta el factor de carga térmica del motor y una bajada aumenta la generación térmica de frenos según pendiente, velocidad y carga. La carretera debe suministrar esa distancia; el progreso normalizado no determina por sí solo una pendiente física. Este modelo de juego necesita calibración con telemetría dentro de UE 5.8.
