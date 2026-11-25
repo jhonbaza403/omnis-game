@@ -193,6 +193,58 @@ bool UOmnisEconomySubsystem::RegisterMarketCommodity(
     return true;
 }
 
+
+void UOmnisEconomySubsystem::AdvanceAutonomousDay(int32 DaysToSimulate)
+{
+    if (!HasMutationAuthority())
+    {
+        return;
+    }
+
+    struct FProductionFlow
+    {
+        const TCHAR* MarketId;
+        const TCHAR* ItemId;
+        int32 ProductionPerDay;
+        int32 ConsumptionPerDay;
+    };
+
+    // Abstract game-economy units per in-game day, not real-world statistics.
+    static const FProductionFlow Flows[] =
+    {
+        {TEXT("Market.Caracas.Formal"), TEXT("Item.Food"), 45, 60},
+        {TEXT("Market.Caracas.Formal"), TEXT("Item.Fuel"), 0, 45},
+        {TEXT("Market.Caracas.Formal"), TEXT("Item.Medicine"), 5, 8},
+        {TEXT("Market.GuarenasGuatire.Formal"), TEXT("Item.Food"), 30, 25},
+        {TEXT("Market.GuarenasGuatire.Formal"), TEXT("Item.Fuel"), 8, 15},
+        {TEXT("Market.Caucagua.Rural"), TEXT("Item.AgriculturalProduce"), 65, 25},
+        {TEXT("Market.Caucagua.Rural"), TEXT("Item.Food"), 25, 30},
+        {TEXT("Market.RioChico.Coastal"), TEXT("Item.FreshFish"), 50, 35},
+        {TEXT("Market.RioChico.Coastal"), TEXT("Item.Food"), 20, 22},
+        {TEXT("Market.Higuerote.Coastal"), TEXT("Item.FreshFish"), 40, 30},
+        {TEXT("Market.Higuerote.Coastal"), TEXT("Item.Fuel"), 5, 14},
+        {TEXT("Market.LaGuaira.Port"), TEXT("Item.Fuel"), 30, 24},
+        {TEXT("Market.LaGuaira.Port"), TEXT("Item.Electronics"), 12, 7}
+    };
+
+    const int32 SafeDays = FMath::Clamp(DaysToSimulate, 1, 7);
+    for (int32 Day = 0; Day < SafeDays; ++Day)
+    {
+        for (const FProductionFlow& Flow : Flows)
+        {
+            const int32 NetStock = Flow.ProductionPerDay - Flow.ConsumptionPerDay;
+            if (NetStock != 0)
+            {
+                AdjustMarketConditions(
+                    FName(Flow.MarketId),
+                    FName(Flow.ItemId),
+                    NetStock,
+                    0);
+            }
+        }
+    }
+}
+
 int64 UOmnisEconomySubsystem::CalculateUnitPrice(
     const FOmnisEconomyMarketEntry& Entry,
     int32& OutPriceIndexBasisPoints)

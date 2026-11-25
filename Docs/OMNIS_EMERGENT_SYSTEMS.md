@@ -18,9 +18,12 @@ Input, output, concurrent requests and timeout are bounded. No gameplay tools or
 ## Existing deterministic foundations
 - NPC population manager schedules bounded life simulation and throttles navigation by distance.
 - NPC state simulates hunger, energy and social needs and persists memory and relationships.
-- Economy is server-authoritative, uses integer minor currency units, stock/demand price indices, route supply shocks, trade receipts and barter.
+- UOmnisEconomySubsystem is server-authoritative, uses integer minor currency units, stock/demand price indices, route supply shocks, trade receipts and barter. UOmnisEconomySimulationSubsystem advances bounded daily production and consumption on the authoritative world clock.
 - Terrain surface response feeds vehicle grip and deformation.
 - Route, market and faction catalogs define the Caracas–La Guaira–Barlovento vertical slice.
+
+## Autonomous regional economy
+UOmnisEconomySimulationSubsystem advances the seeded Caracas, Guarenas-Guatire, Caucagua, Río Chico, Higuerote and La Guaira flows from elapsed in-game days. Production and NPC/population consumption change market stock; the existing stock/demand pricing formula then changes quotes. Catch-up is capped at seven game days per tick, clients never simulate authoritative stock, and missing markets are ignored rather than silently created. These rates are fictional balancing units, not real economic statistics.
 
 ## Emergent loop
 1. A player action changes validated server state (trade, helping an NPC, repairing a vehicle, completing a mission or disrupting a route).

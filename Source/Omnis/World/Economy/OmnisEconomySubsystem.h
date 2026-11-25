@@ -132,6 +132,9 @@ public:
     void RegisterVenezuelaTriangleMarkets(int32 ThroughPhase = 1);
 
     UFUNCTION(BlueprintCallable, Category="Omnis|Economy")
+    void AdvanceAutonomousDay(int32 DaysToSimulate = 1);
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Economy")
     bool RegisterMarketCommodity(
         FName MarketId,
         FName RegionId,

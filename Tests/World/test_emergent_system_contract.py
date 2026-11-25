@@ -24,6 +24,17 @@ class EmergentSystemContractTests(unittest.TestCase):
         self.assertIn("GetSubsystem<UOmnisNPCDialogueSubsystem>", npc_cpp)
         self.assertIn("RequestGeneratedDialogue(", npc_cpp)
         self.assertIn("DOREPLIFETIME(AOmnisNPCCharacter, LastGeneratedDialogue)", npc_cpp)
+        economy_h = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.h").read_text(encoding="utf-8")
+        economy_cpp = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.cpp").read_text(encoding="utf-8")
+        scheduler_h = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySimulationSubsystem.h").read_text(encoding="utf-8")
+        scheduler_cpp = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySimulationSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("AdvanceAutonomousDay", economy_h)
+        self.assertIn("ProductionPerDay", economy_cpp)
+        self.assertIn("ConsumptionPerDay", economy_cpp)
+        self.assertIn("GetElapsedSeconds", scheduler_cpp)
+        self.assertIn("GetNetMode() != NM_Client", scheduler_cpp)
+        self.assertIn("AdvanceAutonomousDay(DaysToCatchUp)", scheduler_cpp)
+        self.assertIn("SecondsPerGameDay = 86400.0", scheduler_h)
         for forbidden in ("ExecuteTrade", "AddItem", "SetRelationship", "CompleteMission"):
             self.assertNotIn(forbidden, source)
 
