@@ -338,6 +338,19 @@
         "wetness_response": 1,
         "salt_mask": 0
       }
+    },
+    {
+      "id": "Surface.RoughTrack",
+      "base_grip": 0.58,
+      "wet_grip_multiplier": 0.66,
+      "rolling_resistance": 0.19,
+      "mud_deformation_rate": 0.004,
+      "corrosion_rate_per_hour": 0.002,
+      "visual_parameters": {
+        "roughness": 0.98,
+        "wetness_response": 0.72,
+        "salt_mask": 0
+      }
     }
   ],
   "reveal_gates": [
