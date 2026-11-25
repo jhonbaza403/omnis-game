@@ -109,9 +109,13 @@ assert.ok(damageHeader.includes("RepairStructuralPart"));
 assert.ok(damageHeader.includes("PersistentStructureId"));
 assert.ok(damageSubsystem.includes("StructureSnapshots.Add"));
 assert.ok(damageSubsystem.includes("RegisterStructure(Component)"));
-assert.ok(saveHeader.includes("SchemaVersion = 6"));
+assert.ok(saveHeader.includes("SchemaVersion = 7"));
 assert.ok(saveHeader.includes("StructuralDamageSnapshots"));
-assert.ok(persistence.includes("CurrentSaveSchemaVersion = 6"));
+assert.ok(saveHeader.includes("TerrainDeformationSnapshots"));
+assert.ok(saveHeader.includes("FactionTerritoryStates"));
+assert.ok(saveHeader.includes("FOmnisSavedVehicleState"));
+assert.ok(persistence.includes("Save->SchemaVersion != 6"));
+assert.ok(persistence.includes("CurrentSaveSchemaVersion = 7"));
 assert.ok(persistence.includes("Damage->ImportSnapshots(Save->StructuralDamageSnapshots)"));
 
 assert.equal(catalog.production_phases.map((phase) => phase.phase).join(","), "1,2,3");
