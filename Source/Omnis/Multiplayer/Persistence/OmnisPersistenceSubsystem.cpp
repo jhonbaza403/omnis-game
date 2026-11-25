@@ -20,10 +20,12 @@
 #include "Narrative/Reputation/OmnisReputationSubsystem.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 #include "World/WorldState/OmnisWorldStateSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
+#include "World/Destruction/OmnisStructuralDamageSubsystem.h"
 
 namespace
 {
-    constexpr int32 CurrentSaveSchemaVersion = 4;
+    constexpr int32 CurrentSaveSchemaVersion = 6;
 
     bool IsValidSlotName(const FString& SlotName)
     {
@@ -94,6 +96,15 @@ bool UOmnisPersistenceSubsystem::SaveCurrentGame(const FString& SlotName)
     Save->SchemaVersion = CurrentSaveSchemaVersion;
     Save->SavedAtUtc = FDateTime::UtcNow();
     Save->PersistentInts = PersistentInts;
+
+    if (UOmnisEconomySubsystem* Economy = GameInstance->GetSubsystem<UOmnisEconomySubsystem>())
+    {
+        Save->EconomyState = Economy->ExportState();
+    }
+    if (UOmnisStructuralDamageSubsystem* Damage = World->GetSubsystem<UOmnisStructuralDamageSubsystem>())
+    {
+        Save->StructuralDamageSnapshots = Damage->ExportSnapshots();
+    }
 
     if (UOmnisCycleSubsystem* Cycle = GameInstance->GetSubsystem<UOmnisCycleSubsystem>())
     {
@@ -223,6 +234,8 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
     if (!Save || (Save->SchemaVersion != 0 &&
         Save->SchemaVersion != 2 &&
         Save->SchemaVersion != 3 &&
+        Save->SchemaVersion != 4 &&
+        Save->SchemaVersion != 5 &&
         Save->SchemaVersion != CurrentSaveSchemaVersion))
     {
         UE_LOG(LogTemp, Error,
@@ -321,6 +334,15 @@ bool UOmnisPersistenceSubsystem::LoadCurrentGame(const FString& SlotName)
     {
         WorldState->ImportStates(Save->WorldStateValues);
     }
+    if (UOmnisEconomySubsystem* Economy = GameInstance->GetSubsystem<UOmnisEconomySubsystem>())
+    {
+        Economy->ImportState(Save->EconomyState);
+    }
+    if (UOmnisStructuralDamageSubsystem* Damage = World->GetSubsystem<UOmnisStructuralDamageSubsystem>())
+    {
+        Damage->ImportSnapshots(Save->StructuralDamageSnapshots);
+    }
+
     if (UOmnisTimeSubsystem* Time = World->GetSubsystem<UOmnisTimeSubsystem>())
     {
         Time->RestoreElapsedSeconds(Save->WorldElapsedSeconds);

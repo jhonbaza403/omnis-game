@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "package_id": "org.omnis.sample.venezuela-community-events",
+  "display_name": "OMNIS Community Events — Venezuela Triangle",
+  "version": "1.0.0",
+  "package_status": "unsigned_authoring_template_not_installable",
+  "engine_target": "Unreal Engine 5.8",
+  "target_world_pack": "WorldPack.ModernVenezuela",
+  "dependencies": [],
+  "content_types": [
+    "world_event_rules",
+    "mission_data",
+    "dialogue_data",
+    "economy_data",
+    "vehicle_tuning",
+    "interior_theme"
+  ],
+  "content_files": [
+    {
+      "path": "data/world-events.json",
+      "type": "world_event_rules"
+    }
+  ],
+  "permissions": {
+    "register_data_missions": true,
+    "register_dialogue_lines": true,
+    "modify_declared_market_supply_demand": true,
+    "tune_allowlisted_vehicle_parameters": true,
+    "select_allowlisted_interior_themes": true,
+    "spawn_arbitrary_actors": false,
+    "execute_scripts": false,
+    "execute_native_code": false,
+    "filesystem_access": false,
+    "external_network_access": false
+  },
+  "signature_policy": {
+    "algorithm": "Ed25519",
+    "required_for_production": true,
+    "status": "unsigned_authoring_template",
+    "key_id": null,
+    "signature": null
+  },
+  "compatibility": {
+    "minimum_game_version": "0.1.0",
+    "server_must_approve": true,
+    "client_must_match_server_package_hash": true
+  }
+}

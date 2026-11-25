@@ -82,6 +82,9 @@ jobs:
           node CI/World/validate_elemental_regions.mjs
           node CI/World/validate_vertical_slice.mjs
           node CI/World/validate_visual_quality_profile.mjs
+          node CI/World/validate_venezuela_triangle.mjs
+          node CI/Mods/validate_mod_manifest.mjs
+          node CI/World/validate_building_interiors.mjs
 
       - name: Check shell-script syntax
         shell: bash

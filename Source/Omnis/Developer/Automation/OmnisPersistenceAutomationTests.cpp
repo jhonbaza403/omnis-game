@@ -10,6 +10,7 @@
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Narrative/Consequences/OmnisConsequenceSubsystem.h"
 #include "Narrative/Quests/OmnisQuestSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     FOmnisPersistenceSnapshotRoundTrip,
@@ -136,7 +137,7 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     {
         return false;
     }
-    Save->SchemaVersion = 4;
+    Save->SchemaVersion = 6;
     Save->QuestProgress = RestoredQuests->ExportProgress();
     Save->ActiveConsequences = RestoredConsequences->ExportConsequences();
     FOmnisSavedCharacterState Character;
@@ -198,7 +199,7 @@ bool FOmnisPersistenceSnapshotRoundTrip::RunTest(const FString& Parameters)
     Character.AbilityCooldowns = RestoredAbilities->ExportCooldowns();
     Save->Characters.Add(Character);
 
-    TestEqual(TEXT("Save schema version"), Save->SchemaVersion, 4);
+    TestEqual(TEXT("Save schema version"), Save->SchemaVersion, 6);
     TestEqual(TEXT("Saved quest count"), Save->QuestProgress.Num(), 3);
     TestEqual(TEXT("Saved character count"), Save->Characters.Num(), 1);
     TestEqual(TEXT("Saved inventory entries"), Save->Characters[0].InventoryItems.Num(), 2);
@@ -241,5 +242,96 @@ bool FOmnisWorldCalendarBoundaries::RunTest(const FString& Parameters)
     TestEqual(TEXT("New year begins at day one"), Date.DayOfYear, 1);
     return true;
 }
+
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FOmnisEconomySupplyDemandRoundTrip,
+    "Omnis.Economy.SupplyDemandRoundTrip",
+    EAutomationTestFlags::ApplicationContextMask |
+    EAutomationTestFlags::SmokeFilter)
+
+bool FOmnisEconomySupplyDemandRoundTrip::RunTest(const FString& Parameters)
+{
+    UOmnisEconomySubsystem* Economy = NewObject<UOmnisEconomySubsystem>();
+    TestNotNull(TEXT("Economy subsystem"), Economy);
+    if (!Economy)
+    {
+        return false;
+    }
+
+    const FName MarketId(TEXT("Market.Automation.Test"));
+    const FName RegionId(TEXT("Region.Automation.Test"));
+    const FName ItemId(TEXT("Item.Automation.Fuel"));
+    const FName CurrencyId(TEXT("Currency.Automation"));
+    const FName AccountId(TEXT("Account.Automation.Player"));
+
+    TestTrue(
+        TEXT("Register initial market item"),
+        Economy->RegisterMarketCommodity(
+            MarketId, RegionId, ItemId, CurrencyId, 10000, 100, 100));
+
+    Economy->RegisterVenezuelaTriangleMarkets();
+    const FName RegionalMarketId(TEXT("Market.Higuerote.Coastal"));
+    const FName FuelItemId(TEXT("Item.Fuel"));
+    const FName CoastalRouteId(TEXT("Route.Caucagua-RioChico-Higuerote"));
+    const FOmnisMarketQuote FuelBeforeShock =
+        Economy->GetQuote(RegionalMarketId, FuelItemId);
+    TArray<FName> AffectedItems;
+    AffectedItems.Add(FuelItemId);
+    TestTrue(TEXT("Fuel quote exists before route closure"), FuelBeforeShock.bAvailable);
+    TestEqual(
+        TEXT("The route shock updates only linked markets that stock fuel"),
+        Economy->ApplyRouteSupplyShock(
+            CoastalRouteId, AffectedItems, -10, 10),
+        2);
+    const FOmnisMarketQuote FuelAfterShock =
+        Economy->GetQuote(RegionalMarketId, FuelItemId);
+    TestTrue(TEXT("A disrupted coastal route raises local fuel price"),
+        FuelAfterShock.UnitPriceMinorUnits > FuelBeforeShock.UnitPriceMinorUnits);
+
+    FOmnisMarketQuote Quote = Economy->GetQuote(MarketId, ItemId);
+    TestTrue(TEXT("Initial quote exists"), Quote.bAvailable);
+    TestEqual(TEXT("Balanced stock and demand use base price"), Quote.UnitPriceMinorUnits, 10000LL);
+    TestEqual(TEXT("Balanced stock and demand use neutral index"), Quote.PriceIndexBasisPoints, 10000);
+
+    TestTrue(
+        TEXT("A supply shock can reduce available stock"),
+        Economy->AdjustMarketConditions(MarketId, ItemId, -90, 0));
+    Quote = Economy->GetQuote(MarketId, ItemId);
+    TestEqual(TEXT("Supply shock updates stock"), Quote.StockQuantity, 10);
+    TestTrue(TEXT("Scarcity raises the price"), Quote.UnitPriceMinorUnits > 10000LL);
+    TestTrue(TEXT("Price index remains within configured ceiling"), Quote.PriceIndexBasisPoints <= 40000);
+
+    // Re-registering a streamed market is idempotent and does not refill stock.
+    TestTrue(
+        TEXT("Repeated market registration remains valid"),
+        Economy->RegisterMarketCommodity(
+            MarketId, RegionId, ItemId, CurrencyId, 10000, 100, 100));
+    TestEqual(TEXT("Repeated registration does not reset market stock"),
+        Economy->GetQuote(MarketId, ItemId).StockQuantity, 10);
+
+    Economy->SetAccountBalance(AccountId, CurrencyId, 250000);
+    TestEqual(TEXT("Account balance uses integer minor units"),
+        Economy->GetAccountBalance(AccountId, CurrencyId), 250000LL);
+
+    const FOmnisEconomySnapshot Snapshot = Economy->ExportState();
+    UOmnisEconomySubsystem* RestoredEconomy = NewObject<UOmnisEconomySubsystem>();
+    TestNotNull(TEXT("Restored economy subsystem"), RestoredEconomy);
+    if (!RestoredEconomy)
+    {
+        return false;
+    }
+
+    RestoredEconomy->ImportState(Snapshot);
+    const FOmnisMarketQuote RestoredQuote = RestoredEconomy->GetQuote(MarketId, ItemId);
+    TestEqual(TEXT("Market stock survives save snapshot"), RestoredQuote.StockQuantity, 10);
+    TestEqual(TEXT("Market price survives save snapshot"),
+        RestoredQuote.UnitPriceMinorUnits, Quote.UnitPriceMinorUnits);
+    TestEqual(TEXT("Wallet balance survives save snapshot"),
+        RestoredEconomy->GetAccountBalance(AccountId, CurrencyId), 250000LL);
+
+    return true;
+}
+
 
 #endif

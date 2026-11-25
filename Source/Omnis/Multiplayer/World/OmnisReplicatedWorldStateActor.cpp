@@ -11,6 +11,7 @@
 #include "Online/Services/OmnisOnlineServiceSubsystem.h"
 #include "Serialization/JsonSerializer.h"
 #include "World/WorldState/OmnisWorldStateSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
 
 AOmnisReplicatedWorldStateActor::AOmnisReplicatedWorldStateActor()
 {
@@ -43,6 +44,7 @@ void AOmnisReplicatedWorldStateActor::GetLifetimeReplicatedProps(
     DOREPLIFETIME(AOmnisReplicatedWorldStateActor, ReputationValues);
     DOREPLIFETIME(AOmnisReplicatedWorldStateActor, FactionStandings);
     DOREPLIFETIME(AOmnisReplicatedWorldStateActor, WorldValues);
+    DOREPLIFETIME(AOmnisReplicatedWorldStateActor, PublicMarketQuotes);
 }
 
 void AOmnisReplicatedWorldStateActor::RefreshNarrativeState()
@@ -64,6 +66,7 @@ void AOmnisReplicatedWorldStateActor::RefreshNarrativeState()
     ReputationValues.Reset();
     FactionStandings.Reset();
     WorldValues.Reset();
+    PublicMarketQuotes.Reset();
 
     if (UOmnisQuestSubsystem* Quests = GameInstance->GetSubsystem<UOmnisQuestSubsystem>())
     {
@@ -121,6 +124,11 @@ void AOmnisReplicatedWorldStateActor::RefreshNarrativeState()
             Value.Value = Pair.Value;
             WorldValues.Add(Value);
         }
+    }
+
+    if (UOmnisEconomySubsystem* Economy = GameInstance->GetSubsystem<UOmnisEconomySubsystem>())
+    {
+        PublicMarketQuotes = Economy->GetPublicMarketQuotes();
     }
 
     auto SortValues = [](TArray<FOmnisReplicatedWorldValue>& Values)

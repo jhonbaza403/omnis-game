@@ -41,6 +41,19 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
     int32 FailureWorldStateDelta = 1;
 
+    // Route IDs are resolved by the economy subsystem to linked regional markets.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
+    TArray<FName> FailureAffectedRouteIds;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
+    TArray<FName> FailureAffectedItemIds;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
+    int32 FailureMarketSupplyDelta = 0;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
+    int32 FailureMarketDemandDelta = 0;
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Failure")
     int32 FailureRelationshipDelta = -15;
 
@@ -78,6 +91,18 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Recovery")
     int32 RecoveryWorldStateDelta = -1;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Recovery")
+    TArray<FName> RecoveryAffectedRouteIds;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Recovery")
+    TArray<FName> RecoveryAffectedItemIds;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Recovery")
+    int32 RecoveryMarketSupplyDelta = 0;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Recovery")
+    int32 RecoveryMarketDemandDelta = 0;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest|Recovery")
     int32 RecoveryRelationshipDelta = 10;

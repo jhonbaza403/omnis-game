@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Narrative/Quests/OmnisQuestSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
 #include "OmnisReplicatedWorldStateActor.generated.h"
 
 USTRUCT(BlueprintType)
@@ -75,6 +76,9 @@ public:
     UFUNCTION(BlueprintPure, Category="Omnis|World")
     TArray<FOmnisReplicatedWorldValue> GetWorldValues() const { return WorldValues; }
 
+    UFUNCTION(BlueprintPure, Category="Omnis|Economy")
+    TArray<FOmnisMarketQuote> GetPublicMarketQuotes() const { return PublicMarketQuotes; }
+
     void RefreshFromBackend();
     void RefreshNarrativeState();
 
@@ -110,4 +114,7 @@ private:
 
     UPROPERTY(ReplicatedUsing=OnRep_NarrativeState)
     TArray<FOmnisReplicatedWorldValue> WorldValues;
+
+    UPROPERTY(ReplicatedUsing=OnRep_NarrativeState)
+    TArray<FOmnisMarketQuote> PublicMarketQuotes;
 };

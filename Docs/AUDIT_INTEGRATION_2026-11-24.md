@@ -1,14 +1,14 @@
 # Auditoría técnica e integración inicial — OMNIS
 **Fecha de corte:** 2026-11-24  
-**Repositorio:** \`jhonbaza403/omnis-game\`  
-**Rama de trabajo:** \`audit/omnis-360-baseline\`  
+**Repositorio:** `jhonbaza403/omnis-game`  
+**Rama de trabajo:** `audit/omnis-360-baseline`  
 **PR única de trabajo:** #1 (se mantiene Draft)  
 **Motor principal:** Unreal Engine 5.8  
 **Producción/main:** no modificada.
 
 ## 1. Estado del repositorio inspeccionado
 
-La inspección del árbol Git de \`main\` encontró 707 entradas, 498 archivos, 211 archivos bajo \`Source/\`, seis plugins Omnis habilitados y un proyecto Unity 6.3 secundario. En \`Content/Omnis/SourceAssets\` hay 63 OBJ y 63 MTL. No hay \`.uasset\` ni \`.umap\` nativos en el árbol de \`main\`. Un OBJ inspeccionado es un puntero Git LFS, no el modelo materializado.
+La inspección del árbol Git de `main` encontró 707 entradas, 498 archivos, 211 archivos bajo `Source/`, seis plugins Omnis habilitados y un proyecto Unity 6.3 secundario. En `Content/Omnis/SourceAssets` hay 63 OBJ y 63 MTL. No hay `.uasset` ni `.umap` nativos en el árbol de `main`. Un OBJ inspeccionado es un puntero Git LFS, no el modelo materializado.
 
 El árbol demuestra presencia de fuentes y catálogos, no certifica que el juego arranque ni que los sistemas estén integrados en runtime.
 
@@ -22,22 +22,22 @@ El árbol demuestra presencia de fuentes y catálogos, no certifica que el juego
 | Personajes/NPC | El NPC anterior tenía movimiento oscilatorio y entregaba XP al interactuar. | Sin rutinas, necesidades, memoria, relaciones usadas por IA o persistencia. |
 | Decisiones/diálogo | Registro de decisiones y diálogo lineal por líneas. | Sin condiciones/ramificaciones conectadas al estado del mundo y las consecuencias. |
 | Facciones/reputación | Mapas de puntuaciones modificables. | No se disparaban desde un resultado de misión real. |
-| Guardado | \`UOmnisSaveGame\` conserva estado del ciclo y puntos permanentes. | No serializa misiones, consecuencias, relaciones ni memoria/vida de NPC. |
-| Plugins | Los seis módulos Omnis tienen descriptores y módulos de arranque vacíos; cada Build.cs declara solo Core. | Son puntos de extensión, no seis subsistemas funcionales. La propiedad funcional sigue en \`Source/Omnis\`. |
+| Guardado | `UOmnisSaveGame` conserva estado del ciclo y puntos permanentes. | No serializa misiones, consecuencias, relaciones ni memoria/vida de NPC. |
+| Plugins | Los seis módulos Omnis tienen descriptores y módulos de arranque vacíos; cada Build.cs declara solo Core. | Son puntos de extensión, no seis subsistemas funcionales. La propiedad funcional sigue en `Source/Omnis`. |
 | Contenido 3D | Fuentes OBJ/MTL y catálogos. | Materialización nativa UE5.8 pendiente; el mapa y los assets no están en Git como binarios Unreal. |
 | CI/build | Workflows manuales para runners propios UE5.8. | No hay evidencia de UHT/UBT, Automation Tests, cook/package ni smoke test ejecutados en el commit actual. |
 
 ## 3. Cambios integrados en este corte
 
 ### Misiones con éxito, fracaso y reparación
-- Añadida una API explícita \`StartQuest\`, \`CompleteQuest\` y \`FailQuest\`.
+- Añadida una API explícita `StartQuest`, `CompleteQuest` y `FailQuest`.
 - El subsistema rechaza iniciar una misión ya activa o completada y evita finalizar dos veces una misión terminal.
 - Cada misión puede configurar su propia consecuencia de fracaso, penalización de reputación, impacto en una facción, contador/estado del mundo, testigos y misión de recuperación.
 - El fracaso registra intento y motivo, aplica el ID de consecuencia, actualiza reputación/facción/estado del mundo y guarda recuerdos en el jugador y en los NPC testigos.
 - El éxito otorga XP y emite un evento de misión completada.
 - Se publica un delegado de transición para que HUD, diálogo y otros sistemas puedan reaccionar sin duplicar la propiedad del estado.
 
-El preset por defecto usa \`Mission.Failure.PublicShame\`, reputación -10 y relación de testigos -15. El diseño de cada misión debe definir testigos y, cuando corresponda, facción y recuperación.
+El preset por defecto usa `Mission.Failure.PublicShame`, reputación -10 y relación de testigos -15. El diseño de cada misión debe definir testigos y, cuando corresponda, facción y recuperación.
 
 ### Personajes con estado y rutinas
 - El componente de estado del personaje ahora contiene hambre, energía, necesidad social, relaciones acotadas, recuerdos con importancia y objetivo vital.
@@ -53,7 +53,7 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 ## 4. Limitaciones que no deben declararse resueltas
 
 1. **Persistencia real:** ya existe una API versionada de guardado/carga y snapshots de NPC, pero no está certificada en Unreal 5.8. Todavía no restaura NPC ausentes en regiones no cargadas ni simula vida/economía mientras la aplicación está cerrada.
-2. **Contenido autorado:** cada NPC colocado necesita un \`CharacterId\` único, hogar y \`WorkLocationOffset\` revisados; cada misión necesita un Data Asset configurado con testigos, facciones y consecuencias. No se crean personajes narrativos ni diálogos personalizados automáticamente.
+2. **Contenido autorado:** cada NPC colocado necesita un `CharacterId` único, hogar y `WorkLocationOffset` revisados; cada misión necesita un Data Asset configurado con testigos, facciones y consecuencias. No se crean personajes narrativos ni diálogos personalizados automáticamente.
 3. **NPCs de vida y navegación:** agenda/objetivos, necesidades y memoria existen en cada componente, pero dependen de NavMesh válido y de un PersistentId único asignado a cada instancia. Sin NavMesh, el movimiento puede no completarse.
 4. **Vergüenza social completa:** los testigos guardan el ID de consecuencia como recuerdo y su prompt de interacción puede reaccionar a Mission.Failure.PublicShame; el actor de mundo replica consecuencias y puntuaciones. La propagación emergente de rumores, reacciones de multitudes y ramificación de diálogo más rica todavía requieren diseño e integración.
 5. **Calendario:** el reloj es relativo al tiempo transcurrido (una hora de juego por 60 segundos simulados, con escala 1). No es todavía un calendario persistente con estaciones, días y eventos globales.
@@ -63,24 +63,24 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 
 ## 5. Arquitectura de referencia para la siguiente integración
 
-\`QuestDefinition → QuestSubsystem → Consequence/Reputation/Faction/WorldState → Witness CharacterState → NPC behavior/Dialogue/UI\`
+`QuestDefinition → QuestSubsystem → Consequence/Reputation/Faction/WorldState → Witness CharacterState → NPC behavior/Dialogue/UI`
 
-\`World Time → NPC needs + schedule → Navigation → interaction/social memory → CharacterState persistence\`
+`World Time → NPC needs + schedule → Navigation → interaction/social memory → CharacterState persistence`
 
-\`SaveGame/Repository persistence\` debe capturar de forma versionada misiones, consecuencias, estado del mundo y snapshots de NPC, con autoridad de servidor para multiplayer y migraciones seguras.
+`SaveGame/Repository persistence` debe capturar de forma versionada misiones, consecuencias, estado del mundo y snapshots de NPC, con autoridad de servidor para multiplayer y migraciones seguras.
 
 ## 6. Seguridad del cambio
 
-- La rama de trabajo se sincronizó con el SHA vigente de \`main\` antes de integrar este corte.
-- \`main\` permanece intacta.
+- La rama de trabajo se sincronizó con el SHA vigente de `main` antes de integrar este corte.
+- `main` permanece intacta.
 - Se conserva la PR #1 como única línea de revisión; no se abre una rama ni PR adicional.
-- No se borra contenido ni se fabrican binarios \`.uasset/.umap\`.
-- Los cambios de gameplay permanecen en la ubicación canónica \`Source/Omnis\`; los plugins siguen siendo extensiones, no copias.
+- No se borra contenido ni se fabrican binarios `.uasset/.umap`.
+- Los cambios de gameplay permanecen en la ubicación canónica `Source/Omnis`; los plugins siguen siendo extensiones, no copias.
 
 ## 7. Criterio de aceptación para certificar
 
 - UHT/UBT compilan Editor, Game y Dedicated Server en UE5.8.
-- Unreal Automation pasa los tests \`Omnis.Narrative.CharacterLifeState\` y \`Omnis.Narrative.QuestFailureConsequences\`.
+- Unreal Automation pasa los tests `Omnis.Narrative.CharacterLifeState` y `Omnis.Narrative.QuestFailureConsequences`.
 - Prueba funcional: fallar una misión produce estado Failed, reputación/facción/estado de mundo y recuerdos de testigos; completar la recuperación retira solo la consecuencia prevista si así se configura.
 - NPC de prueba completa ciclos trabajo/comida/descanso/socialización, recuerda al jugador, cambia relación y aplica rechazo por relación baja.
 - Guardar, cerrar, volver a abrir y cargar conserva los estados de misión y NPC.
@@ -93,10 +93,10 @@ Se añade un archivo de Automation Tests C++ para las reglas de necesidades/memo
 
 **Código añadido en la revisión posterior de la misma PR:**
 
-- \`UOmnisSaveGame\` usa esquema versionado 3 y almacena fecha UTC, ciclo, Nexo, reloj de mundo, progreso e intentos de misión, consecuencias activas, reputación, facciones, estado global, variables persistentes y snapshots de personajes.
-- \`UOmnisPersistenceSubsystem\` incorpora \`SaveCurrentGame\` y \`LoadCurrentGame\` usando los slots estándar de Unreal. El guardado/carga se rechaza en clientes de red; la autoridad del servidor mantiene el control del estado compartido.
+- `UOmnisSaveGame` usa esquema versionado 3 y almacena fecha UTC, ciclo, Nexo, reloj de mundo, progreso e intentos de misión, consecuencias activas, reputación, facciones, estado global, variables persistentes y snapshots de personajes.
+- `UOmnisPersistenceSubsystem` incorpora `SaveCurrentGame` y `LoadCurrentGame` usando los slots estándar de Unreal. El guardado/carga se rechaza en clientes de red; la autoridad del servidor mantiene el control del estado compartido.
 - Los snapshots de personajes contienen identidad persistente, transform, necesidades, relaciones, recuerdos, estado vital y salud actual/máxima.
-- Los NPC colocados usan como clave fallback su ruta de actor estable; los NPC generados dinámicamente deben recibir un \`PersistentId\` explícito y único. \`CharacterId\` continúa siendo el tipo/arquetipo narrativo.
+- Los NPC colocados usan como clave fallback su ruta de actor estable; los NPC generados dinámicamente deben recibir un `PersistentId` explícito y único. `CharacterId` continúa siendo el tipo/arquetipo narrativo.
 - Se agregan exportación/importación versionada para progreso de misiones, consecuencias, reputación, facciones, Nexo, ciclo y reloj.
 - Una misión de recuperación puede retirar consecuencias concretas, restituir reputación y facción, revertir contadores del mundo con límite inferior cero y recuperar relaciones de testigos.
 - Se incorporan pruebas de Automation para ida/vuelta de snapshots y pruebas estáticas de los contratos de guardado/carga.
@@ -215,9 +215,9 @@ Resultado actualizado: inventario, equipo y una primera vía de activación de h
 
 ## 15. Novena integración — ubicaciones nominales para rutinas de NPC
 
-- Se reutiliza \`UOmnisCharacterLifeSubsystem\` como registro central de ubicaciones nominales. Cada \`HomeLocationId\` y \`WorkLocationId\` se resuelve a coordenadas del mundo.
+- Se reutiliza `UOmnisCharacterLifeSubsystem` como registro central de ubicaciones nominales. Cada `HomeLocationId` y `WorkLocationId` se resuelve a coordenadas del mundo.
 - El generador del mundo abierto registra los puntos de vivienda y trabajo para sus seis ciudadanos antes de finalizar el spawn; el generador del asentamiento registra las posiciones de vivienda y trabajo de sus dos personajes bootstrap.
-- \`AOmnisNPCCharacter\` resuelve hogar y trabajo desde esos IDs al iniciar, conservando el desplazamiento local como fallback para perfiles de datos que aún no tengan ubicación registrada.
+- `AOmnisNPCCharacter` resuelve hogar y trabajo desde esos IDs al iniciar, conservando el desplazamiento local como fallback para perfiles de datos que aún no tengan ubicación registrada.
 - Si un mismo ID se registra dos veces con coordenadas incompatibles, el sistema informa error y rechaza la colisión; no sobrescribe silenciosamente el destino anterior.
 
 ### Límite restante
@@ -226,10 +226,10 @@ El registro cubre las ubicaciones del mundo de inicio; aún falta conectar todas
 
 ## 16. Décima integración — calendario de mundo y jornadas individuales
 
-- Se expone \`FOmnisWorldCalendarDate\` desde el reloj existente: año, estación, día del año, día de estación, día de semana, hora y minuto.
+- Se expone `FOmnisWorldCalendarDate` desde el reloj existente: año, estación, día del año, día de estación, día de semana, hora y minuto.
 - El calendario usa cuatro estaciones de 30 días, año de 120 días y semana de siete días. El primer día es lunes; las estaciones son primavera, verano, otoño e invierno.
-- El ritmo conserva el reloj existente: un minuto de juego por segundo simulado a escala 1, por lo que un día dura 24 minutos reales a escala 1. La fecha se deriva de \`ElapsedSeconds\`, que ya entra en los guardados, por lo que no necesita un segundo estado persistente.
-- Los perfiles de personaje incorporan \`WorkDaysMask\`: bits 0–4 para jornadas de lunes a viernes (\`0x1F\`), 0–5 para lunes a sábado (\`0x3F\`) y 0–6 para toda la semana (\`0x7F\`).
+- El ritmo conserva el reloj existente: un minuto de juego por segundo simulado a escala 1, por lo que un día dura 24 minutos reales a escala 1. La fecha se deriva de `ElapsedSeconds`, que ya entra en los guardados, por lo que no necesita un segundo estado persistente.
+- Los perfiles de personaje incorporan `WorkDaysMask`: bits 0–4 para jornadas de lunes a viernes (`0x1F`), 0–5 para lunes a sábado (`0x3F`) y 0–6 para toda la semana (`0x7F`).
 - Los seis ciudadanos del mundo abierto y los dos del asentamiento reciben máscaras de jornada por perfil. La rutina solo los manda a trabajar cuando el día y el horario coinciden; hambre, energía y necesidad social mantienen prioridad.
 
 ### Límite restante
@@ -238,11 +238,11 @@ El calendario es determinista y funcional para horarios, pero todavía no repres
 
 ## 17. Undécima integración — testigos automáticos, rumores por misión y reparación social
 
-- Cada intento fallido genera un ID de rumor propio \`Mission.Failure.<QuestId>.Attempt.<n>\`, evitando que misiones distintas o reintentos compartan la misma memoria y se bloqueen por deduplicación.
-- Los testigos pueden configurarse explícitamente en \`WitnessCharacterIds\`; además, los NPC vivos dentro de \`FailureWitnessRadius\` respecto de un jugador activo pueden presenciar el fallo cuando \`bFailureIsPublic\` está habilitado.
+- Cada intento fallido genera un ID de rumor propio `Mission.Failure.<QuestId>.Attempt.<n>`, evitando que misiones distintas o reintentos compartan la misma memoria y se bloqueen por deduplicación.
+- Los testigos pueden configurarse explícitamente en `WitnessCharacterIds`; además, los NPC vivos dentro de `FailureWitnessRadius` respecto de un jugador activo pueden presenciar el fallo cuando `bFailureIsPublic` está habilitado.
 - Los recuerdos del rumor conservan como sujeto al objetivo de reputación y se propagan durante encuentros sociales con pérdida de intensidad y deduplicación por receptor.
-- Las misiones de recuperación buscan por prefijo todos los rumores de los intentos vinculados a la misión fallida, los retiran de los recuerdos de NPC y jugadores, registran \`Quest.RecoveryCompleted\` y recuperan relaciones en proporción a los recuerdos realmente reparados.
-- La lista \`ConsequencesToRemoveOnCompletion\` continúa controlando qué consecuencias globales se eliminan; la reparación social no borra automáticamente consecuencias no configuradas.
+- Las misiones de recuperación buscan por prefijo todos los rumores de los intentos vinculados a la misión fallida, los retiran de los recuerdos de NPC y jugadores, registran `Quest.RecoveryCompleted` y recuperan relaciones en proporción a los recuerdos realmente reparados.
+- La lista `ConsequencesToRemoveOnCompletion` continúa controlando qué consecuencias globales se eliminan; la reparación social no borra automáticamente consecuencias no configuradas.
 
 ### Límite restante
 
@@ -250,12 +250,12 @@ El radio usa la posición del jugador como aproximación al lugar del suceso; la
 
 ## 18. Duodécima integración — consecuencias independientes por misión
 
-- Cada misión fallida conserva su ID base de consecuencia y una marca individual \`<ConsequenceId>.Quest.<QuestId>\`, además del marcador agregado usado por la interfaz previa.
-- El progreso serializado incluye \`FailureConsequenceId\` por misión. Así la carga puede reconstruir las marcas individuales y el agregado sin depender de cargar los Data Assets originales.
+- Cada misión fallida conserva su ID base de consecuencia y una marca individual `<ConsequenceId>.Quest.<QuestId>`, además del marcador agregado usado por la interfaz previa.
+- El progreso serializado incluye `FailureConsequenceId` por misión. Así la carga puede reconstruir las marcas individuales y el agregado sin depender de cargar los Data Assets originales.
 - Una recuperación elimina la marca específica de cada misión vinculada. La marca agregada se mantiene mientras exista cualquier otro fallo no resuelto que use ese mismo tipo de consecuencia.
-- \`ConsequencesToRemoveOnCompletion\` también respeta las referencias de fallos pendientes y no puede borrar prematuramente una consecuencia que todavía pertenece a otra misión.
+- `ConsequencesToRemoveOnCompletion` también respeta las referencias de fallos pendientes y no puede borrar prematuramente una consecuencia que todavía pertenece a otra misión.
 - El estado de misión replicado a clientes incluye el ID base de consecuencia.
-- Se amplía el esquema de guardado a la versión 4. Los esquemas 0, 2 y 3 siguen aceptándose; para una misión fallida antigua que no llevaba este campo, se reconstruye el valor predeterminado \`Mission.Failure.PublicShame\`.
+- Se amplía el esquema de guardado a la versión 4. Los esquemas 0, 2 y 3 siguen aceptándose; para una misión fallida antigua que no llevaba este campo, se reconstruye el valor predeterminado `Mission.Failure.PublicShame`.
 
 ### Límite de migración
 
@@ -263,14 +263,72 @@ Las partidas anteriores al esquema 4 no almacenaban el ID personalizado de conse
 
 ## 19. Decimotercera integración — estado explícito de misión recuperada
 
-- Se añade \`EOmisQuestState::Recovered\` sin alterar los valores previos de los estados existentes.
-- Cuando una misión de recuperación resuelve un fallo vinculado, la misión original pasa de \`Failed\` a \`Recovered\`, se retira su asociación de recuperación y se elimina su ID de consecuencia individual.
-- Al cargar, solo los registros que siguen en estado \`Failed\` reconstruyen consecuencias pendientes. Un registro \`Recovered\` conserva el historial sin volver a activar la vergüenza.
+- Se añade `EOmisQuestState::Recovered` sin alterar los valores previos de los estados existentes.
+- Cuando una misión de recuperación resuelve un fallo vinculado, la misión original pasa de `Failed` a `Recovered`, se retira su asociación de recuperación y se elimina su ID de consecuencia individual.
+- Al cargar, solo los registros que siguen en estado `Failed` reconstruyen consecuencias pendientes. Un registro `Recovered` conserva el historial sin volver a activar la vergüenza.
 - Se amplía la Automation Test de snapshots para cubrir dos misiones fallidas que comparten una consecuencia agregada y una misión ya recuperada.
 
 ## 20. Decimocuarta integración — reloj de simulación al cargar partidas
 
-- Tras restaurar el reloj y los snapshots de personajes, \`LoadCurrentGame\` rebasa cada NPC registrado al tiempo simulado restaurado.
+- Tras restaurar el reloj y los snapshots de personajes, `LoadCurrentGame` rebasa cada NPC registrado al tiempo simulado restaurado.
 - Evita reproducir tiempo pendiente del proceso anterior después de cargar una partida más avanzada y volver a incrementar hambre, energía o necesidad social sobre valores que ya estaban guardados.
 - La población mantiene el reparto por lotes y el límite de diez segundos simulados por actualización; el rebase solo fija el punto de partida, sin simular tiempo extra.
 
+## 21. Decimoquinta integración — economía regional y mercados
+
+- Se incorpora `UOmnisEconomySubsystem` como propietario único del mercado regional; se reutiliza `UOmnisInventoryComponent` para mover bienes.
+- Los mercados se identifican por `MarketId + ItemId`, conservan región y moneda y calculan precios con unidades enteras, inventario y demanda diaria, con límites de precio y cantidad.
+- Operaciones cubiertas por API de servidor: registrar mercado, consultar cotización, modificar oferta/demanda, comprar, vender y hacer trueque. La compra valida saldo, existencias y capacidad del inventario; la venta valida cantidad e integridad del saldo; el trueque exige cubrir el valor de la cesta y usar la misma moneda.
+- Las semillas del World Pack incluyen Caracas formal/oculto, Guarenas–Guatire, Caucagua, Río Chico e Higuerote en fase 1; el puerto de La Guaira queda en fase 2. Repetir el registro de una zona no reinicia precios ni existencias.
+- La economía se serializa en SaveGame esquema 6; los esquemas 0, 2, 3, 4 y 5 se siguen aceptando. Si un guardado antiguo no contiene mercados, la carga conserva las semillas iniciales del mapa.
+- El actor de estado mundial replica solo cotizaciones de mercados públicos. Los saldos privados de cuenta y cotizaciones restringidas no se envían a todos los clientes.
+- Se incluye una Automation Test para equilibrio/escasez, registro idempotente y round-trip de mercado/saldo; queda pendiente ejecutarla dentro de UE 5.8.
+
+### Límites pendientes de economía
+
+La ruta y el mercado ya comparten IDs en el catálogo, pero los eventos de sabotaje, cierres de carretera, aduanas, corrupción y transporte todavía deben llamar al ajuste de oferta/demanda. Falta además un RPC/servicio de transacción asociado a identidad individual de cada jugador para clientes multijugador y una UI de tienda. Los saldos iniciales por cuenta deben concederse desde un sistema de inicio/autorización, no por un cliente.
+
+## 22. Decimosexta integración — World Pack del triángulo venezolano
+
+- Se crea `Content/Omnis/Data/venezuela-triangle-v1.json` como contrato de diseño separado del catálogo de regiones elementales.
+- El catálogo define 4 macrozonas, 14 subzonas, 6 rutas y 7 mercados. La fase 1 recorre Caracas Este, Guarenas, Guatire, Caucagua, Río Chico e Higuerote; fase 2 añade La Guaira, puerto, aeropuerto, autopista de túneles y carretera vieja; fase 3 conecta Naiguatá, Todasana, Chuspa y la vía marítima.
+- Las anclas son posiciones relativas del juego y no coordenadas de levantamiento topográfico. El catálogo declara `design_catalog_not_a_materialized_playable_map`; no constituye prueba de nivel, carretera ni asset creado.
+- Se añade `CI/World/validate_venezuela_triangle.mjs` al workflow de validación para revisar IDs, rutas, referencias de mercados, secuencia de fases, coincidencia de semillas C++ y el objetivo del 80 % de interiores.
+- Se crea `Docs/OMNIS_VENEZUELA_TRIANGLE_EXECUTION.md` con la arquitectura de cinco pilares, gates y secuencia de producción.
+
+## 23. Decimoséptima integración — estado estructural por secciones
+
+- Se añaden `UOmnisStructuralDamageComponent` y `UOmnisStructuralDamageSubsystem`.
+- Cada edificio preparado puede exponer secciones con `PartId`, etiqueta de componente, durabilidad máxima y durabilidad actual. Aplicar daño o reparación es una mutación de autoridad.
+- Cuando una sección llega a cero, la pieza preautorizada se oculta y se deshabilita su colisión; al repararla se restaura su visibilidad y colisión. Los estados se replican con el actor y el componente.
+- El registro mundial conserva snapshots por `PersistentStructureId` aunque la celda descargue el actor; el mismo ID aplica el snapshot cuando la estructura vuelve a cargarse.
+- SaveGame pasa a esquema 6 y guarda todos los snapshots estructurales conocidos, incluidos los de estructuras actualmente descargadas.
+
+### Límite restante
+
+Esta es una capa de daño modular persistente para componentes etiquetados. No crea fracturas Chaos, escombros, destrucción voxel ni reconstrucción automática. La integración de Geometry Collections/Chaos requiere activos preparados, materiales, presupuestos de fragmentos, navegación después del daño y pruebas de cliente/servidor en Unreal 5.8. Las estructuras reales deben recibir IDs únicos en sus actores/Blueprints para participar.
+
+## 24. Decimoctava integración — eventos de ruta y escasez regional
+
+- El subsistema económico expone `ApplyRouteSupplyShock(RouteId, ItemIds, SupplyDelta, DemandDelta)`. Cada ruta reconocida identifica las plazas de mercado que conecta.
+- Los shocks actualizan solo las combinaciones mercado/artículo existentes; los mercados de fases futuras no registrados no se inventan ni reciben stock ficticio.
+- `UOmnisQuestDefinition` ahora permite configurar rutas y artículos afectados, y deltas de oferta/demanda tanto en fallo como en recuperación. `UOmnisQuestSubsystem` aplica esos cambios por autoridad al ejecutar los resultados de misión.
+- Se añade una Automation Test para el corredor Caucagua–Río Chico–Higuerote que verifica que una reducción de oferta y aumento de demanda incrementen el precio de combustible en Higuerote.
+- El catálogo de eventos comunitarios sirve como ejemplo data-only; su parser/runtime todavía no está habilitado, por lo que estos shocks se activan mediante misiones y código de servidor, no mediante JSON descargado automáticamente.
+
+### Límite restante
+
+Todavía no hay temporizador de duración para shocks, recuperación automática por paso del calendario ni simulación de inventario durante regiones descargadas. El contenido comunitario de eventos no puede mutar el mundo hasta que exista un cargador de paquetes firmado y un registro de capacidades revisado por el servidor.
+
+## 25. Decimonovena integración — registro de edificios e interiores
+
+- Se añade `Content/Omnis/Data/building-interiors-v1.json` con 20 edificios planificados, 16 como objetivo de accesibilidad para 80 %, y 13 de 16 para la fase 1.
+- Cada entrada declara ID persistente, subregión, plantas, punto de acceso, interior, salas, rutas verticales y estado de materialización/validación.
+- Los contadores medidos permanecen en cero y el ratio medido es `null`. Ningún edificio queda contado como accesible antes de materializarse y superar sus pruebas de streaming y navegación.
+- Se añade `CI/World/validate_building_interiors.mjs` para revisar IDs, referencias geográficas, entradas, salas, rutas verticales y la aritmética del objetivo 80 %.
+
+## 26. Vigésima integración — contrato de IA generativa
+
+- Se amplía `Docs/AI_ARCHITECTURE.md` para delimitar un proveedor de conversación asíncrono, intercambiable local/nube, con contexto acotado, caché, límites de coste, timeout, moderación y fallback.
+- El proveedor generativo no recibe autoridad sobre economía, inventario, combate, misiones, reputación ni propiedad. Esas operaciones continúan bajo reglas C++ de servidor.
+- La implementación de memorias, necesidades y rumores continúa siendo determinista. No hay todavía un proveedor LLM operativo conectado ni diálogo generado probado dentro de Unreal.

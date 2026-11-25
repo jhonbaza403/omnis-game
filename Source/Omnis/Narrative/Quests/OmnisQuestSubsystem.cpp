@@ -12,6 +12,7 @@
 #include "Narrative/Factions/OmnisFactionSubsystem.h"
 #include "Narrative/Reputation/OmnisReputationSubsystem.h"
 #include "World/WorldState/OmnisWorldStateSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
 
 namespace
 {
@@ -166,6 +167,23 @@ bool UOmnisQuestSubsystem::FailQuest(
         RecoveryQuestByFailedQuest.Add(
             Definition->QuestId,
             Definition->RecoveryQuestId);
+    }
+
+    if (Definition->FailureMarketSupplyDelta != 0 ||
+        Definition->FailureMarketDemandDelta != 0)
+    {
+        if (UOmnisEconomySubsystem* Economy =
+            GameInstance->GetSubsystem<UOmnisEconomySubsystem>())
+        {
+            for (const FName RouteId : Definition->FailureAffectedRouteIds)
+            {
+                Economy->ApplyRouteSupplyShock(
+                    RouteId,
+                    Definition->FailureAffectedItemIds,
+                    Definition->FailureMarketSupplyDelta,
+                    Definition->FailureMarketDemandDelta);
+            }
+        }
     }
 
     if (!Definition->FailureConsequenceId.IsNone())
@@ -490,6 +508,23 @@ void UOmnisQuestSubsystem::ApplyCompletionOutcome(
             if (!HasUnresolvedFailureUsingConsequence(ConsequenceId))
             {
                 Consequences->RemoveConsequence(ConsequenceId);
+            }
+        }
+    }
+
+    if (Definition->RecoveryMarketSupplyDelta != 0 ||
+        Definition->RecoveryMarketDemandDelta != 0)
+    {
+        if (UOmnisEconomySubsystem* Economy =
+            GameInstance->GetSubsystem<UOmnisEconomySubsystem>())
+        {
+            for (const FName RouteId : Definition->RecoveryAffectedRouteIds)
+            {
+                Economy->ApplyRouteSupplyShock(
+                    RouteId,
+                    Definition->RecoveryAffectedItemIds,
+                    Definition->RecoveryMarketSupplyDelta,
+                    Definition->RecoveryMarketDemandDelta);
             }
         }
     }

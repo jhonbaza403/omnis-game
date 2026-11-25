@@ -2,6 +2,7 @@
 
 #include "AI/NPC/OmnisNPCCharacter.h"
 #include "AI/NPC/OmnisCharacterLifeSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
 
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
@@ -147,6 +148,20 @@ void UOmnisWorldContentSubsystem::BuildProductionWorld()
 
     // Static environment is authored and persisted by GenerateOmnisWorldContent.py.
     // Runtime only provides dynamic/interactive actors when the persistent map exists.
+    const bool bVenezuelaTriangleWorld =
+        World->GetName().Contains(TEXT("VenezuelaTriangle"));
+    if (bVenezuelaTriangleWorld)
+    {
+        if (UGameInstance* GameInstance = World->GetGameInstance())
+        {
+            if (UOmnisEconomySubsystem* Economy =
+                GameInstance->GetSubsystem<UOmnisEconomySubsystem>())
+            {
+                Economy->RegisterVenezuelaTriangleMarkets();
+            }
+        }
+    }
+
     const bool bPersistentWorld = World->GetName().Contains(TEXT("Omnis_OpenWorld"));
     if (bPersistentWorld)
     {

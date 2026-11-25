@@ -9,6 +9,8 @@
 #include "Gameplay/Inventory/OmnisInventoryComponent.h"
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Narrative/Quests/OmnisQuestSubsystem.h"
+#include "World/Economy/OmnisEconomySubsystem.h"
+#include "World/Destruction/OmnisStructuralDamageComponent.h"
 #include "OmnisSaveGame.generated.h"
 
 USTRUCT(BlueprintType)
@@ -51,7 +53,7 @@ class OMNIS_API UOmnisSaveGame : public USaveGame
 
 public:
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
-    int32 SchemaVersion = 4;
+    int32 SchemaVersion = 6;
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
     FDateTime SavedAtUtc;
@@ -91,4 +93,10 @@ public:
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
     TMap<FName, int32> PersistentInts;
+
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    FOmnisEconomySnapshot EconomyState;
+
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Save")
+    TArray<FOmnisStructuralDamageSnapshot> StructuralDamageSnapshots;
 };

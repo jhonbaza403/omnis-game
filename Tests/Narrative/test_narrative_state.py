@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 
@@ -35,7 +36,7 @@ class PersistenceContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("SaveCurrentGame", source)
         self.assertIn("LoadCurrentGame", source)
-        self.assertIn("CurrentSaveSchemaVersion = 4", source)
+        self.assertIn("CurrentSaveSchemaVersion = 6", source)
         self.assertIn("Save->SchemaVersion != 2", source)
         self.assertIn("SaveGameToSlot", source)
         self.assertIn("LoadGameFromSlot", source)
@@ -114,14 +115,16 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("Save->PermanentUpgradePoints", source)
         self.assertIn("Nexus->ImportProgression(Save->NexusProgression)", source)
 
-    def test_save_schema_four_keeps_legacy_zero_two_and_three_compatible(self):
+    def test_save_schema_six_keeps_legacy_zero_two_three_four_and_five_compatible(self):
         save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
         persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
-        self.assertIn("SchemaVersion = 4", save)
+        self.assertIn("SchemaVersion = 6", save)
         self.assertIn("Save->SchemaVersion != 0", persistence)
         self.assertIn("Save->SchemaVersion != 2", persistence)
         self.assertIn("Save->SchemaVersion != 3", persistence)
-        self.assertIn("CurrentSaveSchemaVersion = 4", persistence)
+        self.assertIn("Save->SchemaVersion != 4", persistence)
+        self.assertIn("Save->SchemaVersion != 5", persistence)
+        self.assertIn("CurrentSaveSchemaVersion = 6", persistence)
 
     def test_authoritative_gameplay_uses_server_rpcs(self):
         interaction = (ROOT / "Source/Omnis/Gameplay/Interaction/OmnisInteractionComponent.cpp").read_text(encoding="utf-8")
@@ -347,7 +350,7 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("HasUnresolvedFailureUsingConsequence(BaseConsequenceId)", quest_cpp)
         self.assertIn("RestoreFailureConsequences", persistence)
         self.assertIn("State.FailureConsequenceId = Progress.FailureConsequenceId", replicated)
-        self.assertIn("SchemaVersion = 4", save)
+        self.assertIn("SchemaVersion = 6", save)
 
 
 
@@ -367,7 +370,7 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertIn("State.FailureConsequenceId = Progress.FailureConsequenceId", actor_cpp)
         self.assertIn("HasUnresolvedFailureUsingConsequence", automation)
         self.assertIn("Quest.Sabotage", automation)
-        self.assertIn("SchemaVersion = 4", (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8"))
+        self.assertIn("SchemaVersion = 6", (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8"))
 
 
 
@@ -381,6 +384,165 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertLess(
             persistence.index("Life->RebaseRegisteredNPCsToCurrentTime()"),
             persistence.index("It->RefreshNarrativeState();", persistence.index("Life->RebaseRegisteredNPCsToCurrentTime()")))
+
+
+    def test_economy_uses_server_authority_supply_demand_and_atomic_inventory_trades(self):
+        header = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.h").read_text(encoding="utf-8")
+        source = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("RegisterMarketCommodity", header)
+        self.assertIn("GetQuote", header)
+        self.assertIn("AdjustMarketConditions", header)
+        self.assertIn("ExecuteTrade", header)
+        self.assertIn("ExecuteBarter", header)
+        self.assertIn("HasMutationAuthority", source)
+        self.assertIn("CalculateUnitPrice", source)
+        self.assertIn("MinimumPriceIndexBasisPoints", source)
+        self.assertIn("MaximumPriceIndexBasisPoints", source)
+        self.assertIn("Inventory->AddItem(ItemId, Quantity)", source)
+        self.assertIn("Inventory->RemoveItem(ItemId, Quantity)", source)
+        self.assertIn("OfferedMarket->CurrencyId != RequestedMarket->CurrencyId", source)
+        self.assertIn("CurrentBalance < Total", source)
+
+    def test_economy_state_is_saved_and_only_public_quotes_replicate(self):
+        save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
+        persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        economy = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.cpp").read_text(encoding="utf-8")
+        actor_h = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.h").read_text(encoding="utf-8")
+        actor_cpp = (ROOT / "Source/Omnis/Multiplayer/World/OmnisReplicatedWorldStateActor.cpp").read_text(encoding="utf-8")
+        self.assertIn("SchemaVersion = 6", save)
+        self.assertIn("FOmnisEconomySnapshot EconomyState", save)
+        self.assertIn("StructuralDamageSnapshots", save)
+        self.assertIn("Damage->ExportSnapshots()", persistence)
+        self.assertIn("Damage->ImportSnapshots(Save->StructuralDamageSnapshots)", persistence)
+        self.assertIn("Save->EconomyState = Economy->ExportState()", persistence)
+        self.assertIn("Economy->ImportState(Save->EconomyState)", persistence)
+        self.assertIn("GetPublicMarketQuotes", economy)
+        self.assertIn("if (!Pair.Value.bPubliclyVisible)", economy)
+        self.assertIn("GetPublicMarketQuotes() const", actor_h)
+        self.assertIn("DOREPLIFETIME(AOmnisReplicatedWorldStateActor, PublicMarketQuotes)", actor_cpp)
+        self.assertNotIn("WalletBalances", actor_cpp)
+
+    def test_venezuela_triangle_catalog_has_valid_geography_and_staged_routes(self):
+        catalog = json.loads((ROOT / "Content/Omnis/Data/venezuela-triangle-v1.json").read_text(encoding="utf-8"))
+        self.assertEqual(catalog["catalog_id"], "omnis.worldpack.venezuela-triangle.v1")
+        self.assertEqual(catalog["status"], "design_catalog_not_a_materialized_playable_map")
+        self.assertEqual(catalog["world_pack"]["interior_access_target"], 0.80)
+        self.assertEqual(catalog["world_pack"]["interior_access_target_status"], "production_target_not_measured")
+        self.assertEqual(len(catalog["regions"]), 4)
+        self.assertEqual(len(catalog["routes"]), 6)
+        self.assertEqual(len(catalog["markets"]), 7)
+        route_nodes = set()
+        market_ids = {market["id"] for market in catalog["markets"]}
+        subregions = {subregion["id"] for region in catalog["regions"] for subregion in region["subregions"]}
+        for route in catalog["routes"]:
+            route_nodes.update([route["from"], *route["via"], route["to"]])
+            for market_id in route["logistics_links"]:
+                self.assertIn(market_id, market_ids)
+        for node in route_nodes:
+            self.assertIn(node, subregions)
+        phase_one = set()
+        for route in catalog["routes"]:
+            if route["phase"] == 1:
+                phase_one.update([route["from"], *route["via"], route["to"]])
+        for node in ("Caracas.East", "Guarenas", "Guatire", "Caucagua", "RioChico", "Higuerote"):
+            self.assertIn(node, phase_one)
+
+    def test_venezuela_economy_seed_matches_worldpack_market_contract(self):
+        catalog = json.loads((ROOT / "Content/Omnis/Data/venezuela-triangle-v1.json").read_text(encoding="utf-8"))
+        economy = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.cpp").read_text(encoding="utf-8")
+        world_content = (ROOT / "Source/Omnis/World/Content/OmnisWorldContentSubsystem.cpp").read_text(encoding="utf-8")
+        for market in catalog["markets"]:
+            self.assertIn('TEXT("' + market["id"] + '")', economy)
+            for item_id in market["commodities"]:
+                self.assertIn('TEXT("' + item_id + '")', economy)
+        self.assertIn("RegisterVenezuelaTriangleMarkets", world_content)
+        self.assertIn("VenezuelaTriangle", world_content)
+        self.assertIn("Seed.Phase > SafeThroughPhase", economy)
+        self.assertIn("SafeThroughPhase = FMath::Clamp(ThroughPhase, 1, 3)", economy)
+        self.assertIn('TEXT("Region.Barlovento")', economy)
+
+
+
+    def test_structural_damage_sections_persist_across_world_cell_unload(self):
+        component_h = (ROOT / "Source/Omnis/World/Destruction/OmnisStructuralDamageComponent.h").read_text(encoding="utf-8")
+        component_cpp = (ROOT / "Source/Omnis/World/Destruction/OmnisStructuralDamageComponent.cpp").read_text(encoding="utf-8")
+        subsystem_h = (ROOT / "Source/Omnis/World/Destruction/OmnisStructuralDamageSubsystem.h").read_text(encoding="utf-8")
+        subsystem_cpp = (ROOT / "Source/Omnis/World/Destruction/OmnisStructuralDamageSubsystem.cpp").read_text(encoding="utf-8")
+        save = (ROOT / "Source/Omnis/Core/Save/OmnisSaveGame.h").read_text(encoding="utf-8")
+        persistence = (ROOT / "Source/Omnis/Multiplayer/Persistence/OmnisPersistenceSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("PersistentStructureId", component_h)
+        self.assertIn("ApplyStructuralDamage", component_h)
+        self.assertIn("RepairStructuralPart", component_h)
+        self.assertIn("ReplicatedUsing=OnRep_PartStates", component_h)
+        self.assertIn("RecordSnapshot(ExportSnapshot())", component_cpp)
+        self.assertIn("StructureSnapshots", subsystem_h)
+        self.assertIn("StructureSnapshots.Add", subsystem_cpp)
+        self.assertIn("RegisterStructure(Component)", subsystem_cpp)
+        self.assertIn("StructuralDamageSnapshots", save)
+        self.assertIn("Damage->ExportSnapshots()", persistence)
+        self.assertIn("Damage->ImportSnapshots(Save->StructuralDamageSnapshots)", persistence)
+
+    def test_community_mod_manifest_is_data_only_signed_and_reference_valid(self):
+        manifest = json.loads((ROOT / "Content/Omnis/Mods/Samples/manifest.json").read_text(encoding="utf-8"))
+        events = json.loads((ROOT / "Content/Omnis/Mods/Samples/data/world-events.json").read_text(encoding="utf-8"))
+        catalog = json.loads((ROOT / "Content/Omnis/Data/venezuela-triangle-v1.json").read_text(encoding="utf-8"))
+        validator = (ROOT / "CI/Mods/validate_mod_manifest.mjs").read_text(encoding="utf-8")
+        self.assertEqual(manifest["package_status"], "unsigned_authoring_template_not_installable")
+        self.assertEqual(manifest["signature_policy"]["algorithm"], "Ed25519")
+        self.assertTrue(manifest["signature_policy"]["required_for_production"])
+        for permission in ("execute_scripts", "execute_native_code", "filesystem_access", "external_network_access"):
+            self.assertFalse(manifest["permissions"][permission])
+        route_ids = {route["id"] for route in catalog["routes"]}
+        market_items = {market["id"]: set(market["commodities"]) for market in catalog["markets"]}
+        self.assertEqual(events["package_id"], manifest["package_id"])
+        for event in events["events"]:
+            for route_id in event["route_ids"]:
+                self.assertIn(route_id, route_ids)
+            for effect in event["effects"]:
+                self.assertIn(effect["market_id"], market_items)
+                self.assertIn(effect["item_id"], market_items[effect["market_id"]])
+        self.assertIn("execute_native_code", validator)
+        self.assertIn("Path traversal is forbidden", validator)
+
+
+    def test_route_disruptions_change_only_linked_regional_market_supply(self):
+        economy_h = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.h").read_text(encoding="utf-8")
+        economy_cpp = (ROOT / "Source/Omnis/World/Economy/OmnisEconomySubsystem.cpp").read_text(encoding="utf-8")
+        quest_h = (ROOT / "Source/Omnis/Data/Quests/OmnisQuestDefinition.h").read_text(encoding="utf-8")
+        quest_cpp = (ROOT / "Source/Omnis/Narrative/Quests/OmnisQuestSubsystem.cpp").read_text(encoding="utf-8")
+        automation = (ROOT / "Source/Omnis/Developer/Automation/OmnisPersistenceAutomationTests.cpp").read_text(encoding="utf-8")
+        self.assertIn("ApplyRouteSupplyShock", economy_h)
+        self.assertIn("Route.Caucagua-RioChico-Higuerote", economy_cpp)
+        self.assertIn("Market.Caucagua.Rural", economy_cpp)
+        self.assertIn("Market.RioChico.Coastal", economy_cpp)
+        self.assertIn("Market.Higuerote.Coastal", economy_cpp)
+        self.assertIn("FailureAffectedRouteIds", quest_h)
+        self.assertIn("FailureMarketSupplyDelta", quest_h)
+        self.assertIn("RecoveryAffectedRouteIds", quest_h)
+        self.assertIn("RecoveryMarketSupplyDelta", quest_h)
+        self.assertIn("Economy->ApplyRouteSupplyShock", quest_cpp)
+        self.assertIn("A disrupted coastal route raises local fuel price", automation)
+
+
+    def test_building_interior_registry_measures_the_80_percent_target_without_claiming_completion(self):
+        interiors = json.loads((ROOT / "Content/Omnis/Data/building-interiors-v1.json").read_text(encoding="utf-8"))
+        world = json.loads((ROOT / "Content/Omnis/Data/venezuela-triangle-v1.json").read_text(encoding="utf-8"))
+        self.assertEqual(interiors["target_metric"]["target_ratio"], 0.80)
+        self.assertEqual(interiors["target_metric"]["planned_building_inventory_count"], 20)
+        self.assertEqual(interiors["target_metric"]["planned_accessible_building_target"], 16)
+        self.assertEqual(interiors["target_metric"]["measured_accessible_buildings"], 0)
+        self.assertIsNone(interiors["target_metric"]["measured_ratio"])
+        self.assertEqual(interiors["target_metric"]["measurement_status"], "not_measured_no_native_maps_or_building_assets_verified")
+        subregions = {subregion["id"] for region in world["regions"] for subregion in region["subregions"]}
+        self.assertEqual(len(interiors["buildings"]), 20)
+        self.assertEqual(len({building["persistent_id"] for building in interiors["buildings"]}), 20)
+        for building in interiors["buildings"]:
+            self.assertIn(building["subregion_id"], subregions)
+            self.assertEqual(building["materialization_status"], "not_materialized")
+            self.assertEqual(building["accessibility_test_status"], "not_tested")
+            self.assertTrue(building["room_templates"])
+            self.assertTrue(building["vertical_routes"])
+
 
 
 if __name__ == "__main__":
