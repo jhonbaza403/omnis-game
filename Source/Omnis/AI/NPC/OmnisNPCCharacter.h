@@ -12,7 +12,14 @@ class UOmnisProceduralAnimationComponent;
 class UOmnisCharacterStateComponent;
 class UOmnisPerceptionComponent;
 class UOmnisCharacterDefinition;
+class UOmnisNPCDialogueSubsystem;
 struct FOmnisCharacterLifeSnapshot;
+class AOmnisNPCCharacter;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+    FOmnisNPCDialogueEvent,
+    AOmnisNPCCharacter*, NPC,
+    bool, bSucceeded,
+    const FString&, Dialogue);
 
 UCLASS()
 class OMNIS_API AOmnisNPCCharacter : public ACharacter, public IOmnisInteractableInterface
@@ -30,6 +37,18 @@ public:
 
     void RestorePersistentState(const FTransform& SavedTransform, const FOmnisCharacterLifeSnapshot& SavedLifeState);
     FName GetPersistentId() const;
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|NPC|Dialogue")
+    void RequestGeneratedDialogue(AActor* Interactor, const FString& PlayerMessage);
+
+    UPROPERTY(BlueprintAssignable, Category="Omnis|NPC|Dialogue")
+    FOmnisNPCDialogueEvent OnGeneratedDialogue;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_GeneratedDialogue, Category="Omnis|NPC|Dialogue")
+    FString LastGeneratedDialogue;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_GeneratedDialogue, Category="Omnis|NPC|Dialogue")
+    bool bLastGeneratedDialogueSucceeded = false;
 
     void SimulateLifeFromPopulationManager(float DeltaSeconds, bool bAllowNavigation);
     float GetLifeUpdateInterval() const { return FMath::Max(1.0f, LifeUpdateInterval); }
@@ -114,6 +133,9 @@ public:
 protected:
     UFUNCTION()
     void HandleNPCDeath();
+
+    UFUNCTION()
+    void OnRep_GeneratedDialogue();
 
 private:
     void ApplyCharacterDefinition();

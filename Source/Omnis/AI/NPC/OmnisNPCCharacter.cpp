@@ -2,6 +2,8 @@
 
 #include "AIController.h"
 #include "AI/NPC/OmnisCharacterLifeSubsystem.h"
+#include "AI/NPC/OmnisNPCDialogueSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "AI/Perception/OmnisPerceptionComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/Time/OmnisTimeSubsystem.h"
@@ -120,6 +122,8 @@ void AOmnisNPCCharacter::GetLifetimeReplicatedProps(
     DOREPLIFETIME(AOmnisNPCCharacter, OccupationId);
     DOREPLIFETIME(AOmnisNPCCharacter, HomeLocationId);
     DOREPLIFETIME(AOmnisNPCCharacter, WorkLocationId);
+    DOREPLIFETIME(AOmnisNPCCharacter, LastGeneratedDialogue);
+    DOREPLIFETIME(AOmnisNPCCharacter, bLastGeneratedDialogueSucceeded);
 }
 
 void AOmnisNPCCharacter::ApplyCharacterDefinition()
@@ -469,6 +473,10 @@ void AOmnisNPCCharacter::Interact_Implementation(AActor* Interactor)
     CharacterState->RecordMemory(TEXT("NPC.Interaction"), InteractorId, 25);
     CharacterState->AdjustRelationship(InteractorId, 5);
 
+    RequestGeneratedDialogue(
+        Interactor,
+        TEXT("The player approaches and greets you. Respond naturally using only what you know."));
+
     if (AOmnisPlayerCharacter* Player = Cast<AOmnisPlayerCharacter>(Interactor))
     {
         if (Player->CharacterState)
@@ -554,4 +562,54 @@ void AOmnisNPCCharacter::RestorePersistentState(
         CurrentDestination = GetActorLocation();
         bHasLifeDestination = true;
     }
+}
+
+
+void AOmnisNPCCharacter::RequestGeneratedDialogue(
+    AActor* Interactor,
+    const FString& PlayerMessage)
+{
+    if (!HasAuthority() || !IsValid(Interactor) || Interactor == this ||
+        !CharacterState || !CharacterState->IsAlive())
+    {
+        return;
+    }
+
+    UGameInstance* GameInstance = GetGameInstance();
+    UOmnisNPCDialogueSubsystem* Dialogue =
+        GameInstance ? GameInstance->GetSubsystem<UOmnisNPCDialogueSubsystem>() : nullptr;
+    if (!Dialogue)
+    {
+        LastGeneratedDialogue = TEXT("The character has nothing more to say right now.");
+        bLastGeneratedDialogueSucceeded = false;
+        ForceNetUpdate();
+        OnGeneratedDialogue.Broadcast(this, false, LastGeneratedDialogue);
+        return;
+    }
+
+    TWeakObjectPtr<AOmnisNPCCharacter> WeakThis(this);
+    Dialogue->RequestDialogue(
+        this,
+        PlayerMessage,
+        [WeakThis](bool bSucceeded, const FString& GeneratedText)
+        {
+            AOmnisNPCCharacter* NPC = WeakThis.Get();
+            if (!NPC || !NPC->HasAuthority())
+            {
+                return;
+            }
+
+            NPC->LastGeneratedDialogue = GeneratedText;
+            NPC->bLastGeneratedDialogueSucceeded = bSucceeded;
+            NPC->ForceNetUpdate();
+            NPC->OnGeneratedDialogue.Broadcast(NPC, bSucceeded, GeneratedText);
+        });
+}
+
+void AOmnisNPCCharacter::OnRep_GeneratedDialogue()
+{
+    OnGeneratedDialogue.Broadcast(
+        this,
+        bLastGeneratedDialogueSucceeded,
+        LastGeneratedDialogue);
 }
