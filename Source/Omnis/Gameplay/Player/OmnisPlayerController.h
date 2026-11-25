@@ -20,6 +20,12 @@ protected:
 private:
     void ToggleNearestVehicle();
     void ToggleNearestAircraft();
+
+    UFUNCTION(Server, Reliable)
+    void ServerToggleNearestVehicle();
+
+    UFUNCTION(Server, Reliable)
+    void ServerToggleNearestAircraft();
     APawn* FindNearestPawn(UClass* PawnClass, float MaxDistance) const;
 
     TWeakObjectPtr<APawn> OnFootPawn;

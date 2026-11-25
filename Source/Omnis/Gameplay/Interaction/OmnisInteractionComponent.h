@@ -17,4 +17,10 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Omnis|Interaction")
     float InteractionDistance = 300.0f;
+
+private:
+    UFUNCTION(Server, Reliable)
+    void ServerInteract();
+
+    bool PerformInteractionOnAuthority();
 };

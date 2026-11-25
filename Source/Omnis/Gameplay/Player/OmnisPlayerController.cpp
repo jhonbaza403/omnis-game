@@ -60,6 +60,12 @@ APawn* AOmnisPlayerController::FindNearestPawn(UClass* PawnClass, float MaxDista
 
 void AOmnisPlayerController::ToggleNearestVehicle()
 {
+    if (!HasAuthority())
+    {
+        ServerToggleNearestVehicle();
+        return;
+    }
+
     if (GetPawn() && GetPawn()->IsA(AOmnisVehiclePawn::StaticClass()))
     {
         if (OnFootPawn.IsValid())
@@ -79,6 +85,12 @@ void AOmnisPlayerController::ToggleNearestVehicle()
 
 void AOmnisPlayerController::ToggleNearestAircraft()
 {
+    if (!HasAuthority())
+    {
+        ServerToggleNearestAircraft();
+        return;
+    }
+
     if (GetPawn() && GetPawn()->IsA(AOmnisAircraftPawn::StaticClass()))
     {
         if (OnFootPawn.IsValid())
@@ -94,4 +106,14 @@ void AOmnisPlayerController::ToggleNearestAircraft()
         OnFootPawn = GetPawn();
         Possess(Aircraft);
     }
+}
+
+void AOmnisPlayerController::ServerToggleNearestVehicle_Implementation()
+{
+    ToggleNearestVehicle();
+}
+
+void AOmnisPlayerController::ServerToggleNearestAircraft_Implementation()
+{
+    ToggleNearestAircraft();
 }

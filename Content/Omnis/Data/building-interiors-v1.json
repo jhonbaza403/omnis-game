@@ -1,0 +1,593 @@
+{
+  "schema_version": 1,
+  "catalog_id": "omnis.building-interiors.v1",
+  "title": "OMNIS Building and Interior Access Registry",
+  "status": "design_inventory_not_materialized_or_measured",
+  "engine_target": "Unreal Engine 5.8",
+  "target_metric": {
+    "description": "Accessible buildings divided by all buildings registered in this World Pack inventory; every counted building must have a functional entrance, navigable interior, and tested exterior/interior transition without a loading screen.",
+    "target_ratio": 0.8,
+    "planned_building_inventory_count": 20,
+    "planned_accessible_building_target": 16,
+    "phase_1_building_count": 16,
+    "phase_1_accessible_target": 13,
+    "measured_accessible_buildings": 0,
+    "measured_total_buildings": 0,
+    "measured_ratio": null,
+    "measurement_status": "not_measured_no_native_maps_or_building_assets_verified"
+  },
+  "generation_policy": {
+    "architecture": "rule_based_modular_kit_with_handcrafted_landmarks",
+    "verticality": [
+      "stairs",
+      "elevators",
+      "ramps",
+      "vehicle_ramps",
+      "exterior_walkways"
+    ],
+    "streaming": "World Partition cell streaming with interior cell adjacency",
+    "no_loading_screen_target": true,
+    "data_only_rules": true
+  },
+  "buildings": [
+    {
+      "persistent_id": "Building.Caracas.East.Apartment.001",
+      "region_id": "Region.Caracas",
+      "subregion_id": "Caracas.East",
+      "building_type": "apartment",
+      "floors": 6,
+      "interior_id": "Interior.Caracas.Apartment.001",
+      "entry_id": "Building.Caracas.East.Apartment.001.Entry.Main",
+      "entry_anchor_relative": [
+        0,
+        0,
+        0
+      ],
+      "room_templates": [
+        "lobby",
+        "stairs",
+        "elevator",
+        "apartments",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "elevator"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caracas.East.Apartment.002",
+      "region_id": "Region.Caracas",
+      "subregion_id": "Caracas.East",
+      "building_type": "apartment",
+      "floors": 8,
+      "interior_id": "Interior.Caracas.Apartment.002",
+      "entry_id": "Building.Caracas.East.Apartment.002.Entry.Main",
+      "entry_anchor_relative": [
+        550,
+        0,
+        0
+      ],
+      "room_templates": [
+        "lobby",
+        "stairs",
+        "elevator",
+        "apartments",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "elevator"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caracas.ElValle.Market.001",
+      "region_id": "Region.Caracas",
+      "subregion_id": "Caracas.ElValle",
+      "building_type": "market",
+      "floors": 2,
+      "interior_id": "Interior.Caracas.Market.001",
+      "entry_id": "Building.Caracas.ElValle.Market.001.Entry.Main",
+      "entry_anchor_relative": [
+        1100,
+        0,
+        0
+      ],
+      "room_templates": [
+        "sales_floor",
+        "storage",
+        "office",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caracas.Cerros.Community.001",
+      "region_id": "Region.Caracas",
+      "subregion_id": "Caracas.Cerros",
+      "building_type": "community_center",
+      "floors": 3,
+      "interior_id": "Interior.Caracas.CommunityCenter.001",
+      "entry_id": "Building.Caracas.Cerros.Community.001.Entry.Main",
+      "entry_anchor_relative": [
+        1650,
+        0,
+        0
+      ],
+      "room_templates": [
+        "entry",
+        "hall",
+        "meeting_rooms",
+        "service_room",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "exterior_walkway"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caracas.Central.Office.001",
+      "region_id": "Region.Caracas",
+      "subregion_id": "Caracas.CentralBusiness",
+      "building_type": "office_tower",
+      "floors": 12,
+      "interior_id": "Interior.Caracas.Office.001",
+      "entry_id": "Building.Caracas.Central.Office.001.Entry.Main",
+      "entry_anchor_relative": [
+        2200,
+        0,
+        0
+      ],
+      "room_templates": [
+        "lobby",
+        "offices",
+        "conference",
+        "service_core",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "elevator"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caracas.Central.Garage.001",
+      "region_id": "Region.Caracas",
+      "subregion_id": "Caracas.CentralBusiness",
+      "building_type": "parking_garage",
+      "floors": 5,
+      "interior_id": "Interior.Caracas.Garage.001",
+      "entry_id": "Building.Caracas.Central.Garage.001.Entry.Main",
+      "entry_anchor_relative": [
+        2750,
+        0,
+        0
+      ],
+      "room_templates": [
+        "ramps",
+        "parking_levels",
+        "service_bay",
+        "roof"
+      ],
+      "vertical_routes": [
+        "vehicle_ramp",
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Guarenas.Warehouse.001",
+      "region_id": "Region.GuarenasGuatire",
+      "subregion_id": "Guarenas",
+      "building_type": "warehouse",
+      "floors": 2,
+      "interior_id": "Interior.Guarenas.Warehouse.001",
+      "entry_id": "Building.Guarenas.Warehouse.001.Entry.Main",
+      "entry_anchor_relative": [
+        3300,
+        0,
+        0
+      ],
+      "room_templates": [
+        "loading_bay",
+        "storage",
+        "office",
+        "service_yard"
+      ],
+      "vertical_routes": [
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Guarenas.Terminal.001",
+      "region_id": "Region.GuarenasGuatire",
+      "subregion_id": "Guarenas",
+      "building_type": "transit_terminal",
+      "floors": 2,
+      "interior_id": "Interior.Guarenas.Terminal.001",
+      "entry_id": "Building.Guarenas.Terminal.001.Entry.Main",
+      "entry_anchor_relative": [
+        3850,
+        0,
+        0
+      ],
+      "room_templates": [
+        "ticket_hall",
+        "platform",
+        "service_rooms",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "ramp"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Guatire.Shop.001",
+      "region_id": "Region.GuarenasGuatire",
+      "subregion_id": "Guatire",
+      "building_type": "retail_shop",
+      "floors": 2,
+      "interior_id": "Interior.Guatire.Shop.001",
+      "entry_id": "Building.Guatire.Shop.001.Entry.Main",
+      "entry_anchor_relative": [
+        4400,
+        0,
+        0
+      ],
+      "room_templates": [
+        "sales_floor",
+        "stockroom",
+        "office"
+      ],
+      "vertical_routes": [
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Guatire.Depot.001",
+      "region_id": "Region.GuarenasGuatire",
+      "subregion_id": "Guatire",
+      "building_type": "vehicle_depot",
+      "floors": 2,
+      "interior_id": "Interior.Guatire.Depot.001",
+      "entry_id": "Building.Guatire.Depot.001.Entry.Main",
+      "entry_anchor_relative": [
+        4950,
+        0,
+        0
+      ],
+      "room_templates": [
+        "garage_bays",
+        "parts_store",
+        "office",
+        "yard"
+      ],
+      "vertical_routes": [
+        "vehicle_ramp",
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caucagua.AgroMarket.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "Caucagua",
+      "building_type": "agricultural_market",
+      "floors": 2,
+      "interior_id": "Interior.Caucagua.AgroMarket.001",
+      "entry_id": "Building.Caucagua.AgroMarket.001.Entry.Main",
+      "entry_anchor_relative": [
+        5500,
+        0,
+        0
+      ],
+      "room_templates": [
+        "market_hall",
+        "cold_store",
+        "loading_bay",
+        "office"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "ramp"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Caucagua.Workshop.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "Caucagua",
+      "building_type": "repair_workshop",
+      "floors": 2,
+      "interior_id": "Interior.Caucagua.Workshop.001",
+      "entry_id": "Building.Caucagua.Workshop.001.Entry.Main",
+      "entry_anchor_relative": [
+        6050,
+        0,
+        0
+      ],
+      "room_templates": [
+        "repair_bays",
+        "parts_store",
+        "office",
+        "yard"
+      ],
+      "vertical_routes": [
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.RioChico.FishMarket.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "RioChico",
+      "building_type": "fish_market",
+      "floors": 2,
+      "interior_id": "Interior.RioChico.FishMarket.001",
+      "entry_id": "Building.RioChico.FishMarket.001.Entry.Main",
+      "entry_anchor_relative": [
+        6600,
+        0,
+        0
+      ],
+      "room_templates": [
+        "auction_hall",
+        "cold_store",
+        "washing_area",
+        "office"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "ramp"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.RioChico.Riverside.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "RioChico",
+      "building_type": "residential_building",
+      "floors": 4,
+      "interior_id": "Interior.RioChico.Residential.001",
+      "entry_id": "Building.RioChico.Riverside.001.Entry.Main",
+      "entry_anchor_relative": [
+        7150,
+        0,
+        0
+      ],
+      "room_templates": [
+        "lobby",
+        "stairs",
+        "apartments",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Higuerote.Marina.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "Higuerote",
+      "building_type": "marina_service",
+      "floors": 2,
+      "interior_id": "Interior.Higuerote.Marina.001",
+      "entry_id": "Building.Higuerote.Marina.001.Entry.Main",
+      "entry_anchor_relative": [
+        7700,
+        0,
+        0
+      ],
+      "room_templates": [
+        "reception",
+        "equipment_store",
+        "repair_bay",
+        "pier_access"
+      ],
+      "vertical_routes": [
+        "ramp",
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Higuerote.Hostel.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "Higuerote",
+      "building_type": "hotel",
+      "floors": 4,
+      "interior_id": "Interior.Higuerote.Hostel.001",
+      "entry_id": "Building.Higuerote.Hostel.001.Entry.Main",
+      "entry_anchor_relative": [
+        8250,
+        0,
+        0
+      ],
+      "room_templates": [
+        "lobby",
+        "stairs",
+        "rooms",
+        "kitchen",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs"
+      ],
+      "phase": 1,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.LaGuaira.Port.Customs.001",
+      "region_id": "Region.LaGuaira",
+      "subregion_id": "LaGuaira.Port",
+      "building_type": "customs_office",
+      "floors": 3,
+      "interior_id": "Interior.LaGuaira.Customs.001",
+      "entry_id": "Building.LaGuaira.Port.Customs.001.Entry.Main",
+      "entry_anchor_relative": [
+        8800,
+        0,
+        0
+      ],
+      "room_templates": [
+        "inspection_hall",
+        "offices",
+        "secure_records",
+        "roof"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "elevator"
+      ],
+      "phase": 2,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.LaGuaira.Port.Warehouse.001",
+      "region_id": "Region.LaGuaira",
+      "subregion_id": "LaGuaira.Port",
+      "building_type": "port_warehouse",
+      "floors": 2,
+      "interior_id": "Interior.LaGuaira.Warehouse.001",
+      "entry_id": "Building.LaGuaira.Port.Warehouse.001.Entry.Main",
+      "entry_anchor_relative": [
+        9350,
+        0,
+        0
+      ],
+      "room_templates": [
+        "loading_bay",
+        "storage",
+        "dispatch_office",
+        "yard"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "ramp"
+      ],
+      "phase": 2,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.LaGuaira.Airport.Terminal.001",
+      "region_id": "Region.LaGuaira",
+      "subregion_id": "LaGuaira.Airport",
+      "building_type": "airport_terminal",
+      "floors": 4,
+      "interior_id": "Interior.LaGuaira.Terminal.001",
+      "entry_id": "Building.LaGuaira.Airport.Terminal.001.Entry.Main",
+      "entry_anchor_relative": [
+        9900,
+        0,
+        0
+      ],
+      "room_templates": [
+        "check_in",
+        "departures",
+        "arrivals",
+        "baggage",
+        "service_core"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "elevator"
+      ],
+      "phase": 2,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    },
+    {
+      "persistent_id": "Building.Chuspa.CoastalStation.001",
+      "region_id": "Region.Barlovento",
+      "subregion_id": "Chuspa",
+      "building_type": "coastal_station",
+      "floors": 2,
+      "interior_id": "Interior.Chuspa.Station.001",
+      "entry_id": "Building.Chuspa.CoastalStation.001.Entry.Main",
+      "entry_anchor_relative": [
+        10450,
+        0,
+        0
+      ],
+      "room_templates": [
+        "public_hall",
+        "radio_room",
+        "equipment_store",
+        "pier_access"
+      ],
+      "vertical_routes": [
+        "stairs",
+        "ramp"
+      ],
+      "phase": 3,
+      "accessible_interior_target": true,
+      "materialization_status": "not_materialized",
+      "accessibility_test_status": "not_tested"
+    }
+  ]
+}

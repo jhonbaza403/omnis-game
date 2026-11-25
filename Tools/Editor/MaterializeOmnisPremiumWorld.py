@@ -74,11 +74,24 @@ def import_obelisk():
 
     task=unreal.AssetImportTask()
     task.set_editor_property("filename",filename)
-    task.set_editor_property("destination_path",ART_ROOT+"/Obelisk")
+    destination = ART_ROOT + "/Obelisk"
+    target = destination + "/Omnis_Obelisk.Omnis_Obelisk"
+    if unreal.EditorAssetLibrary.does_asset_exist(target):
+        existing = unreal.EditorAssetLibrary.load_asset(target)
+        if not existing or not isinstance(existing, unreal.StaticMesh):
+            raise RuntimeError(
+                "Existing Obelisk asset is invalid; refusing overwrite: " + target)
+        log("Preserving existing Obelisk mesh: " + target)
+        return
+
+    task.set_editor_property("destination_path",destination)
     task.set_editor_property("automated",True)
-    task.set_editor_property("replace_existing",True)
+    task.set_editor_property("replace_existing",False)
     task.set_editor_property("save",True)
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    imported = unreal.EditorAssetLibrary.load_asset(target)
+    if not imported or not isinstance(imported, unreal.StaticMesh):
+        raise RuntimeError("Obelisk import did not create a native StaticMesh: " + target)
 
 def spawn_premium(sub,mesh,loc,scale,label,mat,yaw=0):
     actor=base.spawn_mesh(sub,mesh,loc,scale,label,yaw)
@@ -149,6 +162,7 @@ def extra_dressing(sub,m,mat):
             "Premium_Cycle_Landmark_%02d"%i,mat["Obelisk"])
 
 def main():
+    base.ensure_map_absent()
     base.ensure_dirs()
     base.import_all()
     import_obelisk()
@@ -192,13 +206,15 @@ def main():
         1 for f in COLORS
         if unreal.EditorAssetLibrary.load_asset(
             MAT_ROOT+"/M_"+f+"_Premium"))
+    mat_count += int(
+        unreal.EditorAssetLibrary.does_asset_exist(MAT_ROOT + "/M_Water_Premium"))
 
     if not unreal.Paths.file_exists(
         ROOT+"Content/Omnis/Maps/Omnis_OpenWorld.umap"):
         raise RuntimeError("Native .umap missing")
     if found<expected:
         raise RuntimeError("Native mesh library incomplete")
-    if mat_count<9:
+    if mat_count<10:
         raise RuntimeError("Premium materials incomplete")
     if count<250:
         raise RuntimeError("World dressing incomplete: %d actors"%count)
@@ -208,5 +224,5 @@ def main():
         %(found,expected,mat_count,count))
     log("REAL PREMIUM WORLD MATERIALIZED")
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

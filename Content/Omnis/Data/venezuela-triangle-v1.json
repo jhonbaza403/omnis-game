@@ -1,0 +1,704 @@
+{
+  "schema_version": 1,
+  "catalog_id": "omnis.worldpack.venezuela-triangle.v1",
+  "title": "OMNIS — Triángulo venezolano",
+  "status": "design_catalog_not_a_materialized_playable_map",
+  "engine_target": "Unreal Engine 5.8",
+  "world_pack": {
+    "id": "WorldPack.ModernVenezuela",
+    "compatibility": "Independent modern-world content pack. Preserve the existing elemental-cycle regions and do not silently replace their maps or progression.",
+    "initial_vertical_slice": "Phase 1 corridor from Caracas Este through Guarenas/Guatire and Caucagua to Río Chico and Higuerote.",
+    "coordinate_space": "Relative Unreal game-space anchors only; these are not geodetic coordinates or surveyed road distances.",
+    "interior_access_target": 0.8,
+    "interior_access_target_status": "production_target_not_measured",
+    "seamless_travel_target": true,
+    "seamless_travel_status": "requires World Partition streaming, memory budgets, and native UE 5.8 profiling"
+  },
+  "regions": [
+    {
+      "id": "Region.Caracas",
+      "name": "Caracas",
+      "role": "Urban financial, civic and high-density vertical core",
+      "biomes": [
+        "urban_valley",
+        "hillside_neighborhoods",
+        "elevated_roads"
+      ],
+      "subregions": [
+        {
+          "id": "Caracas.East",
+          "name": "Caracas Este",
+          "role": "Vertical-slice entry and main arterial connection",
+          "anchor": [
+            0,
+            0,
+            0
+          ],
+          "environment": {
+            "heat": "moderate",
+            "rainfall": "seasonal",
+            "surface": [
+              "asphalt",
+              "concrete"
+            ],
+            "slope": "mixed"
+          }
+        },
+        {
+          "id": "Caracas.ElValle",
+          "name": "El Valle",
+          "role": "Dense residential valley and community markets",
+          "anchor": [
+            -1800,
+            -900,
+            0
+          ],
+          "environment": {
+            "heat": "moderate",
+            "rainfall": "seasonal",
+            "surface": [
+              "asphalt",
+              "concrete"
+            ],
+            "slope": "valley"
+          }
+        },
+        {
+          "id": "Caracas.Cerros",
+          "name": "Cerros de Caracas",
+          "role": "Ladera access, stairways, pedestrian shortcuts and motorcycle paths",
+          "anchor": [
+            -1200,
+            900,
+            280
+          ],
+          "environment": {
+            "heat": "moderate",
+            "rainfall": "seasonal",
+            "surface": [
+              "concrete",
+              "stairs",
+              "rough_track"
+            ],
+            "slope": "steep"
+          }
+        },
+        {
+          "id": "Caracas.CentralBusiness",
+          "name": "Centro financiero",
+          "role": "Formal commerce, offices, services and high-value interiors",
+          "anchor": [
+            900,
+            500,
+            0
+          ],
+          "environment": {
+            "heat": "moderate",
+            "rainfall": "seasonal",
+            "surface": [
+              "asphalt",
+              "concrete"
+            ],
+            "slope": "urban"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Region.GuarenasGuatire",
+      "name": "Guarenas–Guatire",
+      "role": "Industrial and peri-urban transition corridor",
+      "biomes": [
+        "peri_urban",
+        "river_valley",
+        "hillside"
+      ],
+      "subregions": [
+        {
+          "id": "Guarenas",
+          "name": "Guarenas",
+          "role": "Logistics and residential connector",
+          "anchor": [
+            8500,
+            900,
+            0
+          ],
+          "environment": {
+            "heat": "warm",
+            "rainfall": "seasonal",
+            "surface": [
+              "asphalt",
+              "patched_asphalt"
+            ],
+            "slope": "rolling"
+          }
+        },
+        {
+          "id": "Guatire",
+          "name": "Guatire",
+          "role": "Trade, depots and transition to rural routes",
+          "anchor": [
+            11200,
+            1400,
+            0
+          ],
+          "environment": {
+            "heat": "warm",
+            "rainfall": "seasonal",
+            "surface": [
+              "asphalt",
+              "patched_asphalt"
+            ],
+            "slope": "rolling"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Region.Barlovento",
+      "name": "Barlovento",
+      "role": "Agricultural, river, mangrove and coastal economy",
+      "biomes": [
+        "humid_tropical",
+        "savanna",
+        "mangrove",
+        "coast"
+      ],
+      "subregions": [
+        {
+          "id": "Caucagua",
+          "name": "Caucagua",
+          "role": "Rural logistics, agricultural production and road junction",
+          "anchor": [
+            17800,
+            2100,
+            0
+          ],
+          "environment": {
+            "heat": "hot_humid",
+            "rainfall": "high",
+            "surface": [
+              "asphalt",
+              "gravel",
+              "mud"
+            ],
+            "slope": "rolling"
+          }
+        },
+        {
+          "id": "RioChico",
+          "name": "Río Chico",
+          "role": "River and coastal town, fishing and wetland access",
+          "anchor": [
+            23100,
+            1700,
+            0
+          ],
+          "environment": {
+            "heat": "hot_humid",
+            "rainfall": "high",
+            "surface": [
+              "asphalt",
+              "gravel",
+              "mud"
+            ],
+            "slope": "flat"
+          }
+        },
+        {
+          "id": "Higuerote",
+          "name": "Higuerote",
+          "role": "Coastal hub, marina, tourism and boat supply",
+          "anchor": [
+            26600,
+            900,
+            0
+          ],
+          "environment": {
+            "heat": "hot_humid",
+            "rainfall": "high",
+            "surface": [
+              "asphalt",
+              "sand",
+              "mud"
+            ],
+            "slope": "coastal_flat"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Region.LaGuaira",
+      "name": "La Guaira",
+      "role": "Port, customs, airport and narrow coastal urban strip",
+      "biomes": [
+        "coast",
+        "port",
+        "mountain_foothills"
+      ],
+      "phase": 2,
+      "subregions": [
+        {
+          "id": "LaGuaira.Port",
+          "name": "Puerto de La Guaira",
+          "role": "Cargo, formal import and port logistics",
+          "anchor": [
+            -4200,
+            -7600,
+            0
+          ],
+          "environment": {
+            "heat": "warm_humid",
+            "rainfall": "seasonal",
+            "surface": [
+              "concrete",
+              "asphalt"
+            ],
+            "slope": "coastal"
+          }
+        },
+        {
+          "id": "LaGuaira.Airport",
+          "name": "Aeropuerto",
+          "role": "Passenger, air freight and aviation logistics",
+          "anchor": [
+            -1800,
+            -8200,
+            0
+          ],
+          "environment": {
+            "heat": "warm_humid",
+            "rainfall": "seasonal",
+            "surface": [
+              "concrete",
+              "asphalt"
+            ],
+            "slope": "coastal"
+          }
+        },
+        {
+          "id": "Naiguata",
+          "name": "Naiguatá",
+          "role": "Eastern coastal gateway",
+          "anchor": [
+            900,
+            -6900,
+            0
+          ],
+          "environment": {
+            "heat": "warm_humid",
+            "rainfall": "high",
+            "surface": [
+              "asphalt",
+              "gravel"
+            ],
+            "slope": "coastal_mountain"
+          }
+        },
+        {
+          "id": "Todasana",
+          "name": "Todasana",
+          "role": "Coastal village and mountain footpath junction",
+          "anchor": [
+            4100,
+            -5900,
+            0
+          ],
+          "environment": {
+            "heat": "hot_humid",
+            "rainfall": "high",
+            "surface": [
+              "asphalt",
+              "gravel",
+              "mud"
+            ],
+            "slope": "coastal_mountain"
+          }
+        },
+        {
+          "id": "Chuspa",
+          "name": "Chuspa",
+          "role": "Small coastal community and boat access",
+          "anchor": [
+            7600,
+            -4400,
+            0
+          ],
+          "environment": {
+            "heat": "hot_humid",
+            "rainfall": "high",
+            "surface": [
+              "gravel",
+              "mud",
+              "sand"
+            ],
+            "slope": "coastal_mountain"
+          }
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "Route.CaracasEast-Guarenas-Guatire-Caucagua",
+      "phase": 1,
+      "from": "Caracas.East",
+      "to": "Caucagua",
+      "via": [
+        "Guarenas",
+        "Guatire"
+      ],
+      "modes": [
+        "car",
+        "truck",
+        "motorcycle",
+        "foot"
+      ],
+      "road_profile": "urban_to_rural_arterial",
+      "surfaces": [
+        "asphalt",
+        "patched_asphalt",
+        "gravel"
+      ],
+      "dynamic_hazards": [
+        "rain",
+        "pothole",
+        "temporary_closure"
+      ],
+      "logistics_links": [
+        "Market.Caracas.Formal",
+        "Market.GuarenasGuatire.Formal",
+        "Market.Caucagua.Rural"
+      ]
+    },
+    {
+      "id": "Route.Caucagua-RioChico-Higuerote",
+      "phase": 1,
+      "from": "Caucagua",
+      "to": "Higuerote",
+      "via": [
+        "RioChico"
+      ],
+      "modes": [
+        "car",
+        "truck",
+        "motorcycle",
+        "boat",
+        "foot"
+      ],
+      "road_profile": "humid_rural_to_coastal",
+      "surfaces": [
+        "asphalt",
+        "gravel",
+        "mud"
+      ],
+      "dynamic_hazards": [
+        "flood",
+        "mud",
+        "bridge_closure"
+      ],
+      "logistics_links": [
+        "Market.Caucagua.Rural",
+        "Market.RioChico.Coastal",
+        "Market.Higuerote.Coastal"
+      ]
+    },
+    {
+      "id": "Route.Caracas-LaGuaira.TunnelHighway",
+      "phase": 2,
+      "from": "Caracas.CentralBusiness",
+      "to": "LaGuaira.Port",
+      "via": [],
+      "modes": [
+        "car",
+        "truck",
+        "motorcycle"
+      ],
+      "road_profile": "mountain_tunnel_and_viaduct_highway",
+      "surfaces": [
+        "asphalt",
+        "concrete"
+      ],
+      "dynamic_hazards": [
+        "tunnel_closure",
+        "rain",
+        "rockfall"
+      ],
+      "logistics_links": [
+        "Market.Caracas.Formal",
+        "Market.LaGuaira.Port"
+      ]
+    },
+    {
+      "id": "Route.Caracas-LaGuaira.OldRoad",
+      "phase": 2,
+      "from": "Caracas.ElValle",
+      "to": "LaGuaira.Port",
+      "via": [],
+      "modes": [
+        "car",
+        "motorcycle",
+        "truck",
+        "foot"
+      ],
+      "road_profile": "historic_steep_mountain_road",
+      "surfaces": [
+        "asphalt",
+        "patched_asphalt",
+        "gravel"
+      ],
+      "dynamic_hazards": [
+        "fog",
+        "rain",
+        "rockfall"
+      ],
+      "logistics_links": [
+        "Market.Caracas.Formal",
+        "Market.LaGuaira.Port"
+      ]
+    },
+    {
+      "id": "Route.Naiguata-Todasana-Chuspa-Higuerote",
+      "phase": 3,
+      "from": "Naiguata",
+      "to": "Higuerote",
+      "via": [
+        "Todasana",
+        "Chuspa"
+      ],
+      "modes": [
+        "car",
+        "motorcycle",
+        "boat",
+        "foot"
+      ],
+      "road_profile": "remote_coastal_mountain_route",
+      "surfaces": [
+        "asphalt",
+        "gravel",
+        "mud",
+        "sand"
+      ],
+      "dynamic_hazards": [
+        "landslide",
+        "flood",
+        "coastal_storm"
+      ],
+      "logistics_links": [
+        "Market.Higuerote.Coastal"
+      ]
+    },
+    {
+      "id": "Route.LaGuaira-Higuerote.SeaLane",
+      "phase": 3,
+      "from": "LaGuaira.Port",
+      "to": "Higuerote",
+      "via": [],
+      "modes": [
+        "boat"
+      ],
+      "road_profile": "coastal_sea_lane",
+      "surfaces": [
+        "water"
+      ],
+      "dynamic_hazards": [
+        "storm",
+        "wave",
+        "visibility"
+      ],
+      "logistics_links": [
+        "Market.LaGuaira.Port",
+        "Market.Higuerote.Coastal"
+      ]
+    }
+  ],
+  "markets": [
+    {
+      "id": "Market.Caracas.Formal",
+      "region": "Region.Caracas",
+      "currency": "Currency.VES",
+      "visibility": "public",
+      "commodities": [
+        "Item.Food",
+        "Item.Fuel",
+        "Item.VehicleParts",
+        "Item.Medicine",
+        "Item.BuildingMaterials",
+        "Item.Electronics"
+      ]
+    },
+    {
+      "id": "Market.Caracas.Black",
+      "region": "Region.Caracas",
+      "currency": "Currency.USD",
+      "visibility": "restricted",
+      "commodities": [
+        "Item.Fuel",
+        "Item.VehicleParts",
+        "Item.Medicine"
+      ]
+    },
+    {
+      "id": "Market.GuarenasGuatire.Formal",
+      "region": "Region.GuarenasGuatire",
+      "currency": "Currency.VES",
+      "visibility": "public",
+      "commodities": [
+        "Item.Food",
+        "Item.Fuel",
+        "Item.VehicleParts"
+      ]
+    },
+    {
+      "id": "Market.Caucagua.Rural",
+      "region": "Region.Barlovento",
+      "currency": "Currency.VES",
+      "visibility": "public",
+      "commodities": [
+        "Item.AgriculturalProduce",
+        "Item.Food",
+        "Item.Fuel"
+      ]
+    },
+    {
+      "id": "Market.RioChico.Coastal",
+      "region": "Region.Barlovento",
+      "currency": "Currency.VES",
+      "visibility": "public",
+      "commodities": [
+        "Item.FreshFish",
+        "Item.Food",
+        "Item.BoatParts"
+      ]
+    },
+    {
+      "id": "Market.Higuerote.Coastal",
+      "region": "Region.Barlovento",
+      "currency": "Currency.VES",
+      "visibility": "public",
+      "commodities": [
+        "Item.FreshFish",
+        "Item.Fuel",
+        "Item.BoatParts"
+      ]
+    },
+    {
+      "id": "Market.LaGuaira.Port",
+      "region": "Region.LaGuaira",
+      "currency": "Currency.USD",
+      "visibility": "public",
+      "phase": 2,
+      "commodities": [
+        "Item.Fuel",
+        "Item.VehicleParts",
+        "Item.Vehicles",
+        "Item.Electronics"
+      ]
+    }
+  ],
+  "systemic_targets": {
+    "economy": {
+      "multi_currency": true,
+      "barter": true,
+      "regional_supply_and_demand": true,
+      "market_shocks_from_route_disruption": true,
+      "property_and_services_market": "planned"
+    },
+    "vehicles": {
+      "terrain_and_weather_affect_handling": true,
+      "fuel_and_repair_parts": "planned",
+      "persistent_component_damage": "planned"
+    },
+    "environment": {
+      "seasonal_rainfall": true,
+      "river_floods": "planned",
+      "landslides": "planned",
+      "coastal_storms": "planned"
+    },
+    "crime_and_reputation": {
+      "district_reputation": true,
+      "faction_territory": "existing_foundation",
+      "law_enforcement_response": "planned"
+    },
+    "npc_social": {
+      "bounded_memory": true,
+      "rumor_propagation": true,
+      "workweek_schedules": true,
+      "generative_dialogue": "adapter_required"
+    },
+    "destruction": {
+      "persistent_building_damage": "planned",
+      "repair_crews": "planned",
+      "chaos_runtime_validation": "required"
+    },
+    "interiors": {
+      "accessibility_ratio_target": 0.8,
+      "procedural_rules": "planned",
+      "seamless_streaming": "requires_profiling"
+    },
+    "creator_ecosystem": {
+      "signed_data_packs": "planned",
+      "mission_vehicle_map_rules": "planned",
+      "arbitrary_native_code_execution": "not_allowed"
+    }
+  },
+  "production_phases": [
+    {
+      "phase": 1,
+      "name": "Vertical slice urbano-rural-costero",
+      "scope": [
+        "Caracas Este",
+        "Guarenas",
+        "Guatire",
+        "Caucagua",
+        "Río Chico",
+        "Higuerote"
+      ],
+      "goals": [
+        "driving_and_vehicle_condition",
+        "regional_market_supply_demand",
+        "one_rainfall_cycle",
+        "living_NPC_reactions",
+        "mission_failure_and_recovery",
+        "interior_access_sample"
+      ],
+      "gate": "Playable and profiled in UE 5.8 before extending geography"
+    },
+    {
+      "phase": 2,
+      "name": "Puerto y cordillera",
+      "scope": [
+        "La Guaira",
+        "Puerto",
+        "Aeropuerto",
+        "Túneles",
+        "Carretera Vieja"
+      ],
+      "goals": [
+        "port_cargo_flows",
+        "customs_and_market_links",
+        "tunnel_and_viaduct_routes",
+        "vertical_mountain_routes"
+      ],
+      "gate": "Vehicle and streaming tests on both tunnel/old-road paths"
+    },
+    {
+      "phase": 3,
+      "name": "Conexión costera y marítima",
+      "scope": [
+        "Naiguatá",
+        "Todasana",
+        "Chuspa",
+        "Higuerote",
+        "SeaLane"
+      ],
+      "goals": [
+        "coastal_route",
+        "boats_and_mangroves",
+        "storm_and_visibility",
+        "multi-region_supply_shocks"
+      ],
+      "gate": "Boat/land route continuity and regional simulation tests"
+    }
+  ]
+}

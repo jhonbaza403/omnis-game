@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "title": "Omnis: El Último Ciclo",
+  "catalog_id": "omnis.elemental_regions.v1",
+  "status": "design_data_not_yet_materialized_as_unreal_assets",
+  "engine_target": "Unreal Engine 5.8",
+  "world_plan": {
+    "region_count": 12,
+    "subregions_per_region": 134,
+    "planned_subregion_total": 1608,
+    "generation_policy": "Create and validate subregions incrementally; this catalog is not proof that the maps or assets already exist.",
+    "subregion_tiers": [
+      { "id": "initiation", "from": 1, "to": 10, "count": 10, "purpose": "Teach movement, interaction and the region's core mechanic." },
+      { "id": "apprentice", "from": 11, "to": 30, "count": 20, "purpose": "Introduce enemy combinations, traversal and short objectives." },
+      { "id": "veteran", "from": 31, "to": 50, "count": 20, "purpose": "Test builds, teamwork and elemental counters." },
+      { "id": "elite", "from": 51, "to": 75, "count": 25, "purpose": "Combine combat, exploration and environmental hazards." },
+      { "id": "master", "from": 76, "to": 100, "count": 25, "purpose": "Offer multi-stage encounters and meaningful choices." },
+      { "id": "legend", "from": 101, "to": 120, "count": 20, "purpose": "Challenge advanced mastery with optional objectives." },
+      { "id": "mythic", "from": 121, "to": 133, "count": 13, "purpose": "Deliver high-skill encounters and rare cosmetic rewards." },
+      { "id": "convergence", "from": 134, "to": 134, "count": 1, "purpose": "Region finale, boss encounter and narrative consequence." }
+    ]
+  },
+  "design_rules": [
+    "Each region must have a readable silhouette, palette, traversal identity, local culture, faction conflict and unique boss.",
+    "Elemental powers should enable exploration and combat without making one element universally dominant.",
+    "Competitive modes must normalize combat stats; progression unlocks options and cosmetics, not guaranteed wins.",
+    "Rewards are earned through play; no paid randomized loot boxes.",
+    "All subregions must be tested and materialized in Unreal before being described as playable."
+  ],
+  "regions": [
+    {
+      "id": "life",
+      "index": 1,
+      "name": "Valle del Despertar",
+      "element": "Vida",
+      "palette": ["emerald", "gold", "warm ivory"],
+      "biome": "Ancient valleys, colossal roots and luminous ruins",
+      "culture": "Caretakers who preserve memories in living groves",
+      "core_mechanic": "Restore plant structures to open routes, create cover and reveal hidden paths",
+      "combat_identity": "Sustain, protective growth and controlled area denial",
+      "boss": "El Corazón que Recuerda"
+    },
+    {
+      "id": "ice",
+      "index": 2,
+      "name": "Cumbres del Eco",
+      "element": "Hielo",
+      "palette": ["ice blue", "silver", "deep navy"],
+      "biome": "Glacial peaks, frozen bridges and echoing caverns",
+      "culture": "Clans of navigators who record history in ice",
+      "core_mechanic": "Freeze water, redirect sliding surfaces and stabilize temporary bridges",
+      "combat_identity": "Slows, defensive shaping and precise control",
+      "boss": "La Corona del Invierno"
+    },
+    {
+      "id": "shadow",
+      "index": 3,
+      "name": "Bosque de los Nombres Perdidos",
+      "element": "Sombra",
+      "palette": ["violet", "charcoal", "moonlit teal"],
+      "biome": "Twilight forests, broken observatories and hidden trails",
+      "culture": "Keepers of forgotten names and secret paths",
+      "core_mechanic": "Reveal concealed marks and pass through designated shadow gates",
+      "combat_identity": "Feints, repositioning and brief concealment with clear counterplay",
+      "boss": "El Heraldo sin Rostro"
+    },
+    {
+      "id": "fire",
+      "index": 4,
+      "name": "Dominio de las Cenizas",
+      "element": "Fuego",
+      "palette": ["ember orange", "crimson", "basalt"],
+      "biome": "Volcanic citadels, ash plains and molten foundries",
+      "culture": "Forge guilds rebuilding tools from the remains of prior cycles",
+      "core_mechanic": "Manage heat vents, ignite ancient mechanisms and time safe crossings",
+      "combat_identity": "Burst damage, area pressure and risk-reward windows",
+      "boss": "El Monarca de la Brasa"
+    },
+    {
+      "id": "earth",
+      "index": 5,
+      "name": "Reino de las Dunas Doradas",
+      "element": "Tierra",
+      "palette": ["sand gold", "terracotta", "obsidian"],
+      "biome": "Moving dunes, buried cities and canyon fortresses",
+      "culture": "Caravan alliances that protect wells and subterranean archives",
+      "core_mechanic": "Raise temporary platforms, brace structures and uncover buried routes",
+      "combat_identity": "Fortification, stagger and reliable frontline control",
+      "boss": "El Coloso de las Profundidades"
+    },
+    {
+      "id": "lightning",
+      "index": 6,
+      "name": "Islas de la Tempestad",
+      "element": "Rayo",
+      "palette": ["electric cyan", "storm violet", "steel"],
+      "biome": "Floating islands, storm towers and suspended bridges",
+      "culture": "Pilots and signal-keepers who read the weather as a living language",
+      "core_mechanic": "Route energy through conductors to activate lifts and traversal nodes",
+      "combat_identity": "Mobility, chaining pressure and quick punish windows",
+      "boss": "La Voz del Trueno"
+    },
+    {
+      "id": "water",
+      "index": 7,
+      "name": "Ciudad de las Mareas",
+      "element": "Agua",
+      "palette": ["turquoise", "deep blue", "pearl"],
+      "biome": "Tidal districts, drowned plazas and coral archives",
+      "culture": "Tide councils balancing trade, memory and the rising sea",
+      "core_mechanic": "Change water levels, steer currents and access submerged passages",
+      "combat_identity": "Flow, displacement and team protection",
+      "boss": "La Reina del Fondo"
+    },
+    {
+      "id": "crystal",
+      "index": 8,
+      "name": "Abismo de Cristal",
+      "element": "Cristal",
+      "palette": ["magenta", "prismatic white", "midnight blue"],
+      "biome": "Refracting caverns, crystal forests and mirrored halls",
+      "culture": "Artisans who store shared knowledge in resonant crystal",
+      "core_mechanic": "Rotate mirrors and tune crystal resonance to redirect beams and open doors",
+      "combat_identity": "Precision, temporary barriers and line-of-sight tactics",
+      "boss": "El Prisma Inquebrantable"
+    },
+    {
+      "id": "spirit",
+      "index": 9,
+      "name": "Imperio de la Raíz Antigua",
+      "element": "Espíritu",
+      "palette": ["jade", "soft lavender", "bark brown"],
+      "biome": "Ancestral groves, spirit bridges and ceremonial ruins",
+      "culture": "Storykeepers who negotiate with echoes of earlier cycles",
+      "core_mechanic": "Follow spirit traces, restore memory shrines and choose which echoes to preserve",
+      "combat_identity": "Summoned support, awareness and team utility",
+      "boss": "El Ancestro de las Mil Voces"
+    },
+    {
+      "id": "venom",
+      "index": 10,
+      "name": "Pantano del Crepúsculo",
+      "element": "Veneno",
+      "palette": ["acid lime", "swamp green", "smoky plum"],
+      "biome": "Bioluminescent marshes, spore caves and decaying temples",
+      "culture": "Alchemists who turn dangerous ecosystems into carefully balanced medicine",
+      "core_mechanic": "Filter spores, mix safe reagents and open routes by restoring ecological balance",
+      "combat_identity": "Damage over time, area denial and antidote counterplay",
+      "boss": "La Hidra del Crepúsculo"
+    },
+    {
+      "id": "light",
+      "index": 11,
+      "name": "Ciudadela Celeste",
+      "element": "Luz",
+      "palette": ["radiant gold", "sky white", "azure"],
+      "biome": "Skyborne terraces, sun engines and luminous sanctuaries",
+      "culture": "Astral archivists who debate what knowledge should survive the final cycle",
+      "core_mechanic": "Align light paths, reveal false walls and synchronize sun engines",
+      "combat_identity": "Team shielding, telegraphed bursts and reveal tools",
+      "boss": "El Juez del Alba"
+    },
+    {
+      "id": "time",
+      "index": 12,
+      "name": "Nexo del Último Ciclo",
+      "element": "Tiempo",
+      "palette": ["antique gold", "indigo", "fractured white"],
+      "biome": "Temporal ruins, overlapping timelines and the central Nexus",
+      "culture": "Cycle witnesses who protect the right of each civilization to choose its future",
+      "core_mechanic": "Replay short environmental states, synchronize mechanisms and inspect alternate outcomes",
+      "combat_identity": "Timing, controlled resets and high-skill utility with strict cooldowns",
+      "boss": "El Último Testigo"
+    }
+  ]
+}

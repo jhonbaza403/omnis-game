@@ -2,6 +2,10 @@
 
 void UOmnisWorldStateSubsystem::SetState(FName Key, int32 Value)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     if (!Key.IsNone())
     {
         Values.Add(Key, Value);
@@ -16,8 +20,28 @@ int32 UOmnisWorldStateSubsystem::GetState(FName Key, int32 DefaultValue) const
 
 void UOmnisWorldStateSubsystem::IncrementState(FName Key, int32 Delta)
 {
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
     if (!Key.IsNone())
     {
         Values.FindOrAdd(Key) += Delta;
+    }
+}
+
+void UOmnisWorldStateSubsystem::ImportStates(const TMap<FName, int32>& NewValues)
+{
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+    {
+        return;
+    }
+    Values.Reset();
+    for (const TPair<FName, int32>& Pair : NewValues)
+    {
+        if (!Pair.Key.IsNone())
+        {
+            Values.Add(Pair.Key, Pair.Value);
+        }
     }
 }

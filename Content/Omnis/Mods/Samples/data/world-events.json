@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "package_id": "org.omnis.sample.venezuela-community-events",
+  "events": [
+    {
+      "id": "WorldEvent.RioChico.FloodWarning",
+      "region_id": "Region.Barlovento",
+      "route_ids": [
+        "Route.Caucagua-RioChico-Higuerote"
+      ],
+      "trigger": "Weather.RainfallThreshold",
+      "effects": [
+        {
+          "market_id": "Market.RioChico.Coastal",
+          "item_id": "Item.FreshFish",
+          "supply_delta": -35,
+          "demand_delta": 15
+        },
+        {
+          "market_id": "Market.Higuerote.Coastal",
+          "item_id": "Item.Fuel",
+          "supply_delta": -10,
+          "demand_delta": 10
+        }
+      ],
+      "duration_in_game_hours": 12,
+      "mission_hook": "Mission.WorldEvent.RioChico.FloodWarning"
+    },
+    {
+      "id": "WorldEvent.Caucagua.RoadClosure",
+      "region_id": "Region.Barlovento",
+      "route_ids": [
+        "Route.Caucagua-RioChico-Higuerote"
+      ],
+      "trigger": "Mission.RoadsideLandslide",
+      "effects": [
+        {
+          "market_id": "Market.Caucagua.Rural",
+          "item_id": "Item.Fuel",
+          "supply_delta": -25,
+          "demand_delta": 20
+        },
+        {
+          "market_id": "Market.Higuerote.Coastal",
+          "item_id": "Item.BoatParts",
+          "supply_delta": -12,
+          "demand_delta": 8
+        }
+      ],
+      "duration_in_game_hours": 24,
+      "mission_hook": "Mission.WorldEvent.Caucagua.RoadClosure"
+    }
+  ]
+}

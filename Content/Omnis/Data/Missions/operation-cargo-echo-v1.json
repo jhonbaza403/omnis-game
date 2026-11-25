@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "mission_id": "Operation.CargoEcho",
+  "title": "Ecos del corredor",
+  "status": "vertical_slice_scenario_data_not_yet_bound_to_quest_asset",
+  "prerequisites": [
+    "WorldPack.ModernVenezuela.phase_2",
+    "vehicle_condition_system",
+    "faction_territory_catalog"
+  ],
+  "phases": [
+    {
+      "id": "Step.PortRecords",
+      "region_id": "Region.LaGuaira",
+      "objective": "Recuperar y verificar el manifiesto de un envío disputado en el área portuaria.",
+      "requires": [
+        "Faction.EstibadoresLitoral access or neutral contact"
+      ],
+      "success": [
+        "cargo_manifest_verified"
+      ],
+      "failure": [
+        "territory_heat_plus_15",
+        "faction_standing_minus_5"
+      ],
+      "next": [
+        "Step.RouteChoice"
+      ]
+    },
+    {
+      "id": "Step.RouteChoice",
+      "region_id": "Route.Caracas-LaGuaira.TunnelHighway",
+      "objective": "Elegir una ruta en función del estado de la carretera, el clima y la condición del vehículo.",
+      "branches": [
+        {
+          "choice": "TunnelHighway",
+          "requirements": [
+            "tunnel_open"
+          ],
+          "next": "Step.ValleyDelivery",
+          "world_effects": [
+            "vehicle_brake_temperature_increases_on_grade"
+          ]
+        },
+        {
+          "choice": "OldRoad",
+          "requirements": [
+            "old_road_open"
+          ],
+          "next": "Step.ValleyDelivery",
+          "world_effects": [
+            "suspension_wear_increases_on_rough_surface"
+          ]
+        },
+        {
+          "choice": "CoastalToBarlovento",
+          "requirements": [
+            "coastal_route_open"
+          ],
+          "next": "Step.RuralTransfer",
+          "world_effects": [
+            "wetland_and_fuel_risk"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Step.RuralTransfer",
+      "region_id": "Region.Barlovento",
+      "objective": "Asegurar temporalmente la carga en un depósito rural y completar una transferencia local.",
+      "requires": [
+        "Faction.SenoresCacaoRio access or local contact"
+      ],
+      "success": [
+        "market_supply_event"
+      ],
+      "failure": [
+        "territory_heat_plus_10"
+      ],
+      "next": [
+        "Step.ValleyDelivery"
+      ]
+    },
+    {
+      "id": "Step.ValleyDelivery",
+      "region_id": "Region.Caracas",
+      "objective": "Entregar el envío verificado a un destinatario y resolver el contrato comercial.",
+      "success": [
+        "market_supply_recovery",
+        "faction_standing_plus_10",
+        "territory_heat_decay_8"
+      ],
+      "failure": [
+        "mission_failed",
+        "market_route_shock"
+      ],
+      "next": [
+        "Step.Closeout"
+      ]
+    },
+    {
+      "id": "Step.Closeout",
+      "objective": "Cerrar el contrato y persistir reputación, estado de facciones, vehículo y mercado.",
+      "terminal": true,
+      "save_fields": [
+        "quest_progress",
+        "faction_territory_states",
+        "vehicle_condition_snapshots",
+        "economy_state",
+        "terrain_deformation_snapshots"
+      ]
+    }
+  ],
+  "integration": {
+    "quest_runtime": "Existing UOmnisQuestSubsystem and UOmnisQuestDefinition; this scenario JSON requires authored PrimaryDataAsset and trigger/branch bindings.",
+    "economic_effects": "Use existing ApplyRouteSupplyShock through quest failure/recovery outcomes.",
+    "faction_effects": "Use territory heat and standing APIs; model owns authoritative changes.",
+    "ai_dialogue": "LLM may suggest dialogue only; server-side deterministic systems own all state mutations.",
+    "law_response": "Response tiers are abstract game state; no real-world tactical instructions."
+  }
+}

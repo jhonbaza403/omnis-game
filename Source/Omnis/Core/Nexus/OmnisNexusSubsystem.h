@@ -9,10 +9,10 @@ struct FOmnisNexusProgression
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Nexus")
+    UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly, Category="Nexus")
     int32 PermanentUpgradePoints = 0;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Nexus")
+    UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly, Category="Nexus")
     int32 PermanentVitalityLevel = 0;
 };
 
@@ -33,6 +33,12 @@ public:
 
     UFUNCTION(BlueprintPure, Category="Omnis|Nexus")
     int32 GetPermanentVitalityLevel() const { return Progression.PermanentVitalityLevel; }
+
+    UFUNCTION(BlueprintPure, Category="Omnis|Nexus")
+    FOmnisNexusProgression ExportProgression() const { return Progression; }
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|Nexus")
+    void ImportProgression(const FOmnisNexusProgression& SavedProgression);
 
 private:
     UPROPERTY()

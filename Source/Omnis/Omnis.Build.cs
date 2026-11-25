@@ -11,6 +11,7 @@ public class Omnis : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
+            "AIModule",
             "InputCore",
             "GameplayTags",
             "UMG",

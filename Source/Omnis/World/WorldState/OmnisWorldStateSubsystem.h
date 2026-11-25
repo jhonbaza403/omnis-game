@@ -19,6 +19,12 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|WorldState")
     void IncrementState(FName Key, int32 Delta = 1);
 
+    UFUNCTION(BlueprintPure, Category="Omnis|WorldState")
+    TMap<FName, int32> ExportStates() const { return Values; }
+
+    UFUNCTION(BlueprintCallable, Category="Omnis|WorldState")
+    void ImportStates(const TMap<FName, int32>& NewValues);
+
 private:
     UPROPERTY()
     TMap<FName, int32> Values;
