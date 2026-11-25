@@ -17,10 +17,12 @@
 #include "Narrative/Characters/OmnisCharacterStateComponent.h"
 #include "Systems/Damage/OmnisHealthComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
 
 AOmnisPlayerCharacter::AOmnisPlayerCharacter()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickInterval = 1.0f;
     SetReplicates(true);
     SetReplicateMovement(true);
 
@@ -105,6 +107,102 @@ void AOmnisPlayerCharacter::BeginPlay()
     {
         Health->OnDeath.AddDynamic(this, &AOmnisPlayerCharacter::HandlePlayerDeath);
     }
+}
+
+void AOmnisPlayerCharacter::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    if (!HasAuthority() || !CharacterState || !CharacterState->IsAlive() ||
+        !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
+    {
+        return;
+    }
+
+    const bool bActuallyResting =
+        bResting && GetVelocity().SizeSquared() <= FMath::Square(25.0f);
+    if (bResting && !bActuallyResting)
+    {
+        bResting = false;
+        ForceNetUpdate();
+    }
+
+    const bool bSprinting = GetCharacterMovement() &&
+        GetCharacterMovement()->MaxWalkSpeed > 500.0f;
+    const float SurvivalDelta = DeltaSeconds * (bSprinting ? 1.5f : 1.0f);
+    CharacterState->SimulateNeeds(
+        SurvivalDelta,
+        bActuallyResting ? EOmnisCharacterLifeGoal::Rest : EOmnisCharacterLifeGoal::Explore,
+        bActuallyResting);
+}
+
+void AOmnisPlayerCharacter::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(AOmnisPlayerCharacter, bResting);
+}
+
+bool AOmnisPlayerCharacter::ConsumeFood(int32 Quantity)
+{
+    if (!HasAuthority())
+    {
+        if (Quantity <= 0 || Quantity > 10)
+        {
+            return false;
+        }
+        ServerConsumeFood(Quantity);
+        return true;
+    }
+    return ConsumeFoodOnAuthority(Quantity);
+}
+
+void AOmnisPlayerCharacter::ServerConsumeFood_Implementation(int32 Quantity)
+{
+    ConsumeFoodOnAuthority(Quantity);
+}
+
+bool AOmnisPlayerCharacter::ConsumeFoodOnAuthority(int32 Quantity)
+{
+    if (!HasAuthority() || !CharacterState || !CharacterState->IsAlive() ||
+        !Inventory || Quantity <= 0 || Quantity > 10 ||
+        Inventory->GetQuantity(TEXT("Item.Food")) < Quantity ||
+        !Inventory->RemoveItem(TEXT("Item.Food"), Quantity))
+    {
+        return false;
+    }
+
+    CharacterState->RestoreSurvivalNeeds(30.0f * Quantity, 0.0f);
+    CharacterState->RecordMemory(TEXT("Player.AteFood"), TEXT("Item.Food"), 5);
+    return true;
+}
+
+void AOmnisPlayerCharacter::SetResting(bool bNewResting)
+{
+    if (HasAuthority())
+    {
+        SetRestingOnAuthority(bNewResting);
+    }
+    else
+    {
+        ServerSetResting(bNewResting);
+    }
+}
+
+void AOmnisPlayerCharacter::ServerSetResting_Implementation(bool bNewResting)
+{
+    SetRestingOnAuthority(bNewResting);
+}
+
+void AOmnisPlayerCharacter::SetRestingOnAuthority(bool bNewResting)
+{
+    if (!HasAuthority() || !CharacterState || !CharacterState->IsAlive())
+    {
+        return;
+    }
+
+    bResting = bNewResting &&
+        GetVelocity().SizeSquared() <= FMath::Square(25.0f);
+    ForceNetUpdate();
 }
 
 void AOmnisPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

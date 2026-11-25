@@ -99,6 +99,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Omnis|Life")
     void SimulateNeeds(float DeltaSeconds, EOmnisCharacterLifeGoal Goal, bool bReachedGoal);
 
+    UFUNCTION(BlueprintCallable, Category="Omnis|Life")
+    void RestoreSurvivalNeeds(float HungerRelief, float EnergyRestoration);
+
     UFUNCTION(BlueprintPure, Category="Omnis|Life")
     bool IsAlive() const { return bAlive; }
 

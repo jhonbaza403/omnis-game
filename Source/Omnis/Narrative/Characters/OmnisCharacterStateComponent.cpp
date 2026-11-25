@@ -102,6 +102,25 @@ void UOmnisCharacterStateComponent::SetCurrentGoal(EOmnisCharacterLifeGoal NewGo
     CurrentGoal = bAlive ? NewGoal : EOmnisCharacterLifeGoal::Idle;
 }
 
+
+void UOmnisCharacterStateComponent::RestoreSurvivalNeeds(
+    float HungerRelief,
+    float EnergyRestoration)
+{
+    if (!HasMutationAuthority() || !bAlive ||
+        !FMath::IsFinite(HungerRelief) || !FMath::IsFinite(EnergyRestoration))
+    {
+        return;
+    }
+
+    Hunger = FMath::Clamp(Hunger - FMath::Clamp(HungerRelief, 0.0f, 100.0f), 0.0f, 100.0f);
+    Energy = FMath::Clamp(Energy + FMath::Clamp(EnergyRestoration, 0.0f, 100.0f), 0.0f, 100.0f);
+    if (AActor* Owner = GetOwner())
+    {
+        Owner->ForceNetUpdate();
+    }
+}
+
 void UOmnisCharacterStateComponent::SimulateNeeds(
     float DeltaSeconds,
     EOmnisCharacterLifeGoal Goal,

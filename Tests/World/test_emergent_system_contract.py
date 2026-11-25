@@ -44,6 +44,18 @@ class EmergentSystemContractTests(unittest.TestCase):
         self.assertIn("bRewardClaimed", interaction_cpp)
         self.assertIn("OnInteractionActivated.Broadcast", interaction_cpp)
         self.assertIn("DOREPLIFETIME(AOmnisInteractiveActor, bActivated)", interaction_cpp)
+        player_h = (ROOT / "Source/Omnis/Gameplay/Character/OmnisPlayerCharacter.h").read_text(encoding="utf-8")
+        player_cpp = (ROOT / "Source/Omnis/Gameplay/Character/OmnisPlayerCharacter.cpp").read_text(encoding="utf-8")
+        state_h = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.h").read_text(encoding="utf-8")
+        state_cpp = (ROOT / "Source/Omnis/Narrative/Characters/OmnisCharacterStateComponent.cpp").read_text(encoding="utf-8")
+        self.assertIn("ConsumeFood", player_h)
+        self.assertIn("ServerConsumeFood", player_h)
+        self.assertIn("SetResting", player_h)
+        self.assertIn("SimulateNeeds", player_cpp)
+        self.assertIn('RemoveItem(TEXT("Item.Food")', player_cpp)
+        self.assertIn("RestoreSurvivalNeeds", state_h)
+        self.assertIn("RestoreSurvivalNeeds", state_cpp)
+        self.assertIn("DOREPLIFETIME(AOmnisPlayerCharacter, bResting)", player_cpp)
         for forbidden in ("ExecuteTrade", "AddItem", "SetRelationship", "CompleteMission"):
             self.assertNotIn(forbidden, source)
 

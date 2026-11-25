@@ -18,6 +18,7 @@ Input, output, concurrent requests and timeout are bounded. No gameplay tools or
 ## Existing deterministic foundations
 - NPC population manager schedules bounded life simulation and throttles navigation by distance.
 - NPC state simulates hunger, energy and social needs and persists memory and relationships.
+- Player survival now advances authoritative hunger, energy and social needs on a one-second server tick; sprinting accelerates drain, resting restores energy, and consuming Item.Food reduces hunger through server-validated inventory removal.
 - UOmnisEconomySubsystem is server-authoritative, uses integer minor currency units, stock/demand price indices, route supply shocks, trade receipts and barter. UOmnisEconomySimulationSubsystem advances bounded daily production and consumption on the authoritative world clock.
 - Terrain surface response feeds vehicle grip and deformation.
 - Route, market and faction catalogs define the Caracas–La Guaira–Barlovento vertical slice.
